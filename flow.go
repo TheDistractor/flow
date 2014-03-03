@@ -21,6 +21,7 @@ func NewMemo(v interface{}) *Memo {
 	return &Memo{v, make(map[string]interface{})}
 }
 
+// Get the type of the value of a memo, using reflection.
 func (m *Memo) Type() string {
 	return reflect.TypeOf(m.Val).String()
 }
@@ -43,6 +44,13 @@ type Worker interface {
 	Run()
 }
 
+type Wire struct {
+	conn chan *Memo
+	refs int
+	// To    string
+	// Froms map[string]string
+}
+
 // Pipes are workers with an "In" and an "Out" port.
 type Pipe struct {
 	Worker
@@ -54,12 +62,14 @@ type Pipe struct {
 type Team struct {
 	inbox   []*Memo
 	workers map[string]Worker
+	inputs  map[string]*Wire
 }
 
 // Initialise a new team.
 func NewTeam() *Team {
 	return &Team{
 		workers: make(map[string]Worker),
+		inputs:  make(map[string]*Wire),
 	}
 }
 
@@ -87,13 +97,19 @@ func (t *Team) findPort(name string) reflect.Value {
 // Connect an output port with an input port.
 func (t *Team) Connect(from, to string, capacity int) {
 	fp := t.findPort(from)
-	tp := t.findPort(to)
-	if !fp.IsNil() || !tp.IsNil() {
-		fmt.Println("ports already set?", fp, tp)
+	if !fp.IsNil() {
+		fmt.Println("from port already set: ", from)
 	}
-	c := make(chan *Memo, capacity)
-	fp.Set(reflect.ValueOf(c))
-	tp.Set(reflect.ValueOf(c))
+	w := t.inputs[to]
+	if w == nil {
+		w = &Wire{conn: make(chan *Memo, capacity)}
+		t.inputs[to] = w
+		tp := t.findPort(to)
+		tp.Set(reflect.ValueOf(w.conn))
+	}
+	w.refs++
+	cv := reflect.ValueOf(w.conn)
+	fp.Set(cv)
 }
 
 func (t *Team) pushMemo(m *Memo, dest string) {
@@ -154,9 +170,9 @@ func (t *Team) Run() {
 
 			w.Run()
 
-			// close all output channels, except "sink"
+			// close all output channels except "sink"
 			for _, v := range channels {
-				if !v.IsNil() && v.Interface() != Output(sink) {
+				if !v.IsNil() && v.Interface() != sink {
 					close(v.Interface().(Output))
 				}
 			}
