@@ -19,7 +19,7 @@ func init() {
 
 // A sink eats up all the memos it receives.
 type Sink struct {
-	flow.Worker
+	flow.Work
 	In flow.Input
 }
 
@@ -31,7 +31,7 @@ func (w *Sink) Run() {
 
 // Pipes are workers with an "In" and an "Out" port.
 type Pipe struct {
-	flow.Worker
+	flow.Work
 	In  flow.Input
 	Out flow.Output
 }
@@ -45,7 +45,7 @@ func (w *Pipe) Run() {
 
 // Repeaters are pipes which repeat each memo a number of times.
 type Repeater struct {
-	flow.Worker
+	flow.Work
 	In  flow.Input
 	Out flow.Output
 	Num flow.Input
@@ -64,7 +64,7 @@ func (w *Repeater) Run() {
 
 // A counter reports the number of memos it has received.
 type Counter struct {
-	flow.Worker
+	flow.Work
 	In    flow.Input
 	Out   flow.Output
 	count int
@@ -80,7 +80,7 @@ func (w *Counter) Run() {
 
 // Printers report the memos sent to them as output.
 type Printer struct {
-	flow.Worker
+	flow.Work
 	In flow.Input
 }
 
@@ -93,7 +93,7 @@ func (w *Printer) Run() {
 
 // A timer sends out one memo after the time set by the Rate port.
 type Timer struct {
-	flow.Worker
+	flow.Work
 	Rate flow.Input
 	Out  flow.Output
 }
@@ -107,7 +107,7 @@ func (w *Timer) Run() {
 
 // A clock sends out memos at a fixed rate, as set by the Rate port.
 type Clock struct {
-	flow.Worker
+	flow.Work
 	Rate flow.Input
 	Out  flow.Output
 }

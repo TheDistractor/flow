@@ -15,7 +15,7 @@ func init() {
 
 // Line-oriented serial input port, opened once the Port input is set.
 type SerialIn struct {
-	flow.Worker
+	flow.Work
 	Port flow.Input
 	Out  flow.Output
 }
@@ -37,7 +37,7 @@ func (w *SerialIn) Run() {
 // SketchType looks for lines of the form "[name...]" in the input stream.
 // These are turned into "Sketch" tokens, the rest is passed through as is.
 type SketchType struct {
-	flow.Worker
+	flow.Work
 	In  flow.Input
 	Out flow.Output
 }

@@ -29,11 +29,6 @@ func (m *Memo) Type() string {
 	return reflect.TypeOf(m.Val).String()
 }
 
-// Requests are memo's which need to be sent to a worker on startup.
-func (g *Group) Request(v interface{}, dest string) {
-	g.inbox[dest] = NewMemo(v)
-}
-
 // Input ports can receive memo's.
 type Input <-chan *Memo
 
@@ -43,6 +38,28 @@ type Output chan<- *Memo
 // The worker is the basic unit of processing, shuffling memo's between ports.
 type Worker interface {
 	Run()
+
+	initWork(g *Group)
+	asWork() *Work
+}
+
+// Work keeps some information about each worker.
+type Work struct {
+	parent  *Group
+	inbox   map[string]*Memo
+	inputs  map[string]*connection
+	outputs map[string]*connection
+}
+
+func (w *Work) initWork(g *Group) {
+	w.parent = g
+	w.inbox = make(map[string]*Memo)
+	w.inputs = make(map[string]*connection)
+	w.outputs = make(map[string]*connection)
+}
+
+func (w *Work) asWork() *Work {
+	return w
 }
 
 type connection struct {
@@ -52,7 +69,6 @@ type connection struct {
 
 // A group is a collection of inter-connected workers.
 type Group struct {
-	inbox   map[string]*Memo
 	workers map[string]Worker
 	inputs  map[string]*connection
 	outputs map[string]*connection
@@ -61,7 +77,6 @@ type Group struct {
 // Initialise a new group.
 func NewGroup() *Group {
 	return &Group{
-		inbox:   make(map[string]*Memo),
 		workers: make(map[string]Worker),
 		inputs:  make(map[string]*connection),
 		outputs: make(map[string]*connection),
@@ -69,12 +84,14 @@ func NewGroup() *Group {
 }
 
 // Add a worker to the group, with a unique name.
-func (g *Group) Add(component, name string) {
-	fun := Registry[component]
+func (g *Group) Add(worker, name string) {
+	fun := Registry[worker]
 	if fun == nil {
-		fmt.Println("not found: ", component)
+		fmt.Println("not found: ", worker)
 	}
-	g.workers[name] = fun()
+	w := fun()
+	w.initWork(g)
+	g.workers[name] = w
 }
 
 func (g *Group) findPort(name string) reflect.Value {
@@ -108,12 +125,11 @@ func (g *Group) Connect(from, to string, capacity int) {
 	g.outputs[from] = w
 }
 
-func (g *Group) pushMemo(m *Memo, dest string) {
-	dp := g.findPort(dest)
-	c := make(chan *Memo, 1)
-	dp.Set(reflect.ValueOf(c))
-	c <- m
-	close(c)
+// Requests are memo's which need to be sent to a worker on startup.
+func (g *Group) Request(v interface{}, dest string) {
+	segments := strings.SplitN(dest, ".", 2)
+	w := g.workers[segments[0]].asWork()
+	w.inbox[segments[1]] = NewMemo(v)
 }
 
 func forAllChannels(w Worker, f func(string, reflect.Value)) {
@@ -150,6 +166,15 @@ func (g *Group) Run() {
 		go func(n string, w Worker) {
 			// fmt.Println(" go start", n)
 
+			// send out the initial memo's
+			for dest, memo := range w.asWork().inbox {
+				dp := g.findPort(n + "." + dest)
+				c := make(chan *Memo, 1)
+				dp.Set(reflect.ValueOf(c))
+				c <- memo
+				close(c)
+			}
+
 			// connect unused inputs to "null" and unused outputs to "sink"
 			forAllChannels(w, func(_ string, v reflect.Value) {
 				if v.IsNil() {
@@ -178,11 +203,6 @@ func (g *Group) Run() {
 			wait.Done()
 			// fmt.Println(" go end", n)
 		}(n, w)
-	}
-
-	// send out the initial memo's
-	for k, v := range g.inbox {
-		g.pushMemo(v, k)
 	}
 
 	// wait until all workers have finished, as well as the sink reporter
