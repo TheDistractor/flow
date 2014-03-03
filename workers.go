@@ -22,6 +22,14 @@ func (w *Sink) Run() {
 	}
 }
 
+type PassThrough Pipe
+
+func (w *PassThrough) Run() {
+	for m := range w.In {
+		w.Out <- m
+	}
+}
+
 type Printer struct {
 	Worker
 	In Input

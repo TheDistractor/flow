@@ -5,9 +5,9 @@ import (
 )
 
 func TestSerial(t *testing.T) {
-    if testing.Short() {
-        t.Skip("skipping test in short mode.")
-    }
+	if testing.Short() {
+		t.Skip("skipping test in short mode.")
+	}
 	// team := NewTeam()
 	// team.Add("SerialIn", "jeelink1")
 	// team.Add("SketchType", "jeelink2")

@@ -35,7 +35,7 @@ type Input <-chan *Memo
 // Output ports are used to send memo's elsewhere.
 type Output chan<- *Memo
 
-// Workers is the basic unit of processing, shuffling memo's between ports.
+// The worker is the basic unit of processing, shuffling memo's between ports.
 type Worker interface {
 	Run()
 }
