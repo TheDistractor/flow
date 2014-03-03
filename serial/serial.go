@@ -1,22 +1,23 @@
-package flow
+package serial
 
 import (
 	"bufio"
 	"strings"
 
 	"github.com/chimera/rs232"
+	"github.com/jcw/flow"
 )
 
 func init() {
-	Registry["SerialIn"] = func() Worker { return &SerialIn{} }
-	Registry["SketchType"] = func() Worker { return &SketchType{} }
+	flow.Registry["SerialIn"] = func() flow.Worker { return &SerialIn{} }
+	flow.Registry["SketchType"] = func() flow.Worker { return &SketchType{} }
 }
 
 // Line-oriented serial input port, opened once the Port input is set.
 type SerialIn struct {
-	Worker
-	Port Input
-	Out  Output
+	flow.Worker
+	Port flow.Input
+	Out  flow.Output
 }
 
 // Start processing incoming text lines from the serial interface.
@@ -25,17 +26,21 @@ func (w *SerialIn) Run() {
 
 	opt := rs232.Options{BitRate: 57600, DataBits: 8, StopBits: 1}
 	dev, err := rs232.Open(port.Val.(string), opt)
-	Check(err)
+	check(err)
 
 	scanner := bufio.NewScanner(dev)
 	for scanner.Scan() {
-		w.Out <- NewMemo(scanner.Text())
+		w.Out <- flow.NewMemo(scanner.Text())
 	}
 }
 
 // SketchType looks for lines of the form "[name...]" in the input stream.
 // These are turned into "Sketch" tokens, the rest is passed through as is.
-type SketchType Pipe
+type SketchType struct {
+	flow.Worker
+	In  flow.Input
+	Out flow.Output
+}
 
 // Start transforming the "[name...]" markers in the input stream.
 func (w *SketchType) Run() {
@@ -44,10 +49,17 @@ func (w *SketchType) Run() {
 			if strings.HasPrefix(s, "[") && strings.Contains(s, "]") {
 				tag := s[1:strings.IndexAny(s, ".]")]
 				type Sketch string
-				m = NewMemo(Sketch(tag))
+				m = flow.NewMemo(Sketch(tag))
 				m.Attr["version"] = s
 			}
 		}
 		w.Out <- m
+	}
+}
+
+// Generic error checking, panics if e is not nil.
+func check(e error) {
+	if e != nil {
+		panic(e)
 	}
 }
