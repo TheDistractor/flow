@@ -72,6 +72,49 @@ func (w *Work) port(name string) reflect.Value {
 	return fv
 }
 
+func (w *Work) forAllChannels(f func(string, reflect.Value)) {
+	wv := reflect.ValueOf(w.worker)
+	we := wv.Elem()
+	wt := we.Type()
+	for i := 0; i < we.NumField(); i++ {
+		if fd := wt.Field(i); fd.Name != "" && fd.Type.Kind() == reflect.Chan {
+			f(fd.Name, we.Field(i))
+		}
+	}
+	return
+}
+
+func (w *Work) processInbox() {
+	for dest, memo := range w.inbox {
+		c := make(chan *Memo, 1)
+		dp := w.port(dest)
+		dp.Set(reflect.ValueOf(c))
+		c <- memo
+		close(c)
+	}
+}
+
+func (w *Work) connectChannels(nullSource, nullSink chan *Memo) {
+	w.forAllChannels(func(_ string, v reflect.Value) {
+		if v.IsNil() {
+			c := nullSource
+			if v.Type().ChanDir()&reflect.SendDir != 0 {
+				c = nullSink
+			}
+			v.Set(reflect.ValueOf(c))
+		}
+	})
+}
+
+func (w *Work) closeAllOutputs() {
+	for _, v := range w.outputs {
+		v.senders--
+		if v.senders == 0 {
+			close(v.channel)
+		}
+	}
+}
+
 type connection struct {
 	channel chan *Memo
 	senders int
@@ -92,14 +135,17 @@ func (g *Group) Add(worker, name string) {
 	fun := Registry[worker]
 	if fun == nil {
 		fmt.Println("not found: ", worker)
+		return
 	}
 	w := fun()
 	g.workers[name] = w.initWork(w, name, g)
 }
 
 func (g *Group) workerOf(s string) *Work {
-	n := strings.IndexRune(s, '.')
-	return g.workers[s[:n]]
+	if n := strings.IndexRune(s, '.'); n > 0 {
+		s = s[:n]
+	}
+	return g.workers[s]
 }
 
 func portPart(s string) string {
@@ -134,18 +180,6 @@ func (g *Group) Request(v interface{}, dest string) {
 	w.inbox[portPart(dest)] = NewMemo(v)
 }
 
-func forAllChannels(w *Work, f func(string, reflect.Value)) {
-	wv := reflect.ValueOf(w.worker)
-	we := wv.Elem()
-	wt := we.Type()
-	for i := 0; i < we.NumField(); i++ {
-		if fd := wt.Field(i); fd.Name != "" && fd.Type.Kind() == reflect.Chan {
-			f(fd.Name, we.Field(i))
-		}
-	}
-	return
-}
-
 // Start up the group, and return when it is finished.
 func (g *Group) Run() {
 	done := make(chan struct{})
@@ -164,45 +198,14 @@ func (g *Group) Run() {
 	var wait sync.WaitGroup
 	wait.Add(len(g.workers))
 
-	for n, w := range g.workers {
-		go func(n string, w *Work) {
-			// fmt.Println(" go start", n)
-
-			// send out the initial memo's
-			for dest, memo := range w.inbox {
-				dp := w.port(dest)
-				c := make(chan *Memo, 1)
-				dp.Set(reflect.ValueOf(c))
-				c <- memo
-				close(c)
-			}
-
-			// connect unused inputs to "null" and unused outputs to "sink"
-			forAllChannels(w, func(_ string, v reflect.Value) {
-				if v.IsNil() {
-					c := null
-					if v.Type().ChanDir()&reflect.SendDir != 0 {
-						c = sink
-					}
-					v.Set(reflect.ValueOf(c))
-				}
-			})
-
-			// fmt.Println("run start", n)
+	for _, w := range g.workers {
+		go func(w *Work) {
+			defer wait.Done()
+			w.processInbox()
+			w.connectChannels(null, sink)
 			w.worker.Run()
-			// fmt.Println("run end", n)
-
-			// close all output channels once last reference is gone
-			for _, v := range w.outputs {
-				v.senders--
-				if v.senders == 0 {
-					close(v.channel)
-				}
-			}
-
-			wait.Done()
-			// fmt.Println(" go end", n)
-		}(n, w)
+			w.closeAllOutputs()
+		}(w)
 	}
 
 	// wait until all workers have finished, as well as the sink reporter
