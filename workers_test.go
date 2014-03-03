@@ -14,18 +14,29 @@ func ExampleGraph() {
 	// string: hello
 }
 
-func ExampleRepeater() {
+func ExampleRepeatCount() {
 	g := NewGroup()
 	g.Add("Repeater", "rep1")
+	g.Add("Counter", "cnt1")
 	g.Add("Printer", "printer")
-	g.Connect("rep1.Out", "printer.In", 0)
+	g.Connect("rep1.Out", "cnt1.In", 0)
+	g.Connect("cnt1.Out", "printer.In", 0)
 	g.Request(3, "rep1.Num")
-	g.Request("abc", "rep1.In")
+	g.Request(nil, "rep1.In")
 	g.Run()
 	// Output:
-	// string: abc
-	// string: abc
-	// string: abc
+	// int: 3
+}
+
+func ExampleNoCount() {
+	g := NewGroup()
+	g.Add("Counter", "cnt1")
+	g.Add("Printer", "printer")
+	g.Connect("cnt1.Out", "printer.In", 0)
+	// cnt1.In is not connected, acts same as if closed right away
+	g.Run()
+	// Output:
+	// int: 0
 }
 
 func TestTimer(t *testing.T) {

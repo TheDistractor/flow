@@ -125,19 +125,12 @@ func forAllChannels(w Worker, f func(string, reflect.Value)) {
 	return
 }
 
-func outputChannels(w Worker) (results []reflect.Value) {
-	forAllChannels(w, func(name string, value reflect.Value) {
-		if value.Type().ChanDir()&reflect.SendDir != 0 {
-			results = append(results, value)
-		}
-	})
-	return
-}
-
 // Start up the group, and return when it is finished.
 func (g *Group) Run() {
 	done := make(chan struct{})
 	sink := make(chan *Memo)
+	null := make(chan *Memo)
+	close(null)
 
 	// report all memo's sent to the sink, for debugging
 	go func() {
@@ -152,18 +145,22 @@ func (g *Group) Run() {
 
 	for n, w := range g.workers {
 		go func(n string, w Worker) {
-			channels := outputChannels(w)
+			// fmt.Println(" go start", n)
 
-			// set all unused output channels to "sink"
-			for _, v := range channels {
+			// connect unused inputs to "null" and unused outputs to "sink"
+			forAllChannels(w, func(_ string, v reflect.Value) {
 				if v.IsNil() {
-					v.Set(reflect.ValueOf(sink))
+					c := null
+					if v.Type().ChanDir()&reflect.SendDir != 0 {
+						c = sink
+					}
+					v.Set(reflect.ValueOf(c))
 				}
-			}
+			})
 
-			// fmt.Println("start", n)
+			// fmt.Println("run start", n)
 			w.Run()
-			// fmt.Println("end", n)
+			// fmt.Println("run end", n)
 
 			// close all output channels once last reference is gone
 			for k, v := range g.outputs {
@@ -176,6 +173,7 @@ func (g *Group) Run() {
 			}
 
 			wait.Done()
+			// fmt.Println(" go end", n)
 		}(n, w)
 	}
 

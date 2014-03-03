@@ -9,6 +9,7 @@ func init() {
 	Registry["Sink"] = func() Worker { return new(Sink) }
 	Registry["Pipe"] = func() Worker { return new(Pipe) }
 	Registry["Repeater"] = func() Worker { return new(Repeater) }
+	Registry["Counter"] = func() Worker { return new(Counter) }
 	Registry["Printer"] = func() Worker { return new(Printer) }
 	Registry["Timer"] = func() Worker { return new(Timer) }
 	Registry["Clock"] = func() Worker { return new(Clock) }
@@ -40,7 +41,7 @@ func (w *Pipe) Run() {
 	}
 }
 
-// Repeaters are pipes which repeat each message a number of times
+// Repeaters are pipes which repeat each message a number of times.
 type Repeater struct {
 	Pipe
 	Num Input
@@ -55,6 +56,22 @@ func (w *Repeater) Run() {
 			w.Out <- m
 		}
 	}
+}
+
+// A counter reports the number of messages it has received.
+type Counter struct {
+	Worker
+	In    Input
+	Out   Output
+	count int
+}
+
+// Start counting incoming messages.
+func (w *Counter) Run() {
+	for _ = range w.In {
+		w.count++
+	}
+	w.Out <- NewMemo(w.count)
 }
 
 // Printers report the messages sent to them as output.
