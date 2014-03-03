@@ -13,13 +13,16 @@ var Registry = make(map[string]func() Worker)
 // Memo's are the basic type sent to, between, and from workers.
 type Memo struct {
 	Val  interface{}
-	Type string
 	Attr map[string]interface{}
 }
 
 // Create a new memo from an arbitrary value and register its type.
 func NewMemo(v interface{}) *Memo {
-	return &Memo{v, reflect.TypeOf(v).String(), make(map[string]interface{})}
+	return &Memo{v, make(map[string]interface{})}
+}
+
+func (m *Memo) Type() string {
+	return reflect.TypeOf(m.Val).String()
 }
 
 // Requests are memo's which need to be sent to a worker on startup.

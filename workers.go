@@ -43,7 +43,7 @@ type Printer struct {
 // Start printing incoming messages.
 func (w *Printer) Run() {
 	for m := range w.In {
-		fmt.Printf("%s: %v\n", m.Type, m.Val)
+		fmt.Printf("%s: %v\n", m.Type(), m.Val)
 	}
 }
 
