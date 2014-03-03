@@ -28,9 +28,7 @@ func (m *Memo) Type() string {
 
 // Requests are memo's which need to be sent to a worker on startup.
 func (g *Group) Request(v interface{}, dest string) {
-	m := NewMemo(v)
-	m.Attr["dest"] = dest
-	g.inbox = append(g.inbox, m)
+	g.inbox[dest] = NewMemo(v)
 }
 
 // Input ports can receive memo's.
@@ -51,7 +49,7 @@ type connection struct {
 
 // A group is a collection of inter-connected workers.
 type Group struct {
-	inbox   []*Memo
+	inbox   map[string]*Memo
 	workers map[string]Worker
 	inputs  map[string]*connection
 	outputs map[string]*connection
@@ -60,6 +58,7 @@ type Group struct {
 // Initialise a new group.
 func NewGroup() *Group {
 	return &Group{
+		inbox:   make(map[string]*Memo),
 		workers: make(map[string]Worker),
 		inputs:  make(map[string]*connection),
 		outputs: make(map[string]*connection),
@@ -181,8 +180,8 @@ func (g *Group) Run() {
 	}
 
 	// send out the initial memo's
-	for _, v := range g.inbox {
-		g.pushMemo(v, v.Attr["dest"].(string)) // TODO: not general enough
+	for k, v := range g.inbox {
+		g.pushMemo(v, k)
 	}
 
 	// wait until all workers have finished, as well as the sink reporter
