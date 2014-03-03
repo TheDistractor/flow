@@ -54,7 +54,7 @@ type Repeater struct {
 // Start repeating incoming memos.
 func (w *Repeater) Run() {
 	num := <-w.Num
-	n := num.Val.(int)
+	n := num.(int)
 	for m := range w.In {
 		for i := 0; i < n; i++ {
 			w.Out <- m
@@ -75,7 +75,7 @@ func (w *Counter) Run() {
 	for _ = range w.In {
 		w.count++
 	}
-	w.Out <- flow.NewMemo(w.count)
+	w.Out <- w.count
 }
 
 // Printers report the memos sent to them as output.
@@ -87,7 +87,7 @@ type Printer struct {
 // Start printing incoming memos.
 func (w *Printer) Run() {
 	for m := range w.In {
-		fmt.Printf("%s: %v\n", m.Type(), m.Val)
+		fmt.Printf("%s: %v\n", flow.Type(m), m)
 	}
 }
 
@@ -101,8 +101,8 @@ type Timer struct {
 // Start the timer, sends one memo when it expires.
 func (w *Timer) Run() {
 	rate := <-w.Rate
-	t := <-time.After(rate.Val.(time.Duration))
-	w.Out <- flow.NewMemo(t)
+	t := <-time.After(rate.(time.Duration))
+	w.Out <- t
 }
 
 // A clock sends out memos at a fixed rate, as set by the Rate port.
@@ -115,8 +115,8 @@ type Clock struct {
 // Start sending out periodic memos, once the rate is known.
 func (w *Clock) Run() {
 	rate := <-w.Rate
-	t := time.NewTicker(rate.Val.(time.Duration))
+	t := time.NewTicker(rate.(time.Duration))
 	for m := range t.C {
-		w.Out <- flow.NewMemo(m)
+		w.Out <- m
 	}
 }

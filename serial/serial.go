@@ -25,12 +25,12 @@ func (w *SerialIn) Run() {
 	port := <-w.Port
 
 	opt := rs232.Options{BitRate: 57600, DataBits: 8, StopBits: 1}
-	dev, err := rs232.Open(port.Val.(string), opt)
+	dev, err := rs232.Open(port.(string), opt)
 	check(err)
 
 	scanner := bufio.NewScanner(dev)
 	for scanner.Scan() {
-		w.Out <- flow.NewMemo(scanner.Text())
+		w.Out <- scanner.Text()
 	}
 }
 
@@ -45,12 +45,11 @@ type SketchType struct {
 // Start transforming the "[name...]" markers in the input stream.
 func (w *SketchType) Run() {
 	for m := range w.In {
-		if s, ok := m.Val.(string); ok {
+		if s, ok := m.(string); ok {
 			if strings.HasPrefix(s, "[") && strings.Contains(s, "]") {
 				tag := s[1:strings.IndexAny(s, ".]")]
 				type Sketch string
-				m = flow.NewMemo(Sketch(tag))
-				m.Attr["version"] = s
+				w.Out <- Sketch(tag)
 			}
 		}
 		w.Out <- m

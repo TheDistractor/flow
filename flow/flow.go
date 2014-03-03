@@ -13,27 +13,19 @@ var Version = "0.0.1"
 // The registry is the factory for all known types of workers.
 var Registry = make(map[string]func() Worker)
 
-// Memo's are the basic type sent to, between, and from workers.
-type Memo struct {
-	Val  interface{}
-	Attr map[string]interface{}
-}
-
-// Create a new memo from an arbitrary value and register its type.
-func NewMemo(v interface{}) *Memo {
-	return &Memo{v, make(map[string]interface{})}
-}
+// Memo's are the generic type sent to, between, and from workers.
+type Memo interface{}
 
 // Get the type of the value of a memo, using reflection.
-func (m *Memo) Type() string {
-	return reflect.TypeOf(m.Val).String()
+func Type(m Memo) string {
+	return reflect.TypeOf(m).String()
 }
 
 // Input ports can receive memo's.
-type Input <-chan *Memo
+type Input <-chan Memo
 
 // Output ports are used to send memo's elsewhere.
-type Output chan<- *Memo
+type Output chan<- Memo
 
 // The worker is the basic unit of processing, shuffling memo's between ports.
 type Worker interface {
@@ -47,7 +39,7 @@ type Work struct {
 	worker  Worker
 	name    string
 	parent  *Group
-	inbox   map[string]*Memo
+	inbox   map[string]Memo
 	inputs  map[string]*connection
 	outputs map[string]*connection
 }
@@ -56,7 +48,7 @@ func (w *Work) initWork(wi Worker, nm string, gr *Group) *Work {
 	w.worker = wi
 	w.name = nm
 	w.parent = gr
-	w.inbox = make(map[string]*Memo)
+	w.inbox = make(map[string]Memo)
 	w.inputs = make(map[string]*connection)
 	w.outputs = make(map[string]*connection)
 	return w
@@ -86,7 +78,7 @@ func (w *Work) forAllChannels(f func(string, reflect.Value)) {
 
 func (w *Work) processInbox() {
 	for dest, memo := range w.inbox {
-		c := make(chan *Memo, 1)
+		c := make(chan Memo, 1)
 		dp := w.port(dest)
 		dp.Set(reflect.ValueOf(c))
 		c <- memo
@@ -94,7 +86,7 @@ func (w *Work) processInbox() {
 	}
 }
 
-func (w *Work) connectChannels(nullSource, nullSink chan *Memo) {
+func (w *Work) connectChannels(nullSource, nullSink chan Memo) {
 	w.forAllChannels(func(_ string, v reflect.Value) {
 		if v.IsNil() {
 			c := nullSource
@@ -116,7 +108,7 @@ func (w *Work) closeAllOutputs() {
 }
 
 type connection struct {
-	channel chan *Memo
+	channel chan Memo
 	senders int
 }
 
@@ -163,7 +155,7 @@ func (g *Group) Connect(from, to string, capacity int) {
 	tw := g.workerOf(to)
 	c := tw.inputs[portPart(to)]
 	if c == nil {
-		c = &connection{channel: make(chan *Memo, capacity)}
+		c = &connection{channel: make(chan Memo, capacity)}
 		tw.inputs[portPart(to)] = c
 		tp := tw.port(to)
 		tp.Set(reflect.ValueOf(c.channel))
@@ -177,20 +169,20 @@ func (g *Group) Connect(from, to string, capacity int) {
 // Requests are memo's which need to be sent to a worker on startup.
 func (g *Group) Request(v interface{}, dest string) {
 	w := g.workerOf(dest)
-	w.inbox[portPart(dest)] = NewMemo(v)
+	w.inbox[portPart(dest)] = v
 }
 
 // Start up the group, and return when it is finished.
 func (g *Group) Run() {
 	done := make(chan struct{})
-	sink := make(chan *Memo)
-	null := make(chan *Memo)
+	sink := make(chan Memo)
+	null := make(chan Memo)
 	close(null)
 
 	// report all memo's sent to the sink, for debugging
 	go func() {
 		for m := range sink {
-			fmt.Println("Lost output:", m.Val)
+			fmt.Println("Lost output:", m)
 		}
 		close(done)
 	}()
