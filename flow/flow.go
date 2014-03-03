@@ -39,20 +39,24 @@ type Output chan<- *Memo
 type Worker interface {
 	Run()
 
-	initWork(g *Group)
+	initWork(Worker, string, *Group)
 	asWork() *Work
 }
 
 // Work keeps some information about each worker.
 type Work struct {
+	worker  Worker
+	name	string
 	parent  *Group
 	inbox   map[string]*Memo
 	inputs  map[string]*connection
 	outputs map[string]*connection
 }
 
-func (w *Work) initWork(g *Group) {
-	w.parent = g
+func (w *Work) initWork(wi Worker, nm string, gr *Group) {
+	w.worker = wi
+	w.name = nm
+	w.parent = gr
 	w.inbox = make(map[string]*Memo)
 	w.inputs = make(map[string]*connection)
 	w.outputs = make(map[string]*connection)
@@ -60,6 +64,16 @@ func (w *Work) initWork(g *Group) {
 
 func (w *Work) asWork() *Work {
 	return w
+}
+
+func (w *Work) port(name string) reflect.Value {
+	wp := reflect.ValueOf(w.worker)
+	wv := wp.Elem()
+	fv := wv.FieldByName(portPart(name))
+	if !fv.IsValid() {
+		fmt.Println("port not found: " + name)
+	}
+	return fv
 }
 
 type connection struct {
@@ -84,7 +98,7 @@ func (g *Group) Add(worker, name string) {
 		fmt.Println("not found: ", worker)
 	}
 	w := fun()
-	w.initWork(g)
+	w.initWork(w, name, g)
 	g.workers[name] = w
 }
 
@@ -98,20 +112,10 @@ func portPart(s string) string {
 	return s[n+1:]
 }
 
-func (g *Group) findPort(name string) reflect.Value {
-	worker := g.workerOf(name)
-	wp := reflect.ValueOf(worker)
-	wv := wp.Elem()
-	fv := wv.FieldByName(portPart(name))
-	if !fv.IsValid() {
-		fmt.Println("port not found: " + name)
-	}
-	return fv
-}
-
 // Connect an output port with an input port.
 func (g *Group) Connect(from, to string, capacity int) {
-	fp := g.findPort(from)
+	fw := g.workerOf(from).asWork()
+	fp := fw.port(portPart(from))
 	if !fp.IsNil() {
 		fmt.Println("from port already set: ", from)
 	}
@@ -120,13 +124,12 @@ func (g *Group) Connect(from, to string, capacity int) {
 	if c == nil {
 		c = &connection{channel: make(chan *Memo, capacity)}
 		tw.inputs[portPart(to)] = c
-		tp := g.findPort(to)
+		tp := tw.port(to)
 		tp.Set(reflect.ValueOf(c.channel))
 	}
 	c.senders++
 	cv := reflect.ValueOf(c.channel)
 	fp.Set(cv)
-	fw := g.workerOf(from).asWork()
 	fw.outputs[portPart(from)] = c
 }
 
@@ -173,7 +176,7 @@ func (g *Group) Run() {
 
 			// send out the initial memo's
 			for dest, memo := range aw.inbox {
-				dp := g.findPort(n + "." + dest)
+				dp := aw.port(dest)
 				c := make(chan *Memo, 1)
 				dp.Set(reflect.ValueOf(c))
 				c <- memo
