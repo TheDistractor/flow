@@ -44,27 +44,25 @@ type Worker interface {
 	Run()
 }
 
-type Wire struct {
-	conn chan *Memo
-	refs int
-	// To    string
-	// Froms map[string]string
+type connection struct {
+	channel chan *Memo
+	senders int
 }
 
 // A group is a collection of inter-connected workers.
 type Group struct {
 	inbox   []*Memo
 	workers map[string]Worker
-	inputs  map[string]*Wire
-	outputs map[string]*Wire
+	inputs  map[string]*connection
+	outputs map[string]*connection
 }
 
 // Initialise a new group.
 func NewGroup() *Group {
 	return &Group{
 		workers: make(map[string]Worker),
-		inputs:  make(map[string]*Wire),
-		outputs: make(map[string]*Wire),
+		inputs:  make(map[string]*connection),
+		outputs: make(map[string]*connection),
 	}
 }
 
@@ -97,13 +95,13 @@ func (g *Group) Connect(from, to string, capacity int) {
 	}
 	w := g.inputs[to]
 	if w == nil {
-		w = &Wire{conn: make(chan *Memo, capacity)}
+		w = &connection{channel: make(chan *Memo, capacity)}
 		g.inputs[to] = w
 		tp := g.findPort(to)
-		tp.Set(reflect.ValueOf(w.conn))
+		tp.Set(reflect.ValueOf(w.channel))
 	}
-	w.refs++
-	cv := reflect.ValueOf(w.conn)
+	w.senders++
+	cv := reflect.ValueOf(w.channel)
 	fp.Set(cv)
 	g.outputs[from] = w
 }
@@ -171,9 +169,9 @@ func (g *Group) Run() {
 			// close all output channels once last reference is gone
 			for k, v := range g.outputs {
 				if strings.HasPrefix(k, n+".") {
-					v.refs--
-					if v.refs == 0 {
-						close(v.conn)
+					v.senders--
+					if v.senders == 0 {
+						close(v.channel)
 					}
 				}
 			}
