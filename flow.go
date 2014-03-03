@@ -51,18 +51,12 @@ type Wire struct {
 	// Froms map[string]string
 }
 
-// Pipes are workers with an "In" and an "Out" port.
-type Pipe struct {
-	Worker
-	In  Input
-	Out Output
-}
-
 // A group is a collection of inter-connected workers.
 type Group struct {
 	inbox   []*Memo
 	workers map[string]Worker
 	inputs  map[string]*Wire
+	outputs map[string]*Wire
 }
 
 // Initialise a new group.
@@ -70,6 +64,7 @@ func NewGroup() *Group {
 	return &Group{
 		workers: make(map[string]Worker),
 		inputs:  make(map[string]*Wire),
+		outputs: make(map[string]*Wire),
 	}
 }
 
@@ -110,6 +105,7 @@ func (g *Group) Connect(from, to string, capacity int) {
 	w.refs++
 	cv := reflect.ValueOf(w.conn)
 	fp.Set(cv)
+	g.outputs[from] = w
 }
 
 func (g *Group) pushMemo(m *Memo, dest string) {
@@ -157,8 +153,8 @@ func (g *Group) Run() {
 	var wait sync.WaitGroup
 	wait.Add(len(g.workers))
 
-	for _, w := range g.workers {
-		go func(w Worker) {
+	for n, w := range g.workers {
+		go func(n string, w Worker) {
 			channels := outputChannels(w)
 
 			// set all unused output channels to "sink"
@@ -168,17 +164,22 @@ func (g *Group) Run() {
 				}
 			}
 
+			// fmt.Println("start", n)
 			w.Run()
+			// fmt.Println("end", n)
 
-			// close all output channels except "sink"
-			for _, v := range channels {
-				if !v.IsNil() && v.Interface() != sink {
-					close(v.Interface().(Output))
+			// close all output channels once last reference is gone
+			for k, v := range g.outputs {
+				if strings.HasPrefix(k, n+".") {
+					v.refs--
+					if v.refs == 0 {
+						close(v.conn)
+					}
 				}
 			}
 
 			wait.Done()
-		}(w)
+		}(n, w)
 	}
 
 	// send out the initial memo's

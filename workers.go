@@ -7,6 +7,8 @@ import (
 
 func init() {
 	Registry["Sink"] = func() Worker { return new(Sink) }
+	Registry["Pipe"] = func() Worker { return new(Pipe) }
+	Registry["Repeater"] = func() Worker { return new(Repeater) }
 	Registry["Printer"] = func() Worker { return new(Printer) }
 	Registry["Timer"] = func() Worker { return new(Timer) }
 	Registry["Clock"] = func() Worker { return new(Clock) }
@@ -24,13 +26,34 @@ func (w *Sink) Run() {
 	}
 }
 
-// A pass-through simply copies each message from its In to Out ports.
-type PassThrough Pipe
+// Pipes are workers with an "In" and an "Out" port.
+type Pipe struct {
+	Worker
+	In  Input
+	Out Output
+}
 
 // Start passing through messages.
-func (w *PassThrough) Run() {
+func (w *Pipe) Run() {
 	for m := range w.In {
 		w.Out <- m
+	}
+}
+
+// Repeaters are pipes which repeat each message a number of times
+type Repeater struct {
+	Pipe
+	Num Input
+}
+
+// Start repeating incoming messages.
+func (w *Repeater) Run() {
+	num := <-w.Num
+	n := num.Val.(int)
+	for m := range w.In {
+		for i := 0; i < n; i++ {
+			w.Out <- m
+		}
 	}
 }
 

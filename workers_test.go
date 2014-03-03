@@ -14,6 +14,20 @@ func ExampleGraph() {
 	// string: hello
 }
 
+func ExampleRepeater() {
+	g := NewGroup()
+	g.Add("Repeater", "rep1")
+	g.Add("Printer", "printer")
+	g.Connect("rep1.Out", "printer.In", 0)
+	g.Request(3, "rep1.Num")
+	g.Request("abc", "rep1.In")
+	g.Run()
+	// Output:
+	// string: abc
+	// string: abc
+	// string: abc
+}
+
 func TestTimer(t *testing.T) {
 	g := NewGroup()
 	g.Add("Timer", "timer1")
@@ -24,7 +38,6 @@ func TestTimer(t *testing.T) {
 }
 
 func TestDualTimer(t *testing.T) {
-    t.Skip("shared channels not working yet.")
 	g := NewGroup()
 	g.Add("Timer", "timer1")
 	g.Add("Timer", "timer2")
@@ -37,15 +50,15 @@ func TestDualTimer(t *testing.T) {
 }
 
 func TestClock(t *testing.T) {
-    if testing.Short() {
-        t.Skip("skipping test in short mode.")
-    }
+	if testing.Short() {
+		t.Skip("skipping test in short mode.")
+	}
 	// The following test code never ends, uncomment to try it out:
 	//
-    // g := NewGroup()
-    // g.Add("Clock", "clock1")
-    // g.Add("Printer", "printer")
-    // g.Connect("clock1.Out", "printer.In", 0)
-    // g.Request(time.Second, "clock1.Rate")
-    // g.Run()
+	// g := NewGroup()
+	// g.Add("Clock", "clock1")
+	// g.Add("Printer", "printer")
+	// g.Connect("clock1.Out", "printer.In", 0)
+	// g.Request(time.Second, "clock1.Rate")
+	// g.Run()
 }
