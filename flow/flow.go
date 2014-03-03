@@ -39,30 +39,26 @@ type Output chan<- *Memo
 type Worker interface {
 	Run()
 
-	initWork(Worker, string, *Group)
-	asWork() *Work
+	initWork(Worker, string, *Group) *Work
 }
 
 // Work keeps some information about each worker.
 type Work struct {
 	worker  Worker
-	name	string
+	name    string
 	parent  *Group
 	inbox   map[string]*Memo
 	inputs  map[string]*connection
 	outputs map[string]*connection
 }
 
-func (w *Work) initWork(wi Worker, nm string, gr *Group) {
+func (w *Work) initWork(wi Worker, nm string, gr *Group) *Work {
 	w.worker = wi
 	w.name = nm
 	w.parent = gr
 	w.inbox = make(map[string]*Memo)
 	w.inputs = make(map[string]*connection)
 	w.outputs = make(map[string]*connection)
-}
-
-func (w *Work) asWork() *Work {
 	return w
 }
 
@@ -83,12 +79,12 @@ type connection struct {
 
 // A group is a collection of inter-connected workers.
 type Group struct {
-	workers map[string]Worker
+	workers map[string]*Work
 }
 
 // Initialise a new group.
 func NewGroup() *Group {
-	return &Group{make(map[string]Worker)}
+	return &Group{make(map[string]*Work)}
 }
 
 // Add a worker to the group, with a unique name.
@@ -98,11 +94,10 @@ func (g *Group) Add(worker, name string) {
 		fmt.Println("not found: ", worker)
 	}
 	w := fun()
-	w.initWork(w, name, g)
-	g.workers[name] = w
+	g.workers[name] = w.initWork(w, name, g)
 }
 
-func (g *Group) workerOf(s string) Worker {
+func (g *Group) workerOf(s string) *Work {
 	n := strings.IndexRune(s, '.')
 	return g.workers[s[:n]]
 }
@@ -114,12 +109,12 @@ func portPart(s string) string {
 
 // Connect an output port with an input port.
 func (g *Group) Connect(from, to string, capacity int) {
-	fw := g.workerOf(from).asWork()
+	fw := g.workerOf(from)
 	fp := fw.port(portPart(from))
 	if !fp.IsNil() {
 		fmt.Println("from port already set: ", from)
 	}
-	tw := g.workerOf(to).asWork()
+	tw := g.workerOf(to)
 	c := tw.inputs[portPart(to)]
 	if c == nil {
 		c = &connection{channel: make(chan *Memo, capacity)}
@@ -135,12 +130,12 @@ func (g *Group) Connect(from, to string, capacity int) {
 
 // Requests are memo's which need to be sent to a worker on startup.
 func (g *Group) Request(v interface{}, dest string) {
-	w := g.workerOf(dest).asWork()
+	w := g.workerOf(dest)
 	w.inbox[portPart(dest)] = NewMemo(v)
 }
 
-func forAllChannels(w Worker, f func(string, reflect.Value)) {
-	wv := reflect.ValueOf(w)
+func forAllChannels(w *Work, f func(string, reflect.Value)) {
+	wv := reflect.ValueOf(w.worker)
 	we := wv.Elem()
 	wt := we.Type()
 	for i := 0; i < we.NumField(); i++ {
@@ -170,13 +165,12 @@ func (g *Group) Run() {
 	wait.Add(len(g.workers))
 
 	for n, w := range g.workers {
-		go func(n string, w Worker) {
+		go func(n string, w *Work) {
 			// fmt.Println(" go start", n)
-			aw := w.asWork()
 
 			// send out the initial memo's
-			for dest, memo := range aw.inbox {
-				dp := aw.port(dest)
+			for dest, memo := range w.inbox {
+				dp := w.port(dest)
 				c := make(chan *Memo, 1)
 				dp.Set(reflect.ValueOf(c))
 				c <- memo
@@ -195,11 +189,11 @@ func (g *Group) Run() {
 			})
 
 			// fmt.Println("run start", n)
-			w.Run()
+			w.worker.Run()
 			// fmt.Println("run end", n)
 
 			// close all output channels once last reference is gone
-			for _, v := range aw.outputs {
+			for _, v := range w.outputs {
 				v.senders--
 				if v.senders == 0 {
 					close(v.channel)
