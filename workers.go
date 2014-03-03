@@ -6,13 +6,13 @@ import (
 )
 
 func init() {
-	Registry["Sink"] = func() Worker { return new(Sink) }
-	Registry["Pipe"] = func() Worker { return new(Pipe) }
-	Registry["Repeater"] = func() Worker { return new(Repeater) }
-	Registry["Counter"] = func() Worker { return new(Counter) }
-	Registry["Printer"] = func() Worker { return new(Printer) }
-	Registry["Timer"] = func() Worker { return new(Timer) }
-	Registry["Clock"] = func() Worker { return new(Clock) }
+	Registry["Sink"] = func() Worker { return &Sink{} }
+	Registry["Pipe"] = func() Worker { return &Pipe{} }
+	Registry["Repeater"] = func() Worker { return &Repeater{} }
+	Registry["Counter"] = func() Worker { return &Counter{} }
+	Registry["Printer"] = func() Worker { return &Printer{} }
+	Registry["Timer"] = func() Worker { return &Timer{} }
+	Registry["Clock"] = func() Worker { return &Clock{} }
 }
 
 // A sink eats up all the memos it receives.
@@ -34,20 +34,22 @@ type Pipe struct {
 	Out Output
 }
 
-// Start passing through messages.
+// Start passing through memos.
 func (w *Pipe) Run() {
 	for m := range w.In {
 		w.Out <- m
 	}
 }
 
-// Repeaters are pipes which repeat each message a number of times.
+// Repeaters are pipes which repeat each memo a number of times.
 type Repeater struct {
-	Pipe
+	Worker
+	In    Input
+	Out   Output
 	Num Input
 }
 
-// Start repeating incoming messages.
+// Start repeating incoming memos.
 func (w *Repeater) Run() {
 	num := <-w.Num
 	n := num.Val.(int)
@@ -58,7 +60,7 @@ func (w *Repeater) Run() {
 	}
 }
 
-// A counter reports the number of messages it has received.
+// A counter reports the number of memos it has received.
 type Counter struct {
 	Worker
 	In    Input
@@ -66,7 +68,7 @@ type Counter struct {
 	count int
 }
 
-// Start counting incoming messages.
+// Start counting incoming memos.
 func (w *Counter) Run() {
 	for _ = range w.In {
 		w.count++
@@ -74,41 +76,41 @@ func (w *Counter) Run() {
 	w.Out <- NewMemo(w.count)
 }
 
-// Printers report the messages sent to them as output.
+// Printers report the memos sent to them as output.
 type Printer struct {
 	Worker
 	In Input
 }
 
-// Start printing incoming messages.
+// Start printing incoming memos.
 func (w *Printer) Run() {
 	for m := range w.In {
 		fmt.Printf("%s: %v\n", m.Type(), m.Val)
 	}
 }
 
-// A timer send out one message after the time set by the Rate port.
+// A timer sends out one memo after the time set by the Rate port.
 type Timer struct {
 	Worker
 	Rate Input
 	Out  Output
 }
 
-// Start the timer, sends one message when it expires.
+// Start the timer, sends one memo when it expires.
 func (w *Timer) Run() {
 	rate := <-w.Rate
 	t := <-time.After(rate.Val.(time.Duration))
 	w.Out <- NewMemo(t)
 }
 
-// A clock sends out messages at a fixed rate, as set by the Rate port.
+// A clock sends out memos at a fixed rate, as set by the Rate port.
 type Clock struct {
 	Worker
 	Rate Input
 	Out  Output
 }
 
-// Start sending out periodic messages, once the rate is known.
+// Start sending out periodic memos, once the rate is known.
 func (w *Clock) Run() {
 	rate := <-w.Rate
 	t := time.NewTicker(rate.Val.(time.Duration))

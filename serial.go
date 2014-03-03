@@ -8,8 +8,8 @@ import (
 )
 
 func init() {
-	Registry["SerialIn"] = func() Worker { return new(SerialIn) }
-	Registry["SketchType"] = func() Worker { return new(SketchType) }
+	Registry["SerialIn"] = func() Worker { return &SerialIn{} }
+	Registry["SketchType"] = func() Worker { return &SketchType{} }
 }
 
 // Line-oriented serial input port, opened once the Port input is set.
