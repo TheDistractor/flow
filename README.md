@@ -1,5 +1,4 @@
 An experiment with data flow programming in Go.
-
 Massively inspired by Paul Morrison's [Flow-based Programming][FBP] and
 Vladimir Sibirov's [goflow][GF] implementation in Go.
 
