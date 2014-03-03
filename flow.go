@@ -173,7 +173,7 @@ func (t *Team) Run() {
 	<-done
 }
 
-// Generic error checking.
+// Generic error checking, panics if e is not nil.
 func Check(e error) {
 	if e != nil {
 		panic(e)

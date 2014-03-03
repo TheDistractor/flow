@@ -23,15 +23,15 @@ func TestTimer(t *testing.T) {
 	team.Run()
 }
 
-// func TestClock(t *testing.T) {
-//     if testing.Short() {
-//         t.Skip("skipping test in short mode.")
-//     }
-//     team := NewTeam()
-//     team.Add("Clock", "clock1")
-//     team.Add("Printer", "printer")
-//     team.Connect("clock1.Out", "printer.In", 0)
-//     team.Request(time.Second, "clock1.Rate")
-//     team.Run()
-//     // never ends...
-// }
+func TestClock(t *testing.T) {
+    if testing.Short() {
+        t.Skip("skipping test in short mode.")
+    }
+    // team := NewTeam()
+    // team.Add("Clock", "clock1")
+    // team.Add("Printer", "printer")
+    // team.Connect("clock1.Out", "printer.In", 0)
+    // team.Request(time.Second, "clock1.Rate")
+    // team.Run()
+    // // never ends...
+}

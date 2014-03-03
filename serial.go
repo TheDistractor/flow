@@ -12,12 +12,14 @@ func init() {
 	Registry["SketchType"] = func() Worker { return new(SketchType) }
 }
 
+// Line-oriented serial input port, opened once the Port input is set.
 type SerialIn struct {
 	Worker
 	Port Input
 	Out  Output
 }
 
+// Start processing incoming text lines from the serial interface.
 func (w *SerialIn) Run() {
 	port := <-w.Port
 
@@ -31,8 +33,11 @@ func (w *SerialIn) Run() {
 	}
 }
 
+// SketchType looks for lines of the form "[name...]" in the input stream.
+// These are turned into "Sketch" tokens, the rest is passed through as is.
 type SketchType Pipe
 
+// Start transforming the "[name...]" markers in the input stream.
 func (w *SketchType) Run() {
 	for m := range w.In {
 		if s, ok := m.Val.(string); ok {
