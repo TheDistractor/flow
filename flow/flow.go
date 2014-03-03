@@ -16,7 +16,7 @@ var Registry = make(map[string]func() Worker)
 // Memo's are the generic type sent to, between, and from workers.
 type Memo interface{}
 
-// Get the type of the value of a memo, using reflection.
+// Get the type of a memo, using reflection.
 func Type(m Memo) string {
 	return reflect.TypeOf(m).String()
 }
@@ -34,7 +34,7 @@ type Worker interface {
 	initWork(Worker, string, *Group) *Work
 }
 
-// Work keeps some information about each worker.
+// Work keeps track of some information about a worker.
 type Work struct {
 	worker  Worker
 	name    string
@@ -54,14 +54,24 @@ func (w *Work) initWork(wi Worker, nm string, gr *Group) *Work {
 	return w
 }
 
-func (w *Work) port(name string) reflect.Value {
+func (w *Work) port(p string) reflect.Value {
 	wp := reflect.ValueOf(w.worker)
 	wv := wp.Elem()
-	fv := wv.FieldByName(portPart(name))
+	fv := wv.FieldByName(p)
 	if !fv.IsValid() {
-		fmt.Println("port not found: " + name)
+		fmt.Println("port not found: " + p)
 	}
 	return fv
+}
+
+func (w *Work) processInbox() {
+	for dest, memo := range w.inbox {
+		c := make(chan Memo, 1)
+		dp := w.port(dest)
+		dp.Set(reflect.ValueOf(c))
+		c <- memo
+		close(c)
+	}
 }
 
 func (w *Work) forAllChannels(f func(string, reflect.Value)) {
@@ -74,16 +84,6 @@ func (w *Work) forAllChannels(f func(string, reflect.Value)) {
 		}
 	}
 	return
-}
-
-func (w *Work) processInbox() {
-	for dest, memo := range w.inbox {
-		c := make(chan Memo, 1)
-		dp := w.port(dest)
-		dp.Set(reflect.ValueOf(c))
-		c <- memo
-		close(c)
-	}
 }
 
 func (w *Work) connectChannels(nullSource, nullSink chan Memo) {
@@ -157,7 +157,7 @@ func (g *Group) Connect(from, to string, capacity int) {
 	if c == nil {
 		c = &connection{channel: make(chan Memo, capacity)}
 		tw.inputs[portPart(to)] = c
-		tp := tw.port(to)
+		tp := tw.port(portPart(to))
 		tp.Set(reflect.ValueOf(c.channel))
 	}
 	c.senders++
