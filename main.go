@@ -3,16 +3,16 @@ package main
 import (
 	"encoding/json"
 	"io/ioutil"
-	
+
 	"github.com/jcw/flow/flow"
 	_ "github.com/jcw/flow/serial"
 	_ "github.com/jcw/flow/workers"
 )
 
 type config struct {
-	Workers []struct { Type, Name string }
-	Connections []struct { From, To string }
-	Requests []struct { Data, To string }
+	Workers     []struct{ Type, Name string }
+	Connections []struct{ From, To string }
+	Requests    []struct{ Data, To string }
 }
 
 // Load a group from a JSON description in a file.
