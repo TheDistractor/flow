@@ -27,10 +27,10 @@ func (m *Memo) Type() string {
 }
 
 // Requests are memo's which need to be sent to a worker on startup.
-func (t *Team) Request(v interface{}, dest string) {
+func (g *Group) Request(v interface{}, dest string) {
 	m := NewMemo(v)
 	m.Attr["dest"] = dest
-	t.inbox = append(t.inbox, m)
+	g.inbox = append(g.inbox, m)
 }
 
 // Input ports can receive memo's.
@@ -58,33 +58,33 @@ type Pipe struct {
 	Out Output
 }
 
-// A team is a collection of inter-connected workers.
-type Team struct {
+// A group is a collection of inter-connected workers.
+type Group struct {
 	inbox   []*Memo
 	workers map[string]Worker
 	inputs  map[string]*Wire
 }
 
-// Initialise a new team.
-func NewTeam() *Team {
-	return &Team{
+// Initialise a new group.
+func NewGroup() *Group {
+	return &Group{
 		workers: make(map[string]Worker),
 		inputs:  make(map[string]*Wire),
 	}
 }
 
-// Add a worker to the team, with a unique name.
-func (t *Team) Add(component, name string) {
+// Add a worker to the group, with a unique name.
+func (g *Group) Add(component, name string) {
 	fun := Registry[component]
 	if fun == nil {
 		fmt.Println("not found: ", component)
 	}
-	t.workers[name] = fun()
+	g.workers[name] = fun()
 }
 
-func (t *Team) findPort(name string) reflect.Value {
+func (g *Group) findPort(name string) reflect.Value {
 	segments := strings.Split(name, ".")
-	worker := t.workers[segments[0]]
+	worker := g.workers[segments[0]]
 	wp := reflect.ValueOf(worker)
 	wv := wp.Elem()
 	fv := wv.FieldByName(segments[1])
@@ -95,16 +95,16 @@ func (t *Team) findPort(name string) reflect.Value {
 }
 
 // Connect an output port with an input port.
-func (t *Team) Connect(from, to string, capacity int) {
-	fp := t.findPort(from)
+func (g *Group) Connect(from, to string, capacity int) {
+	fp := g.findPort(from)
 	if !fp.IsNil() {
 		fmt.Println("from port already set: ", from)
 	}
-	w := t.inputs[to]
+	w := g.inputs[to]
 	if w == nil {
 		w = &Wire{conn: make(chan *Memo, capacity)}
-		t.inputs[to] = w
-		tp := t.findPort(to)
+		g.inputs[to] = w
+		tp := g.findPort(to)
 		tp.Set(reflect.ValueOf(w.conn))
 	}
 	w.refs++
@@ -112,8 +112,8 @@ func (t *Team) Connect(from, to string, capacity int) {
 	fp.Set(cv)
 }
 
-func (t *Team) pushMemo(m *Memo, dest string) {
-	dp := t.findPort(dest)
+func (g *Group) pushMemo(m *Memo, dest string) {
+	dp := g.findPort(dest)
 	c := make(chan *Memo, 1)
 	dp.Set(reflect.ValueOf(c))
 	c <- m
@@ -141,8 +141,8 @@ func outputChannels(w Worker) (results []reflect.Value) {
 	return
 }
 
-// Start up the team, and return when it is finished.
-func (t *Team) Run() {
+// Start up the group, and return when it is finished.
+func (g *Group) Run() {
 	done := make(chan struct{})
 	sink := make(chan *Memo)
 
@@ -155,9 +155,9 @@ func (t *Team) Run() {
 	}()
 
 	var wait sync.WaitGroup
-	wait.Add(len(t.workers))
+	wait.Add(len(g.workers))
 
-	for _, w := range t.workers {
+	for _, w := range g.workers {
 		go func(w Worker) {
 			channels := outputChannels(w)
 
@@ -182,8 +182,8 @@ func (t *Team) Run() {
 	}
 
 	// send out the initial memo's
-	for _, v := range t.inbox {
-		t.pushMemo(v, v.Attr["dest"].(string)) // TODO: not general enough
+	for _, v := range g.inbox {
+		g.pushMemo(v, v.Attr["dest"].(string)) // TODO: not general enough
 	}
 
 	// wait until all workers have finished, as well as the sink reporter

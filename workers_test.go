@@ -6,34 +6,34 @@ import (
 )
 
 func ExampleGraph() {
-	team := NewTeam()
-	team.Add("Printer", "printer")
-	team.Request("hello", "printer.In")
-	team.Run()
+	g := NewGroup()
+	g.Add("Printer", "printer")
+	g.Request("hello", "printer.In")
+	g.Run()
 	// Output:
 	// string: hello
 }
 
 func TestTimer(t *testing.T) {
-	team := NewTeam()
-	team.Add("Timer", "timer1")
-	team.Add("Printer", "printer")
-	team.Connect("timer1.Out", "printer.In", 0)
-	team.Request(100*time.Millisecond, "timer1.Rate")
-	team.Run()
+	g := NewGroup()
+	g.Add("Timer", "timer1")
+	g.Add("Printer", "printer")
+	g.Connect("timer1.Out", "printer.In", 0)
+	g.Request(100*time.Millisecond, "timer1.Rate")
+	g.Run()
 }
 
 func TestDualTimer(t *testing.T) {
     t.Skip("shared channels not working yet.")
-	team := NewTeam()
-	team.Add("Timer", "timer1")
-	team.Add("Timer", "timer2")
-	team.Add("Printer", "printer")
-	team.Connect("timer1.Out", "printer.In", 0)
-	team.Connect("timer2.Out", "printer.In", 0)
-	team.Request(100*time.Millisecond, "timer1.Rate")
-	team.Request(200*time.Millisecond, "timer2.Rate")
-	team.Run()
+	g := NewGroup()
+	g.Add("Timer", "timer1")
+	g.Add("Timer", "timer2")
+	g.Add("Printer", "printer")
+	g.Connect("timer1.Out", "printer.In", 0)
+	g.Connect("timer2.Out", "printer.In", 0)
+	g.Request(100*time.Millisecond, "timer1.Rate")
+	g.Request(200*time.Millisecond, "timer2.Rate")
+	g.Run()
 }
 
 func TestClock(t *testing.T) {
@@ -42,10 +42,10 @@ func TestClock(t *testing.T) {
     }
 	// The following test code never ends, uncomment to try it out:
 	//
-    // team := NewTeam()
-    // team.Add("Clock", "clock1")
-    // team.Add("Printer", "printer")
-    // team.Connect("clock1.Out", "printer.In", 0)
-    // team.Request(time.Second, "clock1.Rate")
-    // team.Run()
+    // g := NewGroup()
+    // g.Add("Clock", "clock1")
+    // g.Add("Printer", "printer")
+    // g.Connect("clock1.Out", "printer.In", 0)
+    // g.Request(time.Second, "clock1.Rate")
+    // g.Run()
 }
