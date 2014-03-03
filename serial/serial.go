@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/chimera/rs232"
-	"github.com/jcw/flow"
+	"github.com/jcw/flow/flow"
 )
 
 func init() {

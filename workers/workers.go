@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/jcw/flow"
+	"github.com/jcw/flow/flow"
 )
 
 func init() {

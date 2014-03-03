@@ -7,6 +7,9 @@ import (
 	"sync"
 )
 
+// Version of this package.
+var Version = "0.0.1"
+
 // The registry is the factory for all known types of workers.
 var Registry = make(map[string]func() Worker)
 

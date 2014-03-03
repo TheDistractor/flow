@@ -3,7 +3,7 @@ package serial
 import (
 	"testing"
 
-	"github.com/jcw/flow"
+	"github.com/jcw/flow/flow"
 	_ "github.com/jcw/flow/workers"
 )
 
