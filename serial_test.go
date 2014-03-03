@@ -8,6 +8,8 @@ func TestSerial(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping test in short mode.")
 	}
+	// The following test code never ends, uncomment to try it out:
+	//
 	// team := NewTeam()
 	// team.Add("SerialIn", "jeelink1")
 	// team.Add("SketchType", "jeelink2")

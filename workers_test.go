@@ -27,11 +27,12 @@ func TestClock(t *testing.T) {
     if testing.Short() {
         t.Skip("skipping test in short mode.")
     }
+	// The following test code never ends, uncomment to try it out:
+	//
     // team := NewTeam()
     // team.Add("Clock", "clock1")
     // team.Add("Printer", "printer")
     // team.Connect("clock1.Out", "printer.In", 0)
     // team.Request(time.Second, "clock1.Rate")
     // team.Run()
-    // // never ends...
 }
