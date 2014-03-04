@@ -36,7 +36,7 @@ type Worker interface {
 	initWork(Worker, string, *Group) *Work
 }
 
-// Work keeps track of some information about a worker.
+// Work keeps track of internal details about a worker.
 type Work struct {
 	worker  Worker
 	name    string
@@ -47,6 +47,9 @@ type Work struct {
 }
 
 func (w *Work) initWork(wi Worker, nm string, gr *Group) *Work {
+	if w.parent != nil {
+		panic("worker is already in use: " + nm)
+	}
 	w.worker = wi
 	w.name = nm
 	w.parent = gr
@@ -61,6 +64,13 @@ func (w *Work) port(p string) reflect.Value {
 	wv := wp.Elem()
 	fv := wv.FieldByName(p)
 	if !fv.IsValid() {
+		// maybe it's a group with mapped ports
+		if g, ok := w.worker.(*Group); ok {
+			if p, ok := g.portMap[p]; ok {
+				fw := g.workerOf(p)
+				return fw.port(portPart(p)) // recursive
+			}
+		}
 		fmt.Println("port not found: " + p)
 	}
 	return fv
@@ -116,12 +126,17 @@ type connection struct {
 
 // A group is a collection of inter-connected workers.
 type Group struct {
+	Work
 	workers map[string]*Work
+	portMap map[string]string
 }
 
 // Initialise a new group.
 func NewGroup() *Group {
-	return &Group{make(map[string]*Work)}
+	return &Group{
+		workers: make(map[string]*Work),
+		portMap: make(map[string]string),
+	}
 }
 
 // Add a worker to the group, with a unique name.
@@ -131,7 +146,10 @@ func (g *Group) Add(worker, name string) {
 		fmt.Println("not found: ", worker)
 		return
 	}
-	w := fun()
+	g.AddWorker(fun(), name)
+}
+
+func (g *Group) AddWorker(w Worker, name string) {
 	g.workers[name] = w.initWork(w, name, g)
 }
 
@@ -206,6 +224,14 @@ func (g *Group) Run() {
 	wait.Wait()
 	close(sink)
 	<-done
+}
+
+// Map an external port to an internal one.
+func (g *Group) Map(ext, name string) {
+	if strings.Contains(ext, ".") {
+		panic("external port should not include worker name: " + ext)
+	}
+	g.portMap[ext] = name
 }
 
 type config struct {

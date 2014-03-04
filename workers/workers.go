@@ -2,6 +2,7 @@ package workers
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/jcw/flow/flow"
@@ -11,6 +12,7 @@ func init() {
 	flow.Registry["Sink"] = func() flow.Worker { return &Sink{} }
 	flow.Registry["Pipe"] = func() flow.Worker { return &Pipe{} }
 	flow.Registry["Repeater"] = func() flow.Worker { return &Repeater{} }
+	flow.Registry["ToUpper"] = func() flow.Worker { return &ToUpper{} }
 	flow.Registry["Counter"] = func() flow.Worker { return &Counter{} }
 	flow.Registry["Printer"] = func() flow.Worker { return &Printer{} }
 	flow.Registry["Timer"] = func() flow.Worker { return &Timer{} }
@@ -60,6 +62,23 @@ func (w *Repeater) Run() {
 				w.Out <- m
 			}
 		}
+	}
+}
+
+// Convert input strings to upper case.
+type ToUpper struct {
+	flow.Work
+	In  flow.Input
+	Out flow.Output
+}
+
+// Start converting incoming memos to upper case.
+func (w *ToUpper) Run() {
+	for m := range w.In {
+		if s, ok := m.(string); ok {
+			m = strings.ToUpper(s)
+		}
+		w.Out <- m
 	}
 }
 
