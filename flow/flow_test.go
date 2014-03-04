@@ -21,7 +21,7 @@ func ExampleTransformer() {
 	g.AddWorker("u", upper)
 	g.Add("p", "Printer")
 	g.Connect("u.Out", "p.In", 0)
-	g.Request("abc", "u.In")
+	g.Set("u.In", "abc")
 	g.Run()
 	// Output:
 	// string: ABC
@@ -31,7 +31,7 @@ func ExampleGroup_Map() {
 	// new workgroup to repeat each incoming memo three times
 	wg := flow.NewGroup()
 	wg.Add("r", "Repeater")
-	wg.Request(3, "r.Num")
+	wg.Set("r.Num", 3)
 	wg.Map("MyIn", "r.In")
 	wg.Map("MyOut", "r.Out")
 
@@ -39,7 +39,7 @@ func ExampleGroup_Map() {
 	g.AddWorker("wg", wg)
 	g.Add("p", "Printer")
 	g.Connect("wg.MyOut", "p.In", 0)
-	g.Request("abc", "wg.MyIn")
+	g.Set("wg.MyIn", "abc")
 
 	g.Run()
 	// Output:

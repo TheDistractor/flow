@@ -10,7 +10,7 @@ import (
 func ExamplePrinter() {
 	g := flow.NewGroup()
 	g.Add("p", "Printer")
-	g.Request("hello", "p.In")
+	g.Set("p.In", "hello")
 	g.Run()
 	// Output:
 	// string: hello
@@ -21,8 +21,8 @@ func ExampleRepeater() {
 	g.Add("r", "Repeater")
 	g.Add("p", "Printer")
 	g.Connect("r.Out", "p.In", 0)
-	g.Request(3, "r.Num")
-	g.Request("abc", "r.In")
+	g.Set("r.Num", 3)
+	g.Set("r.In", "abc")
 	g.Run()
 	// Output:
 	// string: abc
@@ -35,7 +35,7 @@ func ExampleCounter() {
 	g.Add("c", "Counter")
 	g.Add("p", "Printer")
 	g.Connect("c.Out", "p.In", 0)
-	g.Request(nil, "c.In")
+	g.Set("c.In", nil)
 	g.Run()
 	// Output:
 	// int: 1
@@ -50,8 +50,8 @@ func ExampleTimer() {
 	g.Connect("t1.Out", "c.In", 0)
 	g.Connect("t2.Out", "c.In", 0)
 	g.Connect("c.Out", "p.In", 0)
-	g.Request(100*time.Millisecond, "t1.Rate")
-	g.Request(200*time.Millisecond, "t2.Rate")
+	g.Set("t1.Rate", 100*time.Millisecond)
+	g.Set("t2.Rate", 200*time.Millisecond)
 	g.Run()
 	// Output:
 	// int: 2
@@ -76,7 +76,7 @@ func TestTimer(t *testing.T) {
 	g.Add("t", "Timer")
 	g.Add("p", "Printer")
 	g.Connect("t.Out", "p.In", 0)
-	g.Request(100*time.Millisecond, "t.Rate")
+	g.Set("t.Rate", 100*time.Millisecond)
 	g.Run()
 }
 
@@ -87,6 +87,6 @@ func TestClock(t *testing.T) {
 	g.Add("c", "Clock")
 	g.Add("p", "Printer")
 	g.Connect("c.Out", "p.In", 0)
-	g.Request(time.Second, "c.Rate")
+	g.Set("c.Rate", time.Second)
 	g.Run()
 }

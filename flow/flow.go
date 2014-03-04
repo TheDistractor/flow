@@ -205,10 +205,10 @@ func (g *Group) Connect(from, to string, capacity int) {
 	fw.outputs[portPart(from)] = c
 }
 
-// Requests are memo's which need to be sent to a worker on startup.
-func (g *Group) Request(v interface{}, dest string) {
-	w := g.workerOf(dest)
-	w.inbox[portPart(dest)] = v
+// Set up a memo which needs to be sent to a worker on startup.
+func (g *Group) Set(port string, v interface{}) {
+	w := g.workerOf(port)
+	w.inbox[portPart(port)] = v
 }
 
 // Start up the group, and return when it is finished.
@@ -275,7 +275,7 @@ func LoadString(s string) *Group {
 		g.Connect(c.From, c.To, 0)
 	}
 	for _, r := range conf.Requests {
-		g.Request(r.Data, r.To)
+		g.Set(r.To, r.Data)
 	}
 
 	return g

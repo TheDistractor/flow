@@ -16,6 +16,6 @@ func TestSerial(t *testing.T) {
 	g.Add("Printer", "p")
 	g.Connect("s.Out", "t.In", 0)
 	g.Connect("t.Out", "p.In", 0)
-	g.Request("/dev/tty.usbserial-A900ad5m", "s.Port")
+	g.Set("s.Port", "/dev/tty.usbserial-A900ad5m")
 	g.Run()
 }
