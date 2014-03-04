@@ -1,4 +1,4 @@
-// Interface to the LevelDB database
+// Interface to the LevelDB database as worker.
 package database
 
 import (
@@ -21,28 +21,48 @@ type LevelDB struct {
 	Put  flow.Input
 	Keys flow.Input
 	Out  flow.Output
-	db   *leveldb.DB
+
+	db *leveldb.DB
 }
 
 func (w *LevelDB) Run() {
 	if name, ok := <-w.Name; ok {
-		db, err := leveldb.OpenFile(name.(string), nil)
+		var err error
+		w.db, err = leveldb.OpenFile(name.(string), nil)
 		if err != nil {
 			panic(err)
 		}
-		w.db = db
-		for {
+		defer w.db.Close()
+
+		active := 3
+		for active > 0 {
 			select {
-			case m := <-w.Get:
-				w.Out <- w.get(m.(string))
-			case m := <-w.Put:
-				args := m.([]interface{})
-				if len(args) < 2 {
-					args = append(args, nil)
+			case m, ok := <-w.Get:
+				if !ok {
+					w.Get = make(flow.Input)
+					active--
+				} else {
+					w.Out <- w.get(m.(string))
 				}
-				w.put(args[0].(string), args[1])
-			case m := <-w.Keys:
-				w.Out <- w.keys(m.(string))
+			case m, ok := <-w.Put:
+				if !ok {
+					w.Put = make(flow.Input)
+					active--
+				} else {
+					args := m.([]string)
+					if len(args) < 2 {
+						w.put(args[0], nil)
+					} else {
+						w.put(args[0], args[1])
+					}
+				}
+			case m, ok := <-w.Keys:
+				if !ok {
+					w.Keys = make(flow.Input)
+					active--
+				} else {
+					w.Out <- w.keys(m.(string))
+				}
 			}
 		}
 	}

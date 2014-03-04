@@ -13,7 +13,7 @@ func TestMqttSub(t *testing.T) {
 	g := flow.NewGroup()
 	g.Add("sub", "MqttSub")
 	g.Add("p", "Printer")
-	g.Connect("sub.Out", "p.In", 10)
+	g.Connect("sub.Out", "p.In", 0)
 	g.Set("sub.Port", ":1883")
 	g.Set("sub.Topic", "#")
 	g.Run()

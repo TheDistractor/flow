@@ -2,10 +2,10 @@ package main
 
 import "github.com/jcw/flow/flow"
 
-func ExampleWorker() {
+func Example() {
 	g := flow.NewGroup()
 	g.Add("clock", "Clock")
-	g.Add("counter", "Counter") // returns 0
+	g.Add("counter", "Counter") // will return 0 when not hooked up
 	g.Add("pipe", "Pipe")
 	g.Add("printer", "Printer")
 	g.Add("repeater", "Repeater")

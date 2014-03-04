@@ -164,6 +164,7 @@ type transformer struct {
 	Work
 	In  Input
 	Out Output
+
 	fun func(Memo) Memo
 }
 

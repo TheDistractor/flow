@@ -67,8 +67,9 @@ func (w *Repeater) Run() {
 // A counter reports the number of memos it has received.
 type Counter struct {
 	flow.Work
-	In    flow.Input
-	Out   flow.Output
+	In  flow.Input
+	Out flow.Output
+
 	count int
 }
 

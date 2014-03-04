@@ -1,6 +1,9 @@
+// This application can exercise the "flow" package via a JSON config file.
 package main
 
 import (
+	"os"
+
 	"github.com/jcw/flow/flow"
 
 	_ "github.com/jcw/flow/database"
@@ -11,5 +14,11 @@ import (
 )
 
 func main() {
-	flow.LoadFile("config.json").Run()
+	configFile := "config.json"
+	if len(os.Args) > 1 {
+		configFile = os.Args[1]
+	}
+
+	g := flow.LoadFile(configFile)
+	g.Run()
 }
