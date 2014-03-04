@@ -10,6 +10,7 @@ import (
 
 func init() {
 	flow.Registry["MqttSub"] = func() flow.Worker { return &MqttSub{} }
+	flow.Registry["MqttPub"] = func() flow.Worker { return &MqttPub{} }
 }
 
 type MqttSub struct {
@@ -41,6 +42,36 @@ func (w *MqttSub) Run() {
 				payload := []byte(m.Payload.(proto.BytesPayload))
 				w.Out <- []string{m.TopicName, string(payload)}
 			}
+		}
+	}
+}
+
+type MqttPub struct {
+	flow.Work
+	Port flow.Input
+	In   flow.Input
+}
+
+// Start publishing to MQTT.
+func (w *MqttPub) Run() {
+	if port, ok := <-w.Port; ok {
+		sock, err := net.Dial("tcp", port.(string))
+		if err != nil {
+			panic(err)
+		}
+		client := mqtt.NewClientConn(sock)
+		err = client.Connect("", "")
+		if err != nil {
+			panic(err)
+		}
+
+		if m, ok := <-w.In; ok {
+			msg := m.([]string)
+			client.Publish(&proto.Publish{
+				Header:    proto.Header{Retain: msg[0][0] == '/'},
+				TopicName: msg[0],
+				Payload:   proto.BytesPayload(msg[1]),
+			})
 		}
 	}
 }
