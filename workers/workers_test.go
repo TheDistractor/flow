@@ -16,7 +16,7 @@ func ExampleGraph() {
 	// string: hello
 }
 
-func ExampleRepeatCount() {
+func ExampleRepeater() {
 	g := flow.NewGroup()
 	g.Add("Repeater", "rep1")
 	g.Add("Counter", "cnt1")
@@ -30,7 +30,7 @@ func ExampleRepeatCount() {
 	// int: 3
 }
 
-func ExampleNoCount() {
+func ExampleCounter() {
 	g := flow.NewGroup()
 	g.Add("Counter", "cnt1")
 	g.Add("Printer", "printer")
@@ -39,6 +39,20 @@ func ExampleNoCount() {
 	g.Run()
 	// Output:
 	// int: 0
+}
+
+func ExampleWorker() {
+	g := flow.NewGroup()
+	g.Add("Clock", "clock")
+	g.Add("Counter", "counter") // returns 0
+	g.Add("Pipe", "pipe")
+	g.Add("Printer", "printer")
+	g.Add("Repeater", "repeater")
+	g.Add("Sink", "sink")
+	g.Add("Timer", "timer")
+	g.Run()
+	// Output:
+	// Lost output: 0
 }
 
 func TestTimer(t *testing.T) {

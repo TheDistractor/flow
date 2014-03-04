@@ -2,7 +2,7 @@ package main
 
 import "github.com/jcw/flow/flow"
 
-func ExampleLoadAll() {
+func ExampleWorker() {
 	g := flow.NewGroup()
 	g.Add("Clock", "clock")
 	g.Add("Counter", "counter") // returns 0
