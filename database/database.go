@@ -39,14 +39,14 @@ func (w *LevelDB) Run() {
 			select {
 			case m, ok := <-w.Get:
 				if !ok {
-					w.Get = make(flow.Input)
+					w.Get = nil
 					active--
 				} else {
 					w.Out <- w.get(m.(string))
 				}
 			case m, ok := <-w.Put:
 				if !ok {
-					w.Put = make(flow.Input)
+					w.Put = nil
 					active--
 				} else {
 					args := m.([]string)
@@ -58,7 +58,7 @@ func (w *LevelDB) Run() {
 				}
 			case m, ok := <-w.Keys:
 				if !ok {
-					w.Keys = make(flow.Input)
+					w.Keys = nil
 					active--
 				} else {
 					w.Out <- w.keys(m.(string))
