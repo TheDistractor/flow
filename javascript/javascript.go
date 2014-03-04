@@ -1,4 +1,4 @@
-// An embedded JavaScript engine as worker.
+// Embedded JavaScript engine.
 package javascript
 
 import (
@@ -21,13 +21,8 @@ type JavaScript struct {
 func (w *JavaScript) Run() {
 	if cmd, ok := <-w.Cmd; ok {
 		// initial setup
-		engine, result, err := otto.Run(cmd.(string))
-		if err != nil {
-			panic(err)
-		}
-		if !result.IsUndefined() {
-			w.Out <- result
-		}
+		engine := otto.New()
+		
 		// define a callback for send memos to Out
 		engine.Set("emitOut", func(call otto.FunctionCall) otto.Value {
 			out, err := call.Argument(0).Export()
@@ -37,9 +32,18 @@ func (w *JavaScript) Run() {
 			w.Out <- out
 			return otto.UndefinedValue()
 		})
-		// enter the processing loop
-		for in := range w.In {
-			engine.Call("onIn", nil, in)
+		
+		// process the command input
+		if _, err := engine.Run(cmd.(string)); err != nil {
+			panic(err)
+		}
+		
+		// only start the processing loop if the "onIn" handler exists
+		value, err := engine.Get("onIn")
+		if err == nil && value.IsFunction() {
+			for in := range w.In {
+				engine.Call("onIn", nil, in)
+			}
 		}
 	}
 }

@@ -1,4 +1,4 @@
-// Interface to the LevelDB database as worker.
+// Interface to the LevelDB database.
 package database
 
 import (
