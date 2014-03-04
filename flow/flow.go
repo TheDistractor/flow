@@ -156,7 +156,7 @@ func (g *Group) AddWorker(name string, w Worker) {
 
 // A transformer processes each memo through a supplied function.
 func Transformer(f func(Memo) Memo) Worker {
-	return &transformer{ fun: f }
+	return &transformer{fun: f}
 }
 
 type transformer struct {
