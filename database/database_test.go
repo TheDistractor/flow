@@ -2,18 +2,16 @@ package database
 
 import (
 	"os"
+	"path"
 	"testing"
 
 	"github.com/jcw/flow/flow"
 	_ "github.com/jcw/flow/workers"
 )
 
-var dbPath = os.TempDir() + "flow-test-db"
+var dbPath = path.Join(os.TempDir(), "flow-test-db")
 
 func init() {
-	if os.TempDir() == "/" { // happens with Travis CI
-		dbPath = dbPath[1:]
-	}
 	println(dbPath)
 }
 
