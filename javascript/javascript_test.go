@@ -20,11 +20,11 @@ func ExampleJavaScript_2() {
 	g.Add("p", "Printer")
 	g.Connect("js.Out", "p.In", 0)
 	g.Set("js.Cmd", `
-		console.log("Howdy from Otto!");
-		function onIn(v) {
-			console.log("Got:", v);
-			emitOut(3 * v)
-		}
+	  console.log("Howdy from Otto!");
+	  function onIn(v) {
+	    console.log("Got:", v);
+	    emitOut(3 * v);
+	  }
 	`)
 	g.Set("js.In", 123)
 	g.Run()

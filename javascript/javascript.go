@@ -16,7 +16,7 @@ type JavaScript struct {
 	Out flow.Output
 }
 
-// Start running the JavaScript engine
+// Start running the JavaScript engine.
 func (w *JavaScript) Run() {
 	if cmd, ok := <-w.Cmd; ok {
 		// initial setup
