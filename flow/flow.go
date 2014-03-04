@@ -227,11 +227,11 @@ func (g *Group) Run() {
 }
 
 // Map an external port to an internal one.
-func (g *Group) Map(ext, name string) {
-	if strings.Contains(ext, ".") {
-		panic("external port should not include worker name: " + ext)
+func (g *Group) Map(external, internal string) {
+	if strings.Contains(external, ".") {
+		panic("external port should not include worker name: " + external)
 	}
-	g.portMap[ext] = name
+	g.portMap[external] = internal
 }
 
 type config struct {
