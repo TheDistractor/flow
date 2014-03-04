@@ -14,7 +14,7 @@ func ExampleJavaScript() {
 	// Hello from Otto!
 }
 
-func ExampleJavaScript_Events() {
+func ExampleJavaScript_2() {
 	g := flow.NewGroup()
 	g.Add("js", "JavaScript")
 	g.Add("p", "Printer")
