@@ -12,11 +12,11 @@ func init() {
 	flow.Registry["Sink"] = func() flow.Worker { return &Sink{} }
 	flow.Registry["Pipe"] = func() flow.Worker { return &Pipe{} }
 	flow.Registry["Repeater"] = func() flow.Worker { return &Repeater{} }
-	flow.Registry["ToUpper"] = func() flow.Worker { return &ToUpper{} }
 	flow.Registry["Counter"] = func() flow.Worker { return &Counter{} }
 	flow.Registry["Printer"] = func() flow.Worker { return &Printer{} }
 	flow.Registry["Timer"] = func() flow.Worker { return &Timer{} }
 	flow.Registry["Clock"] = func() flow.Worker { return &Clock{} }
+	flow.Registry["ToUpper"] = func() flow.Worker { return &ToUpper{} }
 }
 
 // A sink eats up all the memos it receives.

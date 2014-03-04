@@ -124,13 +124,6 @@ type connection struct {
 	senders int
 }
 
-// A group is a collection of inter-connected workers.
-type Group struct {
-	Work
-	workers map[string]*Work
-	portMap map[string]string
-}
-
 // Initialise a new group.
 func NewGroup() *Group {
 	return &Group{
@@ -139,18 +132,44 @@ func NewGroup() *Group {
 	}
 }
 
-// Add a worker to the group, with a unique name.
-func (g *Group) Add(worker, name string) {
+// A group is a collection of inter-connected workers.
+type Group struct {
+	Work
+	workers map[string]*Work
+	portMap map[string]string
+}
+
+// Add a named worker to the group with a unique name.
+func (g *Group) Add(name, worker string) {
 	fun := Registry[worker]
 	if fun == nil {
 		fmt.Println("not found: ", worker)
 		return
 	}
-	g.AddWorker(fun(), name)
+	g.AddWorker(name, fun())
 }
 
-func (g *Group) AddWorker(w Worker, name string) {
+// Add a worker or workgroup to the group with a unique name.
+func (g *Group) AddWorker(name string, w Worker) {
 	g.workers[name] = w.initWork(w, name, g)
+}
+
+// A transformer processes each memo through a supplied function.
+func Transformer(f func(Memo) Memo) Worker {
+	return &transformer{ fun: f }
+}
+
+type transformer struct {
+	Work
+	In  Input
+	Out Output
+	fun func(Memo) Memo
+}
+
+func (w *transformer) Run() {
+	for m := range w.In {
+		w.Out <- w.fun(m)
+	}
 }
 
 func (g *Group) workerOf(s string) *Work {
@@ -250,7 +269,7 @@ func LoadString(s string) *Group {
 
 	g := NewGroup()
 	for _, w := range conf.Workers {
-		g.Add(w.Type, w.Name)
+		g.Add(w.Name, w.Type)
 	}
 	for _, c := range conf.Connections {
 		g.Connect(c.From, c.To, 0)
