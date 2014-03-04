@@ -1,7 +1,9 @@
 package flow
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"reflect"
 	"strings"
 	"sync"
@@ -204,4 +206,41 @@ func (g *Group) Run() {
 	wait.Wait()
 	close(sink)
 	<-done
+}
+
+type config struct {
+	Workers     []struct{ Type, Name string }
+	Connections []struct{ From, To string }
+	Requests    []struct{ Data, To string }
+}
+
+// Load a group from a JSON description in a string.
+func LoadString(s string) *Group {
+	var conf config
+	err := json.Unmarshal([]byte(s), &conf)
+	if err != nil {
+		panic(err)
+	}
+
+	g := NewGroup()
+	for _, w := range conf.Workers {
+		g.Add(w.Type, w.Name)
+	}
+	for _, c := range conf.Connections {
+		g.Connect(c.From, c.To, 0)
+	}
+	for _, r := range conf.Requests {
+		g.Request(r.Data, r.To)
+	}
+
+	return g
+}
+
+// Load a group from a JSON description in a file.
+func LoadFile(filename string) *Group {
+	data, err := ioutil.ReadFile(filename)
+	if err != nil {
+		panic(err)
+	}
+	return LoadString(string(data))
 }
