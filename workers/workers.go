@@ -1,3 +1,4 @@
+// A collection of simple pre-defined workers.
 package workers
 
 import (

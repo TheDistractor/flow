@@ -1,3 +1,4 @@
+// An embedded JavaScript engine as worker.
 package javascript
 
 import (

@@ -1,3 +1,4 @@
+// Core dataflow package.
 package flow
 
 import (

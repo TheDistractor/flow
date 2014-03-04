@@ -1,3 +1,4 @@
+// Interface to MQTT.
 package netflow
 
 import (

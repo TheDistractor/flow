@@ -1,3 +1,4 @@
+// Interface to serial port devices.
 package serial
 
 import (
