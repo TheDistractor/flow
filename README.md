@@ -2,7 +2,7 @@
 
 An experiment with dataflow programming in Go.
 Massively inspired by Paul Morrison's  
-[Flow-based Programming][FB] and
+[Flow-based Programming][FB] (FBP) and
 Vladimir Sibirov's [goflow][GF] implementation in Go.
 
 [![GoDoc][G]][D] [![Travis Status][S]][T]

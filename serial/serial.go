@@ -22,15 +22,15 @@ type SerialIn struct {
 
 // Start processing incoming text lines from the serial interface.
 func (w *SerialIn) Run() {
-	port := <-w.Port
+	if port, ok := <-w.Port; ok {
+		opt := rs232.Options{BitRate: 57600, DataBits: 8, StopBits: 1}
+		dev, err := rs232.Open(port.(string), opt)
+		check(err)
 
-	opt := rs232.Options{BitRate: 57600, DataBits: 8, StopBits: 1}
-	dev, err := rs232.Open(port.(string), opt)
-	check(err)
-
-	scanner := bufio.NewScanner(dev)
-	for scanner.Scan() {
-		w.Out <- scanner.Text()
+		scanner := bufio.NewScanner(dev)
+		for scanner.Scan() {
+			w.Out <- scanner.Text()
+		}
 	}
 }
 

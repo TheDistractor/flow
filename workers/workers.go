@@ -53,11 +53,12 @@ type Repeater struct {
 
 // Start repeating incoming memos.
 func (w *Repeater) Run() {
-	num := <-w.Num
-	n := num.(int)
-	for m := range w.In {
-		for i := 0; i < n; i++ {
-			w.Out <- m
+	if num, ok := <-w.Num; ok {
+		n := num.(int)
+		for m := range w.In {
+			for i := 0; i < n; i++ {
+				w.Out <- m
+			}
 		}
 	}
 }
@@ -87,7 +88,7 @@ type Printer struct {
 // Start printing incoming memos.
 func (w *Printer) Run() {
 	for m := range w.In {
-		fmt.Printf("%s: %v\n", flow.Type(m), m)
+		fmt.Printf("%T: %v\n", m, m)
 	}
 }
 
@@ -100,9 +101,10 @@ type Timer struct {
 
 // Start the timer, sends one memo when it expires.
 func (w *Timer) Run() {
-	rate := <-w.Rate
-	t := <-time.After(rate.(time.Duration))
-	w.Out <- t
+	if rate, ok := <-w.Rate; ok {
+		t := <-time.After(rate.(time.Duration))
+		w.Out <- t
+	}
 }
 
 // A clock sends out memos at a fixed rate, as set by the Rate port.
@@ -114,9 +116,10 @@ type Clock struct {
 
 // Start sending out periodic memos, once the rate is known.
 func (w *Clock) Run() {
-	rate := <-w.Rate
-	t := time.NewTicker(rate.(time.Duration))
-	for m := range t.C {
-		w.Out <- m
+	if rate, ok := <-w.Rate; ok {
+		t := time.NewTicker(rate.(time.Duration))
+		for m := range t.C {
+			w.Out <- m
+		}
 	}
 }

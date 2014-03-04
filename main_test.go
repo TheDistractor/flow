@@ -4,14 +4,14 @@ import "github.com/jcw/flow/flow"
 
 func ExampleLoadAll() {
 	g := flow.NewGroup()
-	// TODO: these crash because they don't check for closed input channels
-	// g.Add("Clock", "clock")
-	// g.Add("Repeater", "repeater")
-	// g.Add("SerialIn", "serial-in")
-	// g.Add("Timer", "timer")
-	g.Add("Counter", "counter")
+	g.Add("Clock", "clock")
+	g.Add("Counter", "counter") // returns 0
+	g.Add("Pipe", "pipe")
 	g.Add("Printer", "printer")
+	g.Add("Repeater", "repeater")
+	g.Add("SerialIn", "serial-in")
 	g.Add("Sink", "sink")
+	g.Add("Timer", "timer")
 	g.Run()
 	// Output:
 	// Lost output: 0
