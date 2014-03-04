@@ -1,4 +1,4 @@
-package netflow
+package network
 
 import (
 	"testing"

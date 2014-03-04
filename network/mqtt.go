@@ -1,5 +1,5 @@
 // Interface to MQTT.
-package netflow
+package network
 
 import (
 	"net"
