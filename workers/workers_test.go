@@ -7,10 +7,10 @@ import (
 	"github.com/jcw/flow/flow"
 )
 
-func ExampleGraph() {
+func ExamplePrinter() {
 	g := flow.NewGroup()
-	g.Add("Printer", "printer")
-	g.Request("hello", "printer.In")
+	g.Add("Printer", "p")
+	g.Request("hello", "p.In")
 	g.Run()
 	// Output:
 	// string: hello
@@ -18,30 +18,46 @@ func ExampleGraph() {
 
 func ExampleRepeater() {
 	g := flow.NewGroup()
-	g.Add("Repeater", "rep1")
-	g.Add("Counter", "cnt1")
-	g.Add("Printer", "printer")
-	g.Connect("rep1.Out", "cnt1.In", 0)
-	g.Connect("cnt1.Out", "printer.In", 0)
-	g.Request(3, "rep1.Num")
-	g.Request(nil, "rep1.In")
+	g.Add("Repeater", "r")
+	g.Add("Printer", "p")
+	g.Connect("r.Out", "p.In", 0)
+	g.Request(3, "r.Num")
+	g.Request("abc", "r.In")
 	g.Run()
 	// Output:
-	// int: 3
+	// string: abc
+	// string: abc
+	// string: abc
 }
 
 func ExampleCounter() {
 	g := flow.NewGroup()
-	g.Add("Counter", "cnt1")
-	g.Add("Printer", "printer")
-	g.Connect("cnt1.Out", "printer.In", 0)
-	// cnt1.In is not connected, acts same as if closed right away
+	g.Add("Counter", "c")
+	g.Add("Printer", "p")
+	g.Connect("c.Out", "p.In", 0)
+	g.Request(nil, "c.In")
 	g.Run()
 	// Output:
-	// int: 0
+	// int: 1
 }
 
-func ExampleWorker() {
+func ExampleTimer() {
+	g := flow.NewGroup()
+	g.Add("Timer", "t1")
+	g.Add("Timer", "t2")
+	g.Add("Counter", "c")
+	g.Add("Printer", "p")
+	g.Connect("t1.Out", "c.In", 0)
+	g.Connect("t2.Out", "c.In", 0)
+	g.Connect("c.Out", "p.In", 0)
+	g.Request(100*time.Millisecond, "t1.Rate")
+	g.Request(200*time.Millisecond, "t2.Rate")
+	g.Run()
+	// Output:
+	// int: 2
+}
+
+func ExampleAllWorkers() {
 	g := flow.NewGroup()
 	g.Add("Clock", "clock")
 	g.Add("Counter", "counter") // returns 0
@@ -57,22 +73,10 @@ func ExampleWorker() {
 
 func TestTimer(t *testing.T) {
 	g := flow.NewGroup()
-	g.Add("Timer", "timer1")
-	g.Add("Printer", "printer")
-	g.Connect("timer1.Out", "printer.In", 0)
-	g.Request(100*time.Millisecond, "timer1.Rate")
-	g.Run()
-}
-
-func TestDualTimer(t *testing.T) {
-	g := flow.NewGroup()
-	g.Add("Timer", "timer1")
-	g.Add("Timer", "timer2")
-	g.Add("Printer", "printer")
-	g.Connect("timer1.Out", "printer.In", 0)
-	g.Connect("timer2.Out", "printer.In", 0)
-	g.Request(100*time.Millisecond, "timer1.Rate")
-	g.Request(200*time.Millisecond, "timer2.Rate")
+	g.Add("Timer", "t")
+	g.Add("Printer", "p")
+	g.Connect("t.Out", "p.In", 0)
+	g.Request(100*time.Millisecond, "t.Rate")
 	g.Run()
 }
 
@@ -80,9 +84,9 @@ func TestClock(t *testing.T) {
 	t.Skip("skipping clock test, never ends.")
 	// The following test code never ends, comment out the above to try it out
 	g := flow.NewGroup()
-	g.Add("Clock", "clock1")
-	g.Add("Printer", "printer")
-	g.Connect("clock1.Out", "printer.In", 0)
-	g.Request(time.Second, "clock1.Rate")
+	g.Add("Clock", "c")
+	g.Add("Printer", "p")
+	g.Connect("c.Out", "p.In", 0)
+	g.Request(time.Second, "c.Rate")
 	g.Run()
 }
