@@ -11,6 +11,9 @@ import (
 var dbPath = os.TempDir() + "flow-test-db"
 
 func init() {
+	if os.TempDir() == "/" { // happens with Travis CI
+		dbPath = dbPath[1:]
+	}
 	println(dbPath)
 }
 
