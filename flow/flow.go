@@ -206,7 +206,7 @@ func (g *Group) Connect(from, to string, capacity int) {
 }
 
 // Set up a memo which needs to be sent to a worker on startup.
-func (g *Group) Set(port string, v interface{}) {
+func (g *Group) Set(port string, v Memo) {
 	w := g.workerOf(port)
 	w.inbox[portPart(port)] = v
 }

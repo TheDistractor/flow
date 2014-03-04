@@ -16,7 +16,7 @@ func ExampleTransformer() {
 	upper := flow.Transformer(func(m flow.Memo) flow.Memo {
 		return strings.ToUpper(m.(string))
 	})
-	
+
 	g := flow.NewGroup()
 	g.AddWorker("u", upper)
 	g.Add("p", "Printer")
