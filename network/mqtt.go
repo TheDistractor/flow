@@ -41,7 +41,7 @@ func (w *MqttSub) Run() {
 			}})
 			for m := range client.Incoming {
 				payload := []byte(m.Payload.(proto.BytesPayload))
-				w.Out <- []string{m.TopicName, string(payload)}
+				w.Out.Send([]string{m.TopicName, string(payload)})
 			}
 		}
 	}

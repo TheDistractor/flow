@@ -24,13 +24,13 @@ type RF12demo struct {
 func (w *RF12demo) Run() {
 	if m, ok := <-w.In; ok {
 		config := parseConfigLine(m.(string))
-		w.Out <- *config
+		w.Out.Send(*config)
 		for m = range w.In {
 			if s, ok := m.(string); ok {
 				if strings.HasPrefix(s, "OK ") {
-					w.Out <- convertToPacket(s)
+					w.Out.Send(convertToPacket(s))
 				} else {
-					w.Rej <- m
+					w.Rej.Send(m)
 				}
 			}
 		}

@@ -21,14 +21,14 @@ type dbFeed struct {
 }
 
 func (w *dbFeed) Run() {
-	w.ToPut <- []string{"a/b", "123"}
-	w.ToPut <- []string{"a/c", "456"}
-	w.ToGet <- "a/b"
-	w.ToKeys <- "a/"
-	w.ToPut <- []string{"a/b"}
-	w.ToGet <- "a/b"
-	w.ToKeys <- "a/"
-	w.ToPut <- []string{"a/c"}
+	w.ToPut.Send([]string{"a/b", "123"})
+	w.ToPut.Send([]string{"a/c", "456"})
+	w.ToGet.Send("a/b")
+	w.ToKeys.Send("a/")
+	w.ToPut.Send([]string{"a/b"})
+	w.ToGet.Send("a/b")
+	w.ToKeys.Send("a/")
+	w.ToPut.Send([]string{"a/c"})
 }
 
 func ExampleLevelDB() {
@@ -38,14 +38,14 @@ func ExampleLevelDB() {
 	// }
 	//
 	// func (w *dbFeed) Run() {
-	//     w.ToPut <- []string{"a/b", "123"}
-	//     w.ToPut <- []string{"a/c", "456"}
-	//     w.ToGet <- "a/b"
-	//     w.ToKeys <- "a/"
-	//     w.ToPut <- []string{"a/b"}
-	//     w.ToGet <- "a/b"
-	//     w.ToKeys <- "a/"
-	//     w.ToPut <- []string{"a/c"}
+	//     w.ToPut.Send([]string{"a/b", "123"})
+	//     w.ToPut.Send([]string{"a/c", "456"})
+	//     w.ToGet.Send("a/b")
+	//     w.ToKeys.Send("a/")
+	//     w.ToPut.Send([]string{"a/b"})
+	//     w.ToGet.Send("a/b")
+	//     w.ToKeys.Send("a/")
+	//     w.ToPut.Send([]string{"a/c"})
 	// }
 
 	g := flow.NewGroup()

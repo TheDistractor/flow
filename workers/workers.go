@@ -40,7 +40,7 @@ type Pipe struct {
 // Start passing through memos.
 func (w *Pipe) Run() {
 	for m := range w.In {
-		w.Out <- m
+		w.Out.Send(m)
 	}
 }
 
@@ -58,7 +58,7 @@ func (w *Repeater) Run() {
 		n := num.(int)
 		for m := range w.In {
 			for i := 0; i < n; i++ {
-				w.Out <- m
+				w.Out.Send(m)
 			}
 		}
 	}
@@ -78,7 +78,7 @@ func (w *Counter) Run() {
 	for _ = range w.In {
 		w.count++
 	}
-	w.Out <- w.count
+	w.Out.Send(w.count)
 }
 
 // Printers report the memos sent to them as output.
@@ -105,7 +105,7 @@ type Timer struct {
 func (w *Timer) Run() {
 	if rate, ok := <-w.Rate; ok {
 		t := <-time.After(rate.(time.Duration))
-		w.Out <- t
+		w.Out.Send(t)
 	}
 }
 
@@ -121,7 +121,7 @@ func (w *Clock) Run() {
 	if rate, ok := <-w.Rate; ok {
 		t := time.NewTicker(rate.(time.Duration))
 		for m := range t.C {
-			w.Out <- m
+			w.Out.Send(m)
 		}
 	}
 }

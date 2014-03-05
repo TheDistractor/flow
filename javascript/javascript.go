@@ -29,7 +29,7 @@ func (w *JavaScript) Run() {
 			if err != nil {
 				panic(err)
 			}
-			w.Out <- out
+			w.Out.Send(out)
 			return otto.UndefinedValue()
 		})
 

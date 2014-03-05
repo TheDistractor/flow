@@ -30,7 +30,7 @@ func (w *SerialIn) Run() {
 
 		scanner := bufio.NewScanner(dev)
 		for scanner.Scan() {
-			w.Out <- scanner.Text()
+			w.Out.Send(scanner.Text())
 		}
 	}
 }
@@ -63,7 +63,7 @@ func (w *SketchType) Run() {
 					go wg.Run()
 				}
 			}
-			w.Out <- m
+			w.Out.Send(m)
 		}
 	}
 }

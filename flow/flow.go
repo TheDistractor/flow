@@ -24,11 +24,14 @@ func Type(m Memo) string {
 	return reflect.TypeOf(m).String()
 }
 
-// Input ports can receive memo's.
+// Input ports are used to receive memo's.
 type Input <-chan Memo
 
 // Output ports are used to send memo's elsewhere.
-type Output chan<- Memo
+type Output interface {
+	Send(v Memo)
+	Close()
+}
 
 // The worker is the basic unit of processing, shuffling memo's between ports.
 type Worker interface {
@@ -104,42 +107,62 @@ func (w *Work) processInbox() {
 	}
 }
 
-func (w *Work) forAllChannels(f func(string, reflect.Value)) {
+func (w *Work) forAllPorts(f func(string, reflect.Value)) {
 	wv := reflect.ValueOf(w.worker)
 	we := wv.Elem()
 	wt := we.Type()
 	for i := 0; i < we.NumField(); i++ {
-		if fd := wt.Field(i); fd.Name != "" && fd.Type.Kind() == reflect.Chan {
-			f(fd.Name, we.Field(i))
+		fd := wt.Field(i)
+		ft := fd.Type.Name()
+		switch ft {
+		case "Input", "Output":
+			f(ft, we.Field(i))
 		}
 	}
 	return
 }
 
-func (w *Work) connectChannels(nullSource, nullSink chan Memo) {
-	w.forAllChannels(func(_ string, v reflect.Value) {
-		if v.IsNil() {
-			c := nullSource
-			if v.Type().ChanDir()&reflect.SendDir != 0 {
-				c = nullSink
+func (w *Work) connectChannels(nullSource Input, nullSink *connection) {
+	w.forAllPorts(func(typ string, val reflect.Value) {
+		if val.IsNil() {
+			switch typ {
+			case "Input":
+				val.Set(reflect.ValueOf(nullSource))
+			case "Output":
+				val.Set(reflect.ValueOf(nullSink))
+				nullSink.senders++
 			}
-			v.Set(reflect.ValueOf(c))
 		}
 	})
 }
 
-func (w *Work) closeAllOutputs() {
-	for _, v := range w.outputs {
-		v.senders--
-		if v.senders == 0 {
-			close(v.channel)
-		}
+func (w *Work) closeChannels() {
+	for _, c := range w.outputs {
+		c.Close()
 	}
+	// TODO: cleanup, to allow re-running
+	// w.forAllPorts(func(typ string, val reflect.Value) {
+	// 	if !val.IsNil() {
+	// 		val.Set(reflect.ValueOf(nil))
+	// 	}
+	// })
 }
 
 type connection struct {
 	channel chan Memo
 	senders int
+}
+
+// Send a memo through an output port.
+func (c *connection) Send(v Memo) {
+	c.channel <- v
+}
+
+func (c *connection) Close() {
+	c.senders--
+	if c.senders == 0 {
+		close(c.channel)
+	}
 }
 
 // Initialise a new group.
@@ -187,7 +210,7 @@ type transformer struct {
 
 func (w *transformer) Run() {
 	for m := range w.In {
-		w.Out <- w.fun(m)
+		w.Out.Send(w.fun(m))
 	}
 }
 
@@ -220,7 +243,7 @@ func (g *Group) Connect(from, to string, capacity int) {
 		tp.Set(reflect.ValueOf(c.channel))
 	}
 	c.senders++
-	cv := reflect.ValueOf(c.channel)
+	cv := reflect.ValueOf(c)
 	fp.Set(cv)
 	fw.outputs[portPart(from)] = c
 }
@@ -234,13 +257,13 @@ func (g *Group) Set(port string, v Memo) {
 // Start up the group, and return when it is finished.
 func (g *Group) Run() {
 	done := make(chan struct{})
-	sink := make(chan Memo)
+	sink := &connection{channel: make(chan Memo)}
 	null := make(chan Memo)
 	close(null)
 
 	// report all memo's sent to the sink, for debugging
 	go func() {
-		for m := range sink {
+		for m := range sink.channel {
 			fmt.Printf("Lost %T: %v\n", m, m)
 		}
 		close(done)
@@ -255,13 +278,13 @@ func (g *Group) Run() {
 			w.processInbox()
 			w.connectChannels(null, sink)
 			w.worker.Run()
-			w.closeAllOutputs()
+			w.closeChannels()
 		}(w)
 	}
 
 	// wait until all workers have finished, as well as the sink reporter
 	wait.Wait()
-	close(sink)
+	close(sink.channel)
 	<-done
 }
 

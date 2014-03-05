@@ -42,7 +42,7 @@ func (w *LevelDB) Run() {
 					w.Get = nil
 					active--
 				} else {
-					w.Out <- w.get(m.(string))
+					w.Out.Send(w.get(m.(string)))
 				}
 			case m, ok := <-w.Put:
 				if !ok {
@@ -61,7 +61,7 @@ func (w *LevelDB) Run() {
 					w.Keys = nil
 					active--
 				} else {
-					w.Out <- w.keys(m.(string))
+					w.Out.Send(w.keys(m.(string)))
 				}
 			}
 		}
