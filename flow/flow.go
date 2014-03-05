@@ -284,31 +284,30 @@ type config struct {
 }
 
 // Load a group from a JSON description in a string.
-func (g *Group) LoadString(s string) {
+func (g *Group) LoadString(s string) error {
 	var conf config
 	err := json.Unmarshal([]byte(s), &conf)
-	if err != nil {
-		panic(err)
+	if err == nil {
+		for _, w := range conf.Workers {
+			g.Add(w.Name, w.Type)
+		}
+		for _, c := range conf.Connections {
+			g.Connect(c.From, c.To, 0)
+		}
+		for _, r := range conf.Requests {
+			g.Set(r.To, r.Data)
+		}
 	}
-
-	for _, w := range conf.Workers {
-		g.Add(w.Name, w.Type)
-	}
-	for _, c := range conf.Connections {
-		g.Connect(c.From, c.To, 0)
-	}
-	for _, r := range conf.Requests {
-		g.Set(r.To, r.Data)
-	}
+	return err
 }
 
 // Load a group from a JSON description in a file.
-func (g *Group) LoadFile(filename string) {
+func (g *Group) LoadFile(filename string) error {
 	data, err := ioutil.ReadFile(filename)
-	if err != nil {
-		panic(err)
+	if err == nil {
+		err = g.LoadString(string(data))
 	}
-	g.LoadString(string(data))
+	return err
 }
 
 // A transformer processes each memo through a supplied function.
