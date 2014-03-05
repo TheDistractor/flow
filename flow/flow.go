@@ -137,6 +137,11 @@ func (w *Work) connectChannels(nullSource Input, nullSink *connection) {
 }
 
 func (w *Work) closeChannels() {
+	// w.forAllPorts(func(typ string, val reflect.Value) {
+	// 	if typ == "Output" {
+	// 		val.Interface().(Output).Close()
+	// 	}
+	// })
 	for _, c := range w.outputs {
 		c.Close()
 	}

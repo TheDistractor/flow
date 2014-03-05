@@ -25,12 +25,12 @@ Then set a few initial values to send and start the whole thing up:
     g.Set("r.In", "abc")
     g.Run()
 
-Run will return once all workers have finished. The output will be lost since
+Run will return once all workers have finished. The output will be "lost" since
 the output port is not connected to anything, so it will show up as follows:
 
     Lost int: 3
 
-A group can also be used as worker, then it acts as a "workgroup". For this,
+A group can be used instead as worker, then it acts as a "workgroup". For this,
 a mapping from external port names to internal ones is needed to expose them:
 
     g.Map("MyOut", "c.out")
@@ -39,10 +39,11 @@ Once mapped, a group can be used like any other worker:
 
     g2 := flow.NewGroup()
     g2.AddWorker("g", g)
-    g.Add("p", "Printer")
-    g.Connect("g.MyOut", "p.In", 0)
+    g2.Add("p", "Printer")
+    g2.Connect("g.MyOut", "p.In", 0)
+    g2.Run()
 
-Since the output has been wired up this time, the output will now be:
+Since the output port has been wired up this time, the output will now be:
 
     int: 3
 
