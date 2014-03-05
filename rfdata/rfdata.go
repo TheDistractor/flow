@@ -2,7 +2,6 @@ package rfdata
 
 import (
 	"bytes"
-	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -25,7 +24,7 @@ type RF12demo struct {
 func (w *RF12demo) Run() {
 	if m, ok := <-w.In; ok {
 		config := parseConfigLine(m.(string))
-		fmt.Println("config:", *config)
+		w.Out <- *config
 		for m = range w.In {
 			if s, ok := m.(string); ok {
 				if strings.HasPrefix(s, "OK ") {

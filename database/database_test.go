@@ -21,8 +21,6 @@ func ExampleLevelDB() {
 	makeDb := func() flow.Worker {
 		g := flow.NewGroup()
 		g.Add("d", "LevelDB")
-		g.Add("p", "Printer")
-		g.Connect("d.Out", "p.In", 0)
 		g.Map("Get", "d.Get")
 		g.Map("Put", "d.Put")
 		g.Map("Keys", "d.Keys")
@@ -70,10 +68,10 @@ func ExampleLevelDB() {
 	g.Set("db.Put", []string{"a/c"})
 	g.Run()
 	// Output:
-	// string: 123
-	// []string: [b c]
-	// <nil>: <nil>
-	// []string: [c]
+	// Lost string: 123
+	// Lost []string: [b c]
+	// Lost <nil>: <nil>
+	// Lost []string: [c]
 }
 
 func TestDatabase(t *testing.T) {

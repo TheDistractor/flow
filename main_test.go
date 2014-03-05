@@ -14,5 +14,5 @@ func Example() {
 	g.Add("timer", "Timer")
 	g.Run()
 	// Output:
-	// Lost output: 0
+	// Lost int: 0
 }

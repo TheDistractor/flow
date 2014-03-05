@@ -19,12 +19,10 @@ func ExampleTransformer() {
 
 	g := flow.NewGroup()
 	g.AddWorker("u", upper)
-	g.Add("p", "Printer")
-	g.Connect("u.Out", "p.In", 0)
 	g.Set("u.In", "abc")
 	g.Run()
 	// Output:
-	// string: ABC
+	// Lost string: ABC
 }
 
 func ExampleGroup_Map() {
@@ -37,13 +35,11 @@ func ExampleGroup_Map() {
 
 	g := flow.NewGroup()
 	g.AddWorker("wg", wg)
-	g.Add("p", "Printer")
-	g.Connect("wg.MyOut", "p.In", 0)
 	g.Set("wg.MyIn", "abc")
 
 	g.Run()
 	// Output:
-	// string: abc
-	// string: abc
-	// string: abc
+	// Lost string: abc
+	// Lost string: abc
+	// Lost string: abc
 }

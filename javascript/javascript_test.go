@@ -17,8 +17,6 @@ func ExampleJavaScript() {
 func ExampleJavaScript_2() {
 	g := flow.NewGroup()
 	g.Add("js", "JavaScript")
-	g.Add("p", "Printer")
-	g.Connect("js.Out", "p.In", 0)
 	g.Set("js.Cmd", `
 	  console.log("Howdy from Otto!");
 	  function onIn(v) {
@@ -31,5 +29,5 @@ func ExampleJavaScript_2() {
 	// Output:
 	// Howdy from Otto!
 	// Got: 123
-	// float64: 369
+	// Lost float64: 369
 }

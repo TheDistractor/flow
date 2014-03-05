@@ -234,7 +234,7 @@ func (g *Group) Run() {
 	// report all memo's sent to the sink, for debugging
 	go func() {
 		for m := range sink {
-			fmt.Println("Lost output:", m)
+			fmt.Printf("Lost %T: %v\n", m, m)
 		}
 		close(done)
 	}()

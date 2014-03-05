@@ -19,26 +19,22 @@ func ExamplePrinter() {
 func ExampleRepeater() {
 	g := flow.NewGroup()
 	g.Add("r", "Repeater")
-	g.Add("p", "Printer")
-	g.Connect("r.Out", "p.In", 0)
 	g.Set("r.Num", 3)
 	g.Set("r.In", "abc")
 	g.Run()
 	// Output:
-	// string: abc
-	// string: abc
-	// string: abc
+	// Lost string: abc
+	// Lost string: abc
+	// Lost string: abc
 }
 
 func ExampleCounter() {
 	g := flow.NewGroup()
 	g.Add("c", "Counter")
-	g.Add("p", "Printer")
-	g.Connect("c.Out", "p.In", 0)
 	g.Set("c.In", nil)
 	g.Run()
 	// Output:
-	// int: 1
+	// Lost int: 1
 }
 
 func ExampleTimer() {
@@ -46,15 +42,13 @@ func ExampleTimer() {
 	g.Add("t1", "Timer")
 	g.Add("t2", "Timer")
 	g.Add("c", "Counter")
-	g.Add("p", "Printer")
 	g.Connect("t1.Out", "c.In", 0)
 	g.Connect("t2.Out", "c.In", 0)
-	g.Connect("c.Out", "p.In", 0)
 	g.Set("t1.Rate", 100*time.Millisecond)
 	g.Set("t2.Rate", 200*time.Millisecond)
 	g.Run()
 	// Output:
-	// int: 2
+	// Lost int: 2
 }
 
 func ExampleAllWorkers() {
@@ -68,14 +62,12 @@ func ExampleAllWorkers() {
 	g.Add("timer", "Timer")
 	g.Run()
 	// Output:
-	// Lost output: 0
+	// Lost int: 0
 }
 
 func TestTimer(t *testing.T) {
 	g := flow.NewGroup()
 	g.Add("t", "Timer")
-	g.Add("p", "Printer")
-	g.Connect("t.Out", "p.In", 0)
 	g.Set("t.Rate", 100*time.Millisecond)
 	g.Run()
 }
@@ -85,8 +77,6 @@ func TestClock(t *testing.T) {
 	// The following test code never ends, comment out the above to try it out
 	g := flow.NewGroup()
 	g.Add("c", "Clock")
-	g.Add("p", "Printer")
-	g.Connect("c.Out", "p.In", 0)
 	g.Set("c.Rate", time.Second)
 	g.Run()
 }
