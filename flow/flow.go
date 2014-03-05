@@ -195,25 +195,6 @@ func (g *Group) AddWorker(name string, w Worker) {
 	g.workers[name] = w.initWork(w, name, g)
 }
 
-// A transformer processes each memo through a supplied function.
-func Transformer(f func(Memo) Memo) Worker {
-	return &transformer{fun: f}
-}
-
-type transformer struct {
-	Work
-	In  Input
-	Out Output
-
-	fun func(Memo) Memo
-}
-
-func (w *transformer) Run() {
-	for m := range w.In {
-		w.Out.Send(w.fun(m))
-	}
-}
-
 func (g *Group) workerOf(s string) *Work {
 	if n := strings.IndexRune(s, '.'); n > 0 {
 		s = s[:n]
@@ -328,4 +309,23 @@ func (g *Group) LoadFile(filename string) {
 		panic(err)
 	}
 	g.LoadString(string(data))
+}
+
+// A transformer processes each memo through a supplied function.
+func Transformer(f func(Memo) Memo) Worker {
+	return &transformer{fun: f}
+}
+
+type transformer struct {
+	Work
+	In  Input
+	Out Output
+
+	fun func(Memo) Memo
+}
+
+func (w *transformer) Run() {
+	for m := range w.In {
+		w.Out.Send(w.fun(m))
+	}
 }
