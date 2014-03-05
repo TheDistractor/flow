@@ -21,11 +21,13 @@ func init() {
 // A sink eats up all the memos it receives.
 type Sink struct {
 	flow.Work
-	In flow.Input
+	In  flow.Input
+	Out flow.Output
 }
 
 // Start reading memos and discard them.
 func (w *Sink) Run() {
+	w.Out.Close()
 	for _ = range w.In {
 	}
 }

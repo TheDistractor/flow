@@ -13,7 +13,7 @@ import (
 var Version = "0.0.1"
 
 // The registry is the factory for all known types of workers.
-var Registry = make(map[string]func() Worker)
+var Registry = map[string]func() Worker{}
 
 // Memo's are the generic type sent to, between, and from workers.
 type Memo interface{}
@@ -57,9 +57,9 @@ func (w *Work) initWork(wi Worker, nm string, gr *Group) *Work {
 	w.worker = wi
 	w.name = nm
 	w.parent = gr
-	w.inbox = make(map[string][]Memo)
-	w.inputs = make(map[string]*connection)
-	w.outputs = make(map[string]*connection)
+	w.inbox = map[string][]Memo{}
+	w.inputs = map[string]*connection{}
+	w.outputs = map[string]*connection{}
 	return w
 }
 
@@ -168,8 +168,8 @@ func (c *connection) Close() {
 // Initialise a new group.
 func NewGroup() *Group {
 	return &Group{
-		workers: make(map[string]*Work),
-		portMap: make(map[string]string),
+		workers: map[string]*Work{},
+		portMap: map[string]string{},
 	}
 }
 

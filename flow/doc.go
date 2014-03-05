@@ -6,7 +6,7 @@ implementation - see also https://en.wikipedia.org/wiki/Flow-based_programming.
 
 The flow library is available as import, along with some supporting packages:
 
-    import "github.com/jcw/flow"
+    import "github.com/jcw/flow/flow"
     import _ "github.com/jcw/flow/workers"
 
 The "workers" package is loaded only for its side-effects here: defining some
@@ -79,6 +79,8 @@ To make this worker available by name in the registry, set up a factory method:
     flow.registry["LineLengths"] = func() Worker {
         return new(LineLengths)
     }
+    ...
+    g.Add("ll", LineLengths)
 
 For this simple case, a Transformer could also have been used:
 
