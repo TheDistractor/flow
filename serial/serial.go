@@ -56,8 +56,10 @@ func (w *SerialIn) Run() {
 // These then cause a corresponding worker to be loaded dynamically.
 type SketchType struct {
 	flow.Work
-	In  flow.Input
-	Out flow.Output
+	In     flow.Input
+	ViaOut flow.Output // send to internally constructed group
+	ViaIn  flow.Input  // receive from internally constructed group
+	Out    flow.Output
 }
 
 // Start transforming the "[name...]" markers in the input stream.
@@ -72,16 +74,24 @@ func (w *SketchType) Run() {
 					wg := flow.NewGroup()
 					wg.Add("sketch", tag)
 					wg.Map("In", "sketch.In")
+					wg.Map("Out", "sketch.Out")
 					// dynamically insert this new group and connect to it
 					g := w.MyGroup()
 					g.AddWorker("(sketch)", wg)
-					g.Connect(w.MyName()+".Out", "(sketch).In", 0)
+					g.Connect(w.MyName()+".ViaOut", "(sketch).In", 0)
+					g.Connect("(sketch).Out", w.MyName()+".ViaIn", 0)
 					// start the new group running
 					go wg.Run()
+					// start extra goroutine to copy ViaIn to Out
+					go func() {
+						for m := range w.ViaIn {
+							w.Out.Send(m)
+						}
+					}()
 				}
 			}
 		}
-		w.Out.Send(m)
+		w.ViaOut.Send(m)
 	}
 }
 

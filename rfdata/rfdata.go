@@ -3,6 +3,7 @@ package rfdata
 
 import (
 	"bytes"
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -12,8 +13,10 @@ import (
 
 func init() {
 	flow.Registry["Sketch-RF12demo"] = func() flow.Worker { return &RF12demo{} }
+	flow.Registry["Decoder-NodeMap"] = func() flow.Worker { return &NodeMap{} }
 }
 
+// RF12demo parses config and OK lines coming from the RF12demo sketch.
 type RF12demo struct {
 	flow.Work
 	In  flow.Input
@@ -73,4 +76,35 @@ func convertToBytes(s string) ([]byte, int) {
 		}
 	}
 	return buf.Bytes(), rssi
+}
+
+// Lookup the group/node information to determine what decoder to use.
+type NodeMap struct {
+	flow.Work
+	In   flow.Input
+	Out  flow.Output
+	Info flow.Input
+}
+
+// Start looking up node ID's in the node map.
+func (w *NodeMap) Run() {
+	if info, ok := <-w.Info; ok {
+		nodeMap := info.(map[string]string)
+		var group int
+		for m := range w.In {
+			if data, ok := m.(map[string]int); ok {
+				switch {
+				case data["<RF12demo>"] > 0:
+					group = data["group"]
+				case data["<node>"] > 0:
+					key := fmt.Sprintf("RFg%di%d", group, data["<node>"])
+					typ := nodeMap[key]
+					if typ != "" {
+						w.Out.Send("<Decoder-" + typ + ">")
+					}
+				}
+			}
+			w.Out.Send(m)
+		}
+	}
 }
