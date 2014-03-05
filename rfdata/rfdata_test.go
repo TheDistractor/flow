@@ -25,7 +25,7 @@ func ExampleRF12demo() {
 func ExampleNodeMap() {
 	g := flow.NewGroup()
 	g.Add("nm", "Decoder-NodeMap")
-	g.Set("nm.Info", map[string]string{"RFg5i4": "roomNode"})
+	g.Set("nm.Info", "RFg5i4 roomNode")
 	g.Set("nm.In", map[string]int{"<RF12demo>": 1, "group": 5})
 	g.Set("nm.In", map[string]int{"<node>": 3})
 	g.Set("nm.In", map[string]int{"<node>": 4})
@@ -34,7 +34,7 @@ func ExampleNodeMap() {
 	// Output:
 	// Lost map[string]int: map[<RF12demo>:1 group:5]
 	// Lost map[string]int: map[<node>:3]
-	// Lost string: <Decoder-roomNode>
 	// Lost map[string]int: map[<node>:4]
+	// Lost string: <Decoder-roomNode>
 	// Lost map[string]int: map[<node>:5]
 }

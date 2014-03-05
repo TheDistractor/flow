@@ -80,14 +80,14 @@ func (w *SketchType) Run() {
 					g.AddWorker("(sketch)", wg)
 					g.Connect(w.MyName()+".ViaOut", "(sketch).In", 0)
 					g.Connect("(sketch).Out", w.MyName()+".ViaIn", 0)
-					// start the new group running
-					go wg.Run()
 					// start extra goroutine to copy ViaIn to Out
 					go func() {
 						for m := range w.ViaIn {
 							w.Out.Send(m)
 						}
 					}()
+					// start the new group running
+					go wg.Run()
 				}
 			}
 		}

@@ -88,23 +88,25 @@ type NodeMap struct {
 
 // Start looking up node ID's in the node map.
 func (w *NodeMap) Run() {
-	if info, ok := <-w.Info; ok {
-		nodeMap := info.(map[string]string)
-		var group int
-		for m := range w.In {
-			if data, ok := m.(map[string]int); ok {
-				switch {
-				case data["<RF12demo>"] > 0:
-					group = data["group"]
-				case data["<node>"] > 0:
-					key := fmt.Sprintf("RFg%di%d", group, data["<node>"])
-					typ := nodeMap[key]
-					if typ != "" {
-						w.Out.Send("<Decoder-" + typ + ">")
-					}
+	nodeMap := map[string]string{}
+	for m := range w.Info {
+		f := strings.Fields(m.(string))
+		nodeMap[f[0]] = f[1]
+	}
+	var group int
+	for m := range w.In {
+		w.Out.Send(m)
+		if data, ok := m.(map[string]int); ok {
+			switch {
+			case data["<RF12demo>"] > 0:
+				group = data["group"]
+			case data["<node>"] > 0:
+				key := fmt.Sprintf("RFg%di%d", group, data["<node>"])
+				typ := nodeMap[key]
+				if typ != "" {
+					w.Out.Send("<Decoder-" + typ + ">")
 				}
 			}
-			w.Out.Send(m)
 		}
 	}
 }
