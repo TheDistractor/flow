@@ -25,8 +25,8 @@ Then set a few initial values to send and start the whole thing up:
     g.Set("r.In", "abc")
     g.Run()
 
-Run will return once all workers have finished. The output will be lost, since
-we've not connected the output port to anything, so it will show up as follows:
+Run will return once all workers have finished. The output will be lost since
+the output port is not connected to anything, so it will show up as follows:
 
     Lost int: 3
 
@@ -46,7 +46,7 @@ Since the output has been wired up this time, the output will now be:
 
     int: 3
 
-Definitions of workers, connections, and initial Set requests can be loaded
+Definitions of workers, connections, and initial set requests can be loaded
 from a JSON description. See Group.LoadFile() and Group.LoadString(), e.g.
 
     g.LoadFile("config.json")
@@ -62,7 +62,7 @@ Te define your own worker, create a type which embeds Work and defines Run():
     func (w *LineLengths) Run() {
         for m := range w.In {
             s := m.(string)     // needs a type assertion
-            m.Out.Send(len(s))
+            w.Out.Send(len(s))
         }
     }
 

@@ -1,4 +1,4 @@
-// Interface to MQTT.
+// Interface to MQTT as client and as server.
 package network
 
 import (
@@ -12,8 +12,10 @@ import (
 func init() {
 	flow.Registry["MqttSub"] = func() flow.Worker { return &MqttSub{} }
 	flow.Registry["MqttPub"] = func() flow.Worker { return &MqttPub{} }
+	flow.Registry["MqttServer"] = func() flow.Worker { return &MqttServer{} }
 }
 
+// MqttSub can subscribe to MQTT.
 type MqttSub struct {
 	flow.Work
 	Port  flow.Input
@@ -47,6 +49,7 @@ func (w *MqttSub) Run() {
 	}
 }
 
+// MqttPub can publish to MQTT.
 type MqttPub struct {
 	flow.Work
 	Port flow.Input
@@ -74,5 +77,24 @@ func (w *MqttPub) Run() {
 				Payload:   proto.BytesPayload(msg[1]),
 			})
 		}
+	}
+}
+
+// MqttServer is an embedded MQTT server.
+type MqttServer struct {
+	flow.Work
+	Port flow.Input
+}
+
+// Start the MQTT server.
+func (w *MqttServer) Run() {
+	if port, ok := <-w.Port; ok {
+		listener, err := net.Listen("tcp", port.(string))
+		if err != nil {
+			panic(err)
+		}
+		server := mqtt.NewServer(listener)
+		server.Start()
+		<-server.Done
 	}
 }

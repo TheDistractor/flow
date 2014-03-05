@@ -37,13 +37,7 @@ func (w *RF12demo) Run() {
 	}
 }
 
-// This type is used for each line which has valid packet data.
-type Packet struct {
-	id   byte
-	rssi int
-	data []byte
-}
-
+// Parse lines of the form "[RF12demo.12] _ i31* g5 @ 868 MHz c1 q1"
 var re = regexp.MustCompile(` i(\d+)\*? g(\d+) @ (\d+) MHz`)
 
 func parseConfigLine(s string) *map[string]int {
@@ -52,6 +46,13 @@ func parseConfigLine(s string) *map[string]int {
 	g, _ := strconv.Atoi(m[2])
 	i, _ := strconv.Atoi(m[1])
 	return &map[string]int{"b": b, "g": g, "i": i}
+}
+
+// This type is used for each line which has valid packet data.
+type Packet struct {
+	Id   byte   // node ID, 1..31
+	Rssi int    // RSSI signal level, if present in input
+	Data []byte // binary packet contents, including the header byte
 }
 
 func convertToPacket(s string) *Packet {
