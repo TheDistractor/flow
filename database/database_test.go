@@ -15,50 +15,50 @@ func init() {
 	println(dbPath)
 }
 
+type dbFeed struct {
+	flow.Work
+	ToGet  flow.Output
+	ToPut  flow.Output
+	ToKeys flow.Output
+}
+
+func (w *dbFeed) Run() {
+	w.ToPut <- []string{"a/b", "123"}
+	w.ToPut <- []string{"a/c", "456"}
+	w.ToGet <- "a/b"
+	w.ToKeys <- "a/"
+	w.ToPut <- []string{"a/b"}
+	w.ToGet <- "a/b"
+	w.ToKeys <- "a/"
+	w.ToPut <- []string{"a/c"}
+}
+
 func ExampleLevelDB() {
-	// TODO: clumsy, use external channels
+	// type dbFeed struct {
+	//     flow.Work
+	//     ToGet  flow.Output
+	//     ToPut  flow.Output
+	//     ToKeys flow.Output
+	// }
+	//
+	// func (w *dbFeed) Run() {
+	//     w.ToPut <- []string{"a/b", "123"}
+	//     w.ToPut <- []string{"a/c", "456"}
+	//     w.ToGet <- "a/b"
+	//     w.ToKeys <- "a/"
+	//     w.ToPut <- []string{"a/b"}
+	//     w.ToGet <- "a/b"
+	//     w.ToKeys <- "a/"
+	//     w.ToPut <- []string{"a/c"}
+	// }
 
 	g := flow.NewGroup()
 	g.Add("db", "LevelDB")
+	g.AddWorker("feed", &dbFeed{})
+	g.Connect("feed.ToPut", "db.Put", 0)
+	g.Connect("feed.ToGet", "db.Get", 0)
+	g.Connect("feed.ToKeys", "db.Keys", 0)
 	g.Set("db.Name", dbPath)
-	g.Set("db.Put", []string{"a/b", "123"})
-	g.Set("db.Put", []string{"a/c", "456"})
-	g.Run()
-
-	g = flow.NewGroup()
-	g.Add("db", "LevelDB")
-	g.Set("db.Name", dbPath)
-	g.Set("db.Get", "a/b")
-	g.Run()
-
-	g = flow.NewGroup()
-	g.Add("db", "LevelDB")
-	g.Set("db.Name", dbPath)
-	g.Set("db.Keys", "a/")
-	g.Run()
-
-	g = flow.NewGroup()
-	g.Add("db", "LevelDB")
-	g.Set("db.Name", dbPath)
-	g.Set("db.Put", []string{"a/b"})
-	g.Run()
-
-	g = flow.NewGroup()
-	g.Add("db", "LevelDB")
-	g.Set("db.Name", dbPath)
-	g.Set("db.Get", "a/b")
-	g.Run()
-
-	g = flow.NewGroup()
-	g.Add("db", "LevelDB")
-	g.Set("db.Name", dbPath)
-	g.Set("db.Keys", "a/")
-	g.Run()
-
-	g = flow.NewGroup()
-	g.Add("db", "LevelDB")
-	g.Set("db.Name", dbPath)
-	g.Set("db.Put", []string{"a/c"})
 	g.Run()
 	// Output:
 	// Lost string: 123
