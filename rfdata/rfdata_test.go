@@ -13,11 +13,11 @@ func ExampleRF12demo() {
 	g.Set("rf.In", "OK 197 (-60)")
 	g.Run()
 	// Output:
-	// Lost map[string]int: map[band:868 group:5 id:31]
-	// Lost map[string]int: map[origin:9 rssi:-66]
+	// Lost map[string]int: map[<RF12demo>:12 band:868 group:5 id:31]
+	// Lost map[string]int: map[<node>:9 rssi:-66]
 	// Lost []uint8: [9 187 176 69 235 249 6 192 234 6 74 190 18]
-	// Lost map[string]int: map[origin:5 rssi:-76]
+	// Lost map[string]int: map[<node>:5 rssi:-76]
 	// Lost []uint8: [37 2 107 185 0]
-	// Lost map[string]int: map[origin:5 rssi:-60]
+	// Lost map[string]int: map[<node>:5 rssi:-60]
 	// Lost []uint8: [197]
 }

@@ -31,10 +31,7 @@ func (w *RF12demo) Run() {
 				if strings.HasPrefix(s, "OK ") {
 					data, rssi := convertToBytes(s)
 					info := map[string]int{
-						// "band": config["band"],
-						// "group": config["group"],
-						// "id": config["id"],
-						"origin": int(data[0] & 0x1F),
+						"<node>": int(data[0] & 0x1F),
 						"rssi":   rssi,
 					}
 					w.Out.Send(info)
@@ -50,14 +47,15 @@ func (w *RF12demo) Run() {
 }
 
 // Parse lines of the form "[RF12demo.12] _ i31* g5 @ 868 MHz c1 q1"
-var re = regexp.MustCompile(` i(\d+)\*? g(\d+) @ (\d+) MHz`)
+var re = regexp.MustCompile(`\.(\d+)] . i(\d+)\*? g(\d+) @ (\d+) MHz`)
 
 func parseConfigLine(s string) map[string]int {
 	m := re.FindStringSubmatch(s)
-	b, _ := strconv.Atoi(m[3])
-	g, _ := strconv.Atoi(m[2])
-	i, _ := strconv.Atoi(m[1])
-	return map[string]int{"band": b, "group": g, "id": i}
+	v, _ := strconv.Atoi(m[1])
+	i, _ := strconv.Atoi(m[2])
+	g, _ := strconv.Atoi(m[3])
+	b, _ := strconv.Atoi(m[4])
+	return map[string]int{"<RF12demo>": v, "band": b, "group": g, "id": i}
 }
 
 func convertToBytes(s string) ([]byte, int) {
