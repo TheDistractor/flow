@@ -29,13 +29,13 @@ func (w *RF12demo) Run() {
 		for m = range w.In {
 			if s, ok := m.(string); ok {
 				if strings.HasPrefix(s, "OK ") {
-					data, rssi := convertToPacket(s)
+					data, rssi := convertToBytes(s)
 					info := map[string]int{
 						// "band": config["band"],
 						// "group": config["group"],
 						// "id": config["id"],
 						"origin": int(data[0] & 0x1F),
-						"rssi": rssi,
+						"rssi":   rssi,
 					}
 					w.Out.Send(info)
 					w.Out.Send(data)
@@ -58,7 +58,7 @@ func parseConfigLine(s string) map[string]int {
 	return map[string]int{"band": b, "group": g, "id": i}
 }
 
-func convertToPacket(s string) ([]byte, int) {
+func convertToBytes(s string) ([]byte, int) {
 	s = strings.TrimSpace(s[3:])
 	var rssi int
 

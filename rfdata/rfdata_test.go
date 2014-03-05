@@ -21,5 +21,3 @@ func ExampleRF12demo() {
 	// Lost map[string]int: map[origin:5 rssi:-60]
 	// Lost []uint8: [197]
 }
-
-
