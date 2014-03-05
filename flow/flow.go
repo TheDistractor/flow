@@ -280,14 +280,13 @@ type config struct {
 }
 
 // Load a group from a JSON description in a string.
-func LoadString(s string) *Group {
+func (g *Group) LoadString(s string) {
 	var conf config
 	err := json.Unmarshal([]byte(s), &conf)
 	if err != nil {
 		panic(err)
 	}
 
-	g := NewGroup()
 	for _, w := range conf.Workers {
 		g.Add(w.Name, w.Type)
 	}
@@ -297,15 +296,13 @@ func LoadString(s string) *Group {
 	for _, r := range conf.Requests {
 		g.Set(r.To, r.Data)
 	}
-
-	return g
 }
 
 // Load a group from a JSON description in a file.
-func LoadFile(filename string) *Group {
+func (g *Group) LoadFile(filename string) {
 	data, err := ioutil.ReadFile(filename)
 	if err != nil {
 		panic(err)
 	}
-	return LoadString(string(data))
+	g.LoadString(string(data))
 }

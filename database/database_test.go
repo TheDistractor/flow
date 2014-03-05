@@ -17,9 +17,7 @@ func init() {
 
 type dbFeed struct {
 	flow.Work
-	ToGet  flow.Output
-	ToPut  flow.Output
-	ToKeys flow.Output
+	ToGet, ToPut, ToKeys flow.Output
 }
 
 func (w *dbFeed) Run() {
@@ -36,9 +34,7 @@ func (w *dbFeed) Run() {
 func ExampleLevelDB() {
 	// type dbFeed struct {
 	//     flow.Work
-	//     ToGet  flow.Output
-	//     ToPut  flow.Output
-	//     ToKeys flow.Output
+	//     ToGet, ToPut, ToKeys flow.Output
 	// }
 	//
 	// func (w *dbFeed) Run() {

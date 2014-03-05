@@ -20,6 +20,7 @@ func main() {
 		configFile = os.Args[1]
 	}
 
-	g := flow.LoadFile(configFile)
+	g := flow.NewGroup()
+	g.LoadFile(configFile)
 	g.Run()
 }
