@@ -31,10 +31,6 @@ func ExampleLevelDB() {
 	g := flow.NewGroup()
 	g.AddWorker("db", makeDb())
 	g.Set("db.Put", []string{"a/b", "123"})
-	g.Run()
-
-	g = flow.NewGroup()
-	g.AddWorker("db", makeDb())
 	g.Set("db.Put", []string{"a/c", "456"})
 	g.Run()
 

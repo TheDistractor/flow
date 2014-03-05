@@ -42,7 +42,7 @@ type Work struct {
 	worker  Worker
 	name    string
 	parent  *Group
-	inbox   map[string]Memo
+	inbox   map[string][]Memo
 	inputs  map[string]*connection
 	outputs map[string]*connection
 }
@@ -54,7 +54,7 @@ func (w *Work) initWork(wi Worker, nm string, gr *Group) *Work {
 	w.worker = wi
 	w.name = nm
 	w.parent = gr
-	w.inbox = make(map[string]Memo)
+	w.inbox = make(map[string][]Memo)
 	w.inputs = make(map[string]*connection)
 	w.outputs = make(map[string]*connection)
 	return w
@@ -87,12 +87,18 @@ func (w *Work) port(p string) reflect.Value {
 	return fv
 }
 
+func (w *Work) addToInbox(port string, value Memo) {
+	w.inbox[port] = append(w.inbox[port], value)
+}
+
 func (w *Work) processInbox() {
-	for dest, memo := range w.inbox {
-		c := make(chan Memo, 1)
+	for dest, memos := range w.inbox {
+		c := make(chan Memo, len(memos))
 		dp := w.port(dest)
 		dp.Set(reflect.ValueOf(c))
-		c <- memo
+		for _, m := range memos {
+			c <- m
+		}
 		close(c)
 	}
 }
@@ -221,7 +227,7 @@ func (g *Group) Connect(from, to string, capacity int) {
 // Set up a memo which needs to be sent to a worker on startup.
 func (g *Group) Set(port string, v Memo) {
 	w := g.workerOf(port)
-	w.inbox[portPart(port)] = v
+	w.addToInbox(portPart(port), v)
 }
 
 // Start up the group, and return when it is finished.
