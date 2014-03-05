@@ -100,6 +100,7 @@ func (w *Work) processInbox() {
 			c <- m
 		}
 		close(c)
+		delete(w.inbox, dest)
 	}
 }
 

@@ -18,49 +18,46 @@ func init() {
 func ExampleLevelDB() {
 	// TODO: clumsy, use external channels
 
-	makeDb := func() flow.Worker {
-		g := flow.NewGroup()
-		g.Add("d", "LevelDB")
-		g.Map("Get", "d.Get")
-		g.Map("Put", "d.Put")
-		g.Map("Keys", "d.Keys")
-		g.Set("d.Name", dbPath)
-		return g
-	}
-
 	g := flow.NewGroup()
-	g.AddWorker("db", makeDb())
+	g.Add("db", "LevelDB")
+	g.Set("db.Name", dbPath)
 	g.Set("db.Put", []string{"a/b", "123"})
 	g.Set("db.Put", []string{"a/c", "456"})
 	g.Run()
 
 	g = flow.NewGroup()
-	g.AddWorker("db", makeDb())
+	g.Add("db", "LevelDB")
+	g.Set("db.Name", dbPath)
 	g.Set("db.Get", "a/b")
 	g.Run()
 
 	g = flow.NewGroup()
-	g.AddWorker("db", makeDb())
+	g.Add("db", "LevelDB")
+	g.Set("db.Name", dbPath)
 	g.Set("db.Keys", "a/")
 	g.Run()
 
 	g = flow.NewGroup()
-	g.AddWorker("db", makeDb())
+	g.Add("db", "LevelDB")
+	g.Set("db.Name", dbPath)
 	g.Set("db.Put", []string{"a/b"})
 	g.Run()
 
 	g = flow.NewGroup()
-	g.AddWorker("db", makeDb())
+	g.Add("db", "LevelDB")
+	g.Set("db.Name", dbPath)
 	g.Set("db.Get", "a/b")
 	g.Run()
 
 	g = flow.NewGroup()
-	g.AddWorker("db", makeDb())
+	g.Add("db", "LevelDB")
+	g.Set("db.Name", dbPath)
 	g.Set("db.Keys", "a/")
 	g.Run()
 
 	g = flow.NewGroup()
-	g.AddWorker("db", makeDb())
+	g.Add("db", "LevelDB")
+	g.Set("db.Name", dbPath)
 	g.Set("db.Put", []string{"a/c"})
 	g.Run()
 	// Output:
