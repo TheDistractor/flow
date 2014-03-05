@@ -5,8 +5,12 @@
             "name": "s"
         },
         {
-            "type": "SketchType",
+            "type": "TimeStamp",
             "name": "t"
+        },
+        {
+            "type": "SketchType",
+            "name": "u"
         },
         {
             "type": "Printer",
@@ -20,6 +24,10 @@
         },
         {
             "from": "t.Out",
+            "to": "u.In"
+        },
+        {
+            "from": "u.Out",
             "to": "p.In"
         }
     ],

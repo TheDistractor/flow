@@ -42,6 +42,8 @@ func (w *RF12demo) Run() {
 				} else {
 					w.Rej.Send(m)
 				}
+			} else {
+				w.Out.Send(m) // not a string
 			}
 		}
 	}

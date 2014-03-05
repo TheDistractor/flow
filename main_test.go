@@ -12,6 +12,7 @@ func Example() {
 	g.Add("serial-in", "SerialIn")
 	g.Add("sink", "Sink")
 	g.Add("timer", "Timer")
+	g.Add("timestamp", "TimeStamp")
 	g.Run()
 	// Output:
 	// Lost int: 0

@@ -4,14 +4,31 @@ package serial
 import (
 	"bufio"
 	"strings"
+	"time"
 
 	"github.com/chimera/rs232"
 	"github.com/jcw/flow/flow"
 )
 
 func init() {
+	flow.Registry["TimeStamp"] = func() flow.Worker { return &TimeStamp{} }
 	flow.Registry["SerialIn"] = func() flow.Worker { return &SerialIn{} }
 	flow.Registry["SketchType"] = func() flow.Worker { return &SketchType{} }
+}
+
+// Insert a timestamp before each message.
+type TimeStamp struct {
+	flow.Work
+	In  flow.Input
+	Out flow.Output
+}
+
+// Start inserting timestamps.
+func (w *TimeStamp) Run() {
+	for m := range w.In {
+		w.Out.Send(time.Now())
+		w.Out.Send(m)
+	}
 }
 
 // Line-oriented serial input port, opened once the Port input is set.
@@ -63,8 +80,8 @@ func (w *SketchType) Run() {
 					go wg.Run()
 				}
 			}
-			w.Out.Send(m)
 		}
+		w.Out.Send(m)
 	}
 }
 
