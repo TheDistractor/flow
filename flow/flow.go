@@ -60,6 +60,16 @@ func (w *Work) initWork(wi Worker, nm string, gr *Group) *Work {
 	return w
 }
 
+// Return the group of this worker.
+func (w *Work) MyGroup() *Group {
+	return w.parent
+}
+
+// Return the name of this worker.
+func (w *Work) MyName() string {
+	return w.name
+}
+
 func (w *Work) port(p string) reflect.Value {
 	wp := reflect.ValueOf(w.worker)
 	wv := wp.Elem()
@@ -192,6 +202,7 @@ func (g *Group) Connect(from, to string, capacity int) {
 	fp := fw.port(portPart(from))
 	if !fp.IsNil() {
 		fmt.Println("from port already set: ", from)
+		// TODO: refcount needs to be lowered
 	}
 	tw := g.workerOf(to)
 	c := tw.inputs[portPart(to)]

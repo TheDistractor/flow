@@ -9,10 +9,6 @@
             "name": "t"
         },
         {
-            "type": "RFpacket",
-            "name": "r"
-        },
-        {
             "type": "Printer",
             "name": "p"
         }
@@ -24,10 +20,6 @@
         },
         {
             "from": "t.Out",
-            "to": "r.In"
-        },
-        {
-            "from": "r.Out",
             "to": "p.In"
         }
     ],

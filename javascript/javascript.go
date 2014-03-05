@@ -22,7 +22,7 @@ func (w *JavaScript) Run() {
 	if cmd, ok := <-w.Cmd; ok {
 		// initial setup
 		engine := otto.New()
-		
+
 		// define a callback for send memos to Out
 		engine.Set("emitOut", func(call otto.FunctionCall) otto.Value {
 			out, err := call.Argument(0).Export()
@@ -32,12 +32,12 @@ func (w *JavaScript) Run() {
 			w.Out <- out
 			return otto.UndefinedValue()
 		})
-		
+
 		// process the command input
 		if _, err := engine.Run(cmd.(string)); err != nil {
 			panic(err)
 		}
-		
+
 		// only start the processing loop if the "onIn" handler exists
 		value, err := engine.Get("onIn")
 		if err == nil && value.IsFunction() {
