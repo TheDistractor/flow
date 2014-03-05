@@ -1,4 +1,3 @@
-// Core dataflow package.
 package flow
 
 import (
@@ -20,9 +19,10 @@ var Registry = make(map[string]func() Worker)
 type Memo interface{}
 
 // Get the type of a memo, using reflection.
-func Type(m Memo) string {
-	return reflect.TypeOf(m).String()
-}
+// TODO: not used
+// func Type(m Memo) string {
+// 	return reflect.TypeOf(m).String()
+// }
 
 // Input ports are used to receive memo's.
 type Input <-chan Memo
