@@ -58,7 +58,7 @@ func (w *SketchType) Run() {
 					// dynamically insert this new group and connect to it
 					g := w.MyGroup()
 					g.AddWorker("(sketch)", wg)
-					g.Connect(w.MyName() + ".Out", "(sketch).In", 0)
+					g.Connect(w.MyName()+".Out", "(sketch).In", 0)
 					// start the new group running
 					go wg.Run()
 				}
