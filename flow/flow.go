@@ -10,19 +10,13 @@ import (
 )
 
 // Version of this package.
-var Version = "0.0.1"
+var Version = "0.1.0"
 
 // The registry is the factory for all known types of workers.
 var Registry = map[string]func() Worker{}
 
 // Memo's are the generic type sent to, between, and from workers.
 type Memo interface{}
-
-// Get the type of a memo, using reflection.
-// TODO: not used
-// func Type(m Memo) string {
-// 	return reflect.TypeOf(m).String()
-// }
 
 // Input ports are used to receive memo's.
 type Input <-chan Memo
@@ -152,12 +146,6 @@ func (w *Work) closeChannels() {
 	for _, c := range w.outputs {
 		c.Close()
 	}
-	// TODO: cleanup, to allow re-running
-	// w.forAllPorts(func(typ string, val reflect.Value) {
-	// 	if !val.IsNil() {
-	// 		val.Set(reflect.ValueOf(nil))
-	// 	}
-	// })
 }
 
 func (w *Work) Launch() {
@@ -238,7 +226,7 @@ func (g *Group) Connect(from, to string, capacity int) {
 	fp := fw.port(portPart(from))
 	if !fp.IsNil() {
 		fmt.Println("output already connected:", from)
-		// TODO: refcount needs to be lowered
+		// TODO: refcount needs to be lowered if it's a *connection
 	}
 	tw := g.workerOf(to)
 	c := tw.inputs[portPart(to)]
