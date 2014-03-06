@@ -29,6 +29,10 @@
             "type": "Node-homePower"
         },
         {
+            "name": "rn",
+            "type": "Node-roomNode"
+        },
+        {
             "name": "p",
             "type": "Printer"
         }
@@ -60,6 +64,10 @@
         },
         {
             "from": "hp.Out",
+            "to": "rn.In"
+        },
+        {
+            "from": "rn.Out",
             "to": "p.In"
         }
     ],
