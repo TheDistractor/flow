@@ -81,7 +81,7 @@ To make this worker available by name in the registry, set up a factory method:
         return new(LineLengths)
     }
     ...
-    g.Add("ll", LineLengths)
+    g.Add("ll", "LineLengths")
 
 For this simple case, a Transformer could also have been used:
 
