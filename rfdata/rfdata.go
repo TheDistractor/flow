@@ -33,9 +33,9 @@ func (w *RF12demo) Run() {
 			if s, ok := m.(string); ok {
 				if strings.HasPrefix(s, "OK ") {
 					data, rssi := convertToBytes(s)
-					info := map[string]int{
-						"<node>": int(data[0] & 0x1F),
-						"rssi":   rssi,
+					info := map[string]int{"<node>": int(data[0] & 0x1F)}
+					if rssi != 0 {
+						info["rssi"] = rssi
 					}
 					w.Out.Send(info)
 					w.Out.Send(data)
