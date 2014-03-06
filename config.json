@@ -1,8 +1,16 @@
 {
     "workers": [
         {
-            "name": "si",
-            "type": "SerialIn"
+            "name": "lr",
+            "type": "LogReader"
+        },
+        {
+            "name": "rf",
+            "type": "Pipe"
+        },
+        {
+            "name": "w1",
+            "type": "LogReplayer"
         },
         {
             "name": "ts",
@@ -23,7 +31,15 @@
     ],
     "connections": [
         {
-            "from": "si.Out",
+            "from": "lr.Out",
+            "to": "w1.In"
+        },
+        {
+            "from": "rf.Out",
+            "to": "ts.In"
+        },
+        {
+            "from": "w1.Out",
             "to": "ts.In"
         },
         {
@@ -81,6 +97,10 @@
             "to": "nm.Info"
         },
         {
+            "data": "RFg5i14 otRelay",
+            "to": "nm.Info"
+        },
+        {
             "data": "RFg5i15 smaRelay",
             "to": "nm.Info"
         },
@@ -101,8 +121,12 @@
             "to": "nm.Info"
         },
         {
-            "data": "/dev/tty.usbserial-A901ROSM",
-            "to": "si.Port"
+            "data": "[RF12demo.10] _ i31* g5 @ 868 MHz",
+            "to": "rf.In"
+        },
+        {
+            "data": "./rfdata/20121130.txt.gz",
+            "to": "lr.Name"
         }
     ]
 }
