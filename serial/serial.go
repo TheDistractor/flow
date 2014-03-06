@@ -59,8 +59,8 @@ func (w *SerialIn) Run() {
 type SketchType struct {
 	flow.Work
 	In     flow.Input
-	ViaOut flow.Output // send to internally constructed group
-	ViaIn  flow.Input  // receive from internally constructed group
+	ViaOut flow.Output // send to dynamically added worker
+	ViaIn  flow.Input  // receive from dynamically added worker
 	Out    flow.Output
 }
 
@@ -72,24 +72,19 @@ func (w *SketchType) Run() {
 				tag := "Sketch-" + s[1:strings.IndexAny(s, ".]")]
 				// FIXME: this code is a horrible hack
 				if _, ok := flow.Registry[tag]; ok {
-					// must create a new workgroup to insert the new worker
-					wg := flow.NewGroup()
-					wg.Add("sketch", tag)
-					wg.Map("In", "sketch.In")
-					wg.Map("Out", "sketch.Out")
-					// dynamically insert this new group and connect to it
+
 					g := w.MyGroup()
-					g.AddWorker("(sketch)", wg)
+					g.Add("(sketch)", tag)
 					g.Connect(w.MyName()+".ViaOut", "(sketch).In", 0)
 					g.Connect("(sketch).Out", w.MyName()+".ViaIn", 0)
+					g.Launch("(sketch)")
+
 					// start extra goroutine to copy ViaIn to Out
 					go func() {
 						for m := range w.ViaIn {
 							w.Out.Send(m)
 						}
 					}()
-					// start the new group running
-					go wg.Run()
 				}
 			}
 		}

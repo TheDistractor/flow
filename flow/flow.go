@@ -122,6 +122,7 @@ func (w *Work) forAllPorts(f func(string, reflect.Value)) {
 	return
 }
 
+// use a fake sink for every output port not connected to anything else
 type fakeSink struct{}
 
 func (c *fakeSink) Send(m Memo) {
@@ -159,13 +160,16 @@ func (w *Work) closeChannels() {
 	// })
 }
 
-func (w *Work) launch() {
-	defer w.parent.wait.Done()
+func (w *Work) Launch() {
+	w.parent.wait.Add(1)
+	go func() {
+		defer w.parent.wait.Done()
 
-	w.processInbox()
-	w.connectChannels()
-	w.worker.Run()
-	w.closeChannels()
+		w.processInbox()
+		w.connectChannels()
+		w.worker.Run()
+		w.closeChannels()
+	}()
 }
 
 type connection struct {
@@ -258,9 +262,8 @@ func (g *Group) Set(port string, v Memo) {
 
 // Start up the group, and return when it is finished.
 func (g *Group) Run() {
-	g.wait.Add(len(g.workers))
 	for _, w := range g.workers {
-		go w.launch()
+		w.Launch()
 	}
 	g.wait.Wait()
 }
@@ -271,6 +274,11 @@ func (g *Group) Map(external, internal string) {
 		panic("external port should not include a dot: " + external)
 	}
 	g.portMap[external] = internal
+}
+
+// Launch a dynamically added Worker
+func (g *Group) Launch(name string) {
+	g.workers[name].Launch()
 }
 
 type config struct {
