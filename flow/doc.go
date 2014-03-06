@@ -75,14 +75,6 @@ Te define your own worker, create a type which embeds Work and defines Run():
 
 Inputs and outputs become available to the group in which this worker is used.
 
-To make this worker available by name in the registry, set up a factory method:
-
-    flow.registry["LineLengths"] = func() Worker {
-        return new(LineLengths)
-    }
-    ...
-    g.Add("ll", "LineLengths")
-
 For this simple case, a Transformer could also have been used:
 
     ll := flow.Transformer(func(m Memo) Memo) {
@@ -93,6 +85,14 @@ For this simple case, a Transformer could also have been used:
 
 This wraps a function into a worker with In and Out ports. It can be used when
 there is a one-to-one processing task from incoming to outgoing memos.
+
+To make a worker available by name in the registry, set up a factory method:
+
+    flow.registry["LineLen"] = func() Worker {
+        return new(LineLengths)
+    }
+    ...
+    g.Add("ll", "LineLen")
 
 Memo's are just a synonym for Go's "interface{}" type.
 */
