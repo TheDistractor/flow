@@ -11,7 +11,7 @@ func init() {
 	flow.Registry["Node-radioBlip"] = func() flow.Worker { return &RadioBlip{} }
 }
 
-// Decoder for the "radioBlip.ino" sketch.
+// Decoder for the "radioBlip.ino" sketch. Registers as "Node-radioBlip".
 type RadioBlip struct {
 	flow.Work
 	In  flow.Input

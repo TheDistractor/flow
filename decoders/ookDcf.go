@@ -8,7 +8,7 @@ func init() {
 	flow.Registry["Node-ookDcf"] = func() flow.Worker { return &OokDcf{} }
 }
 
-// Decoder for the "ookDcf.ino" sketch.
+// Decoder for the "ookDcf.ino" sketch. Registers as "Node-ookDcf".
 type OokDcf struct {
 	flow.Work
 	In  flow.Input

@@ -16,7 +16,7 @@ func init() {
 	flow.Registry["SketchType"] = func() flow.Worker { return &SketchType{} }
 }
 
-// Insert a timestamp before each message.
+// Insert a timestamp before each message. Registers as "TimeStamp".
 type TimeStamp struct {
 	flow.Work
 	In  flow.Input
@@ -39,6 +39,7 @@ type SerialIn struct {
 }
 
 // Start processing incoming text lines from the serial interface.
+// Registers as "SerialIn".
 func (w *SerialIn) Run() {
 	if port, ok := <-w.Port; ok {
 		opt := rs232.Options{BitRate: 57600, DataBits: 8, StopBits: 1}
@@ -54,6 +55,7 @@ func (w *SerialIn) Run() {
 
 // SketchType looks for lines of the form "[name...]" in the input stream.
 // These then cause a corresponding worker to be loaded dynamically.
+// Registers as "SketchType".
 type SketchType struct {
 	flow.Work
 	In     flow.Input

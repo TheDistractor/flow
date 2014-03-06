@@ -19,6 +19,7 @@ func init() {
 }
 
 // LogReader opens a (possibly compressed) log file and sends out its entries.
+// Registers as "LogReader".
 type LogReader struct {
 	flow.Work
 	In   flow.Input
@@ -71,6 +72,7 @@ func (w *LogReader) Run() {
 }
 
 // A LogReplayer generates new entries from existing ones in simulated time.
+// Registers as "LogReplayer".
 type LogReplayer struct {
 	flow.Work
 	In  flow.Input

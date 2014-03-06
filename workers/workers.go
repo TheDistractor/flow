@@ -18,7 +18,7 @@ func init() {
 	flow.Registry["Clock"] = func() flow.Worker { return &Clock{} }
 }
 
-// A sink eats up all the memos it receives.
+// A sink eats up all the memos it receives. Registers as "Sink".
 type Sink struct {
 	flow.Work
 	In  flow.Input
@@ -32,7 +32,7 @@ func (w *Sink) Run() {
 	}
 }
 
-// Pipes are workers with an "In" and an "Out" port.
+// Pipes are workers with an "In" and an "Out" port. Registers as "Pipe".
 type Pipe struct {
 	flow.Work
 	In  flow.Input
@@ -47,6 +47,7 @@ func (w *Pipe) Run() {
 }
 
 // Repeaters are pipes which repeat each memo a number of times.
+// Registers as "Repeater".
 type Repeater struct {
 	flow.Work
 	In  flow.Input
@@ -67,6 +68,7 @@ func (w *Repeater) Run() {
 }
 
 // A counter reports the number of memos it has received.
+// Registers as "Counter".
 type Counter struct {
 	flow.Work
 	In  flow.Input
@@ -83,7 +85,7 @@ func (w *Counter) Run() {
 	w.Out.Send(w.count)
 }
 
-// Printers report the memos sent to them as output.
+// Printers report the memos sent to them as output. Registers as "Printer".
 type Printer struct {
 	flow.Work
 	In flow.Input
@@ -97,6 +99,7 @@ func (w *Printer) Run() {
 }
 
 // A timer sends out one memo after the time set by the Rate port.
+// Registers as "Timer".
 type Timer struct {
 	flow.Work
 	Rate flow.Input
@@ -112,6 +115,7 @@ func (w *Timer) Run() {
 }
 
 // A clock sends out memos at a fixed rate, as set by the Rate port.
+// Registers as "Clock".
 type Clock struct {
 	flow.Work
 	Rate flow.Input

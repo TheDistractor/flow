@@ -15,7 +15,7 @@ func init() {
 	flow.Registry["MqttServer"] = func() flow.Worker { return &MqttServer{} }
 }
 
-// MqttSub can subscribe to MQTT.
+// MqttSub can subscribe to MQTT. Registers as "MqttSub".
 type MqttSub struct {
 	flow.Work
 	Port  flow.Input
@@ -49,7 +49,7 @@ func (w *MqttSub) Run() {
 	}
 }
 
-// MqttPub can publish to MQTT.
+// MqttPub can publish to MQTT. Registers as "MqttPub".
 type MqttPub struct {
 	flow.Work
 	Port flow.Input
@@ -80,7 +80,7 @@ func (w *MqttPub) Run() {
 	}
 }
 
-// MqttServer is an embedded MQTT server.
+// MqttServer is an embedded MQTT server. Registers as "MqttServer".
 type MqttServer struct {
 	flow.Work
 	Port flow.Input

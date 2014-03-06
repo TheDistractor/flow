@@ -13,7 +13,7 @@ var ookDecoders = []string{
 	"Xrf", "Hez", "Elro", "?11", "?12", "?13", "?14", "?15",
 }
 
-// Decoder for the "ookRelay.ino" sketch.
+// Decoder for the "ookRelay.ino" sketch. Registers as "Node-ookRelay".
 type OokRelay struct {
 	flow.Work
 	In  flow.Input

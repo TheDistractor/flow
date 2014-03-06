@@ -8,7 +8,7 @@ func init() {
 	flow.Registry["Node-roomNode"] = func() flow.Worker { return &RoomNode{} }
 }
 
-// Decoder for the "roomNode.ino" sketch.
+// Decoder for the "roomNode.ino" sketch. Registers as "Node-roomNode".
 type RoomNode struct {
 	flow.Work
 	In  flow.Input

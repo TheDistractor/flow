@@ -17,6 +17,7 @@ func init() {
 }
 
 // RF12demo parses config and OK lines coming from the RF12demo sketch.
+// Registers as "Sketch-RF12demo".
 type RF12demo struct {
 	flow.Work
 	In  flow.Input
@@ -79,6 +80,7 @@ func convertToBytes(s string) ([]byte, int) {
 }
 
 // Lookup the group/node information to determine what decoder to use.
+// Registers as "NodeMap".
 type NodeMap struct {
 	flow.Work
 	In   flow.Input
