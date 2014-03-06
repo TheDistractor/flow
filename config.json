@@ -22,7 +22,11 @@
         },
         {
             "name": "nm",
-            "type": "Decoder-NodeMap"
+            "type": "NodeMap"
+        },
+        {
+            "name": "hp",
+            "type": "Node-homePower"
         },
         {
             "name": "p",
@@ -52,6 +56,10 @@
         },
         {
             "from": "nm.Out",
+            "to": "hp.In"
+        },
+        {
+            "from": "hp.Out",
             "to": "p.In"
         }
     ],
