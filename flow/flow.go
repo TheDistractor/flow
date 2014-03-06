@@ -122,7 +122,16 @@ func (w *Work) forAllPorts(f func(string, reflect.Value)) {
 	return
 }
 
-func (w *Work) connectChannels(nullSink *connection) {
+type fakeSink struct{}
+
+func (c *fakeSink) Send(m Memo) {
+	fmt.Printf("Lost %T: %v\n", m, m)
+}
+
+func (c *fakeSink) Close() {}
+
+func (w *Work) connectChannels() {
+	sink := &fakeSink{}
 	null := make(chan Memo)
 	close(null)
 
@@ -132,19 +141,13 @@ func (w *Work) connectChannels(nullSink *connection) {
 			case "Input":
 				val.Set(reflect.ValueOf(null))
 			case "Output":
-				val.Set(reflect.ValueOf(nullSink))
-				nullSink.senders++
+				val.Set(reflect.ValueOf(sink))
 			}
 		}
 	})
 }
 
 func (w *Work) closeChannels() {
-	// w.forAllPorts(func(typ string, val reflect.Value) {
-	// 	if typ == "Output" {
-	// 		val.Interface().(Output).Close()
-	// 	}
-	// })
 	for _, c := range w.outputs {
 		c.Close()
 	}
@@ -156,9 +159,11 @@ func (w *Work) closeChannels() {
 	// })
 }
 
-func (w *Work) launch(sink *connection) {
+func (w *Work) launch() {
+	defer w.parent.wait.Done()
+
 	w.processInbox()
-	w.connectChannels(sink)
+	w.connectChannels()
 	w.worker.Run()
 	w.closeChannels()
 }
@@ -193,6 +198,7 @@ type Group struct {
 	Work
 	workers map[string]*Work
 	portMap map[string]string
+	wait    sync.WaitGroup
 }
 
 // Add a named worker to the group with a unique name.
@@ -227,7 +233,7 @@ func (g *Group) Connect(from, to string, capacity int) {
 	fw := g.workerOf(from)
 	fp := fw.port(portPart(from))
 	if !fp.IsNil() {
-		fmt.Println("from port already set: ", from)
+		fmt.Println("output already connected:", from)
 		// TODO: refcount needs to be lowered
 	}
 	tw := g.workerOf(to)
@@ -252,37 +258,17 @@ func (g *Group) Set(port string, v Memo) {
 
 // Start up the group, and return when it is finished.
 func (g *Group) Run() {
-	done := make(chan struct{})
-	sink := &connection{channel: make(chan Memo)}
-
-	// report all memo's sent to the sink, for debugging
-	go func() {
-		for m := range sink.channel {
-			fmt.Printf("Lost %T: %v\n", m, m)
-		}
-		close(done)
-	}()
-
-	var wait sync.WaitGroup
-	wait.Add(len(g.workers))
-
+	g.wait.Add(len(g.workers))
 	for _, w := range g.workers {
-		go func(w *Work) {
-			defer wait.Done()
-			w.launch(sink)
-		}(w)
+		go w.launch()
 	}
-
-	// wait until all workers have finished, as well as the sink reporter
-	wait.Wait()
-	close(sink.channel)
-	<-done
+	g.wait.Wait()
 }
 
 // Map an external port to an internal one.
 func (g *Group) Map(external, internal string) {
 	if strings.Contains(external, ".") {
-		panic("external port should not include worker name: " + external)
+		panic("external port should not include a dot: " + external)
 	}
 	g.portMap[external] = internal
 }
