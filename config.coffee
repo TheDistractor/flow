@@ -8,8 +8,10 @@ group =
     { name: "st", type: "SketchType" }
     { name: "nm", type: "NodeMap" }
     { name: "hp", type: "Node-homePower" }
+    { name: "or", type: "Node-ookRelay" }
     { name: "rb", type: "Node-radioBlip" }
     { name: "rn", type: "Node-roomNode" }
+    { name: "od", type: "Node-ookDcf" }
     { name: "p", type: "Printer" }
   ]
   connections: [
@@ -19,9 +21,11 @@ group =
     { from: "ts.Out", to: "st.In" }
     { from: "st.Out", to: "nm.In" }
     { from: "nm.Out", to: "hp.In" }
-    { from: "hp.Out", to: "rb.In" }
+    { from: "hp.Out", to: "or.In" }
+    { from: "or.Out", to: "rb.In" }
     { from: "rb.Out", to: "rn.In" }
-    { from: "rn.Out", to: "p.In" }
+    { from: "rn.Out", to: "od.In" }
+    { from: "od.Out", to: "p.In" }
   ]
   requests: [
     { data: "RFg5i2 roomNode",   to: "nm.Info" }

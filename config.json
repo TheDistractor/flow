@@ -29,12 +29,20 @@
             "type": "Node-homePower"
         },
         {
+            "name": "or",
+            "type": "Node-ookRelay"
+        },
+        {
             "name": "rb",
             "type": "Node-radioBlip"
         },
         {
             "name": "rn",
             "type": "Node-roomNode"
+        },
+        {
+            "name": "od",
+            "type": "Node-ookDcf"
         },
         {
             "name": "p",
@@ -68,6 +76,10 @@
         },
         {
             "from": "hp.Out",
+            "to": "or.In"
+        },
+        {
+            "from": "or.Out",
             "to": "rb.In"
         },
         {
@@ -76,6 +88,10 @@
         },
         {
             "from": "rn.Out",
+            "to": "od.In"
+        },
+        {
+            "from": "od.Out",
             "to": "p.In"
         }
     ],

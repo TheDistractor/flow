@@ -35,7 +35,7 @@ func (w *RadioBlip) Run() {
 				if err != nil {
 					panic(err)
 				}
-				
+
 				result := map[string]int{
 					"<reading>": 1,
 					"ping":      int(ping),
@@ -57,7 +57,7 @@ func (w *RadioBlip) Run() {
 						result["vpost"] = 50 + int(v[7])
 					}
 				}
-				
+
 				m = result
 			}
 
