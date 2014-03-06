@@ -48,6 +48,8 @@ func (w *LogReader) Run() {
 			panic(err)
 		}
 		yr, mo, dy := day.Date()
+		lastDev := ""
+		
 		scanner := bufio.NewScanner(file)
 		for scanner.Scan() {
 			m := re.FindStringSubmatch(scanner.Text())
@@ -57,7 +59,10 @@ func (w *LogReader) Run() {
 				panic(err)
 			}
 			w.Out.Send(tod.AddDate(yr, int(mo)-1, dy-1))
-			w.Out.Send("<" + m[2] + ">")
+			if m[2] != lastDev {
+				w.Out.Send("<" + m[2] + ">")
+				lastDev = m[2]
+			}
 			w.Out.Send(m[3])
 		}
 	}
