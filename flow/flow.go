@@ -122,12 +122,15 @@ func (w *Work) forAllPorts(f func(string, reflect.Value)) {
 	return
 }
 
-func (w *Work) connectChannels(nullSource Input, nullSink *connection) {
+func (w *Work) connectChannels(nullSink *connection) {
+	null := make(chan Memo)
+	close(null)
+
 	w.forAllPorts(func(typ string, val reflect.Value) {
 		if val.IsNil() {
 			switch typ {
 			case "Input":
-				val.Set(reflect.ValueOf(nullSource))
+				val.Set(reflect.ValueOf(null))
 			case "Output":
 				val.Set(reflect.ValueOf(nullSink))
 				nullSink.senders++
@@ -151,6 +154,13 @@ func (w *Work) closeChannels() {
 	// 		val.Set(reflect.ValueOf(nil))
 	// 	}
 	// })
+}
+
+func (w *Work) launch(sink *connection) {
+	w.processInbox()
+	w.connectChannels(sink)
+	w.worker.Run()
+	w.closeChannels()
 }
 
 type connection struct {
@@ -244,8 +254,6 @@ func (g *Group) Set(port string, v Memo) {
 func (g *Group) Run() {
 	done := make(chan struct{})
 	sink := &connection{channel: make(chan Memo)}
-	null := make(chan Memo)
-	close(null)
 
 	// report all memo's sent to the sink, for debugging
 	go func() {
@@ -261,10 +269,7 @@ func (g *Group) Run() {
 	for _, w := range g.workers {
 		go func(w *Work) {
 			defer wait.Done()
-			w.processInbox()
-			w.connectChannels(null, sink)
-			w.worker.Run()
-			w.closeChannels()
+			w.launch(sink)
 		}(w)
 	}
 
