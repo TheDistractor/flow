@@ -29,6 +29,10 @@
             "type": "Node-homePower"
         },
         {
+            "name": "rb",
+            "type": "Node-radioBlip"
+        },
+        {
             "name": "rn",
             "type": "Node-roomNode"
         },
@@ -64,6 +68,10 @@
         },
         {
             "from": "hp.Out",
+            "to": "rb.In"
+        },
+        {
+            "from": "rb.Out",
             "to": "rn.In"
         },
         {

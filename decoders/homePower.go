@@ -35,24 +35,24 @@ func (w *HomePower) Run() {
 				if err != nil {
 					panic(err)
 				}
-				results := map[string]int{"<reading>": 1}
+				result := map[string]int{"<reading>": 1}
 				if vec[0] != prev[0] {
-					results["c1"] = int(vec[0])
-					results["p1"] = time2watt(int(vec[1]))
+					result["c1"] = int(vec[0])
+					result["p1"] = time2watt(int(vec[1]))
 				}
 				if vec[2] != prev[2] {
-					results["c2"] = int(vec[2])
-					results["p2"] = time2watt(int(vec[3]))
+					result["c2"] = int(vec[2])
+					result["p2"] = time2watt(int(vec[3]))
 				}
 				if vec[4] != prev[4] {
-					results["c3"] = int(vec[4])
-					results["p3"] = time2watt(int(vec[5]))
+					result["c3"] = int(vec[4])
+					result["p3"] = time2watt(int(vec[5]))
 				}
 				copy(prev[:], vec[:])
-				if len(results) == 1 {
+				if len(result) == 1 {
 					continue
 				}
-				m = results
+				m = result
 			}
 
 		default:
