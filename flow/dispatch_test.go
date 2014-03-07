@@ -2,7 +2,7 @@ package flow_test
 
 import (
 	"strings"
-	
+
 	"github.com/jcw/flow/flow"
 	_ "github.com/jcw/flow/workers"
 )
@@ -15,8 +15,8 @@ func ExampleDispatcher() {
 			}
 			return m
 		})
-	} 
-	
+	}
+
 	g := flow.NewGroup()
 	g.Add("d", "Dispatcher")
 	g.Set("d.In", "abc")

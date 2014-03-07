@@ -10,7 +10,6 @@ type Work struct {
 	worker  Worker
 	name    string
 	parent  *Group
-	inbox   map[string][]Memo
 	inputs  map[string]*connection
 	outputs map[string]*connection
 }
@@ -22,7 +21,6 @@ func (w *Work) initWork(wi Worker, nm string, gr *Group) *Work {
 	w.worker = wi
 	w.name = nm
 	w.parent = gr
-	w.inbox = map[string][]Memo{}
 	w.inputs = map[string]*connection{}
 	w.outputs = map[string]*connection{}
 	return w
@@ -55,12 +53,8 @@ func (w *Work) port(p string) reflect.Value {
 	return fv
 }
 
-func (w *Work) addToInbox(port string, value Memo) {
-	w.inbox[port] = append(w.inbox[port], value)
-}
-
 func (w *Work) processInbox() {
-	for dest, memos := range w.inbox {
+	for dest, memos := range w.parent.inbox[w.name] {
 		c := make(chan Memo, len(memos))
 		dp := w.port(dest)
 		dp.Set(reflect.ValueOf(c))
@@ -68,7 +62,6 @@ func (w *Work) processInbox() {
 			c <- m
 		}
 		close(c)
-		delete(w.inbox, dest)
 	}
 }
 

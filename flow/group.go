@@ -12,6 +12,7 @@ func NewGroup() *Group {
 	return &Group{
 		workers: map[string]*Work{},
 		portMap: map[string]string{},
+		inbox:   map[string]map[string][]Memo{},
 	}
 }
 
@@ -20,6 +21,7 @@ type Group struct {
 	Work
 	workers map[string]*Work
 	portMap map[string]string
+	inbox   map[string]map[string][]Memo
 	wait    sync.WaitGroup
 }
 
@@ -39,10 +41,15 @@ func (g *Group) AddWorker(name string, w Worker) {
 }
 
 func (g *Group) workerOf(s string) *Work {
-	if n := strings.IndexRune(s, '.'); n > 0 {
-		s = s[:n]
+	return g.workers[workerPart(s)]
+}
+
+func workerPart(s string) string {
+	n := strings.IndexRune(s, '.')
+	if n < 0 {
+		n = len(s)
 	}
-	return g.workers[s]
+	return s[:n]
 }
 
 func portPart(s string) string {
@@ -87,8 +94,12 @@ func (g *Group) Connect(from, to string, capacity int) {
 
 // Set up a memo to be sent to a worker on startup.
 func (g *Group) Set(port string, v Memo) {
-	w := g.workerOf(port)
-	w.addToInbox(portPart(port), v)
+	wp := workerPart(port)
+	if _, ok := g.inbox[wp]; !ok {
+		g.inbox[wp] = map[string][]Memo{}
+	}
+	pp := portPart(port)
+	g.inbox[wp][pp] = append(g.inbox[wp][pp], v)
 }
 
 // Start up the group, and return when it is finished.
