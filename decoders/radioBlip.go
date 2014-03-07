@@ -18,7 +18,7 @@ type RadioBlip struct {
 	Out flow.Output
 }
 
-// Start decoding radioBlip packets
+// Start decoding radioBlip packets.
 func (w *RadioBlip) Run() {
 	for m := range w.In {
 		if v, ok := m.([]byte); ok && len(v) >= 4 {

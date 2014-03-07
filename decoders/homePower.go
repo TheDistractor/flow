@@ -18,7 +18,7 @@ type HomePower struct {
 	Out flow.Output
 }
 
-// Start decoding homePower packets
+// Start decoding homePower packets.
 func (w *HomePower) Run() {
 	var vec, prev [6]uint16
 	for m := range w.In {

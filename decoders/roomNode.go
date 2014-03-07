@@ -15,7 +15,7 @@ type RoomNode struct {
 	Out flow.Output
 }
 
-// Start decoding roomNode packets
+// Start decoding roomNode packets.
 func (w *RoomNode) Run() {
 	for m := range w.In {
 		if v, ok := m.([]byte); ok && len(v) >= 4 {

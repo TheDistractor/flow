@@ -15,7 +15,7 @@ type OokDcf struct {
 	Out flow.Output
 }
 
-// Start decoding ookDcf packets
+// Start decoding ookDcf packets.
 func (w *OokDcf) Run() {
 	for m := range w.In {
 		if v, ok := m.([]byte); ok && len(v) >= 6 {

@@ -29,7 +29,7 @@ type OokRelay struct {
 	Out flow.Output
 }
 
-// Start decoding ookRelay packets
+// Start decoding ookRelay packets.
 func (w *OokRelay) Run() {
 	for m := range w.In {
 		if v, ok := m.([]byte); ok {
@@ -46,7 +46,6 @@ func (w *OokRelay) Run() {
 
 				offset += size
 			}
-			w.Out.Send(flow.Tag{"dispatch", ""})
 		} else {
 			w.Out.Send(m)
 		}
