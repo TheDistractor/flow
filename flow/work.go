@@ -87,15 +87,6 @@ func (w *Work) forAllPorts(f func(string, reflect.Value)) {
 	return
 }
 
-// use a fake sink for every output port not connected to anything else
-type fakeSink struct{}
-
-func (c *fakeSink) Send(m Memo) {
-	fmt.Printf("Lost %T: %v\n", m, m)
-}
-
-func (c *fakeSink) Close() {}
-
 func (w *Work) connectChannels() {
 	sink := &fakeSink{}
 	null := make(chan Memo)

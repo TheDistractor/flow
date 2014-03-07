@@ -7,23 +7,6 @@ import (
 	"sync"
 )
 
-type connection struct {
-	channel chan Memo
-	senders int
-}
-
-// Send a memo through an output port.
-func (c *connection) Send(v Memo) {
-	c.channel <- v
-}
-
-func (c *connection) Close() {
-	c.senders--
-	if c.senders == 0 {
-		close(c.channel)
-	}
-}
-
 // Initialise a new group.
 func NewGroup() *Group {
 	return &Group{
