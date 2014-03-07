@@ -17,26 +17,15 @@ type OokDcf struct {
 
 // Start decoding ookDcf packets
 func (w *OokDcf) Run() {
-	active := false
 	for m := range w.In {
-		switch v := m.(type) {
-
-		case string:
-			active = v == "<Node-ookDcf>"
-
-		case []byte:
-			if active {
-				date := ((2000+int(v[0]))*100+int(v[1]))*100 + int(v[2])
-				m = map[string]int{
-					"<reading>": 1,
-					"date":      date,
-					"tod":       int(v[3])*100 + int(v[4]),
-					"dst":       int(v[5]),
-				}
+		if v, ok := m.([]byte); ok && len(v) >= 6 {
+			date := ((2000+int(v[0]))*100+int(v[1]))*100 + int(v[2])
+			m = map[string]int{
+				"<reading>": 1,
+				"date":      date,
+				"tod":       int(v[3])*100 + int(v[4]),
+				"dst":       int(v[5]),
 			}
-
-		default:
-			active = false
 		}
 
 		w.Out.Send(m)

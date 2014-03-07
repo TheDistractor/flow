@@ -16,8 +16,9 @@ var ookDecoders = []string{
 // Decoder for the "ookRelay.ino" sketch. Registers as "Node-ookRelay".
 type OokRelay struct {
 	flow.Work
-	In  flow.Input
-	Out flow.Output
+	In   flow.Input
+	Type flow.Output
+	Out  flow.Output
 }
 
 // Start decoding ookRelay packets
@@ -38,6 +39,7 @@ func (w *OokRelay) Run() {
 					offset++
 
 					// insert a new decoder request
+					w.Type.Send("Node-ook" + ookDecoders[typ])
 					w.Out.Send("<Node-ook" + ookDecoders[typ] + ">")
 					w.Out.Send(v[offset : offset+size])
 

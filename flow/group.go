@@ -52,12 +52,6 @@ func portPart(s string) string {
 
 // Connect an output port with an input port.
 func (g *Group) Connect(from, to string, capacity int) {
-	fw := g.workerOf(from)
-	fp := fw.port(portPart(from))
-	if !fp.IsNil() {
-		fmt.Println("output already connected:", from)
-		// TODO: refcount needs to be lowered if it's a *connection
-	}
 	tw := g.workerOf(to)
 	c := tw.inputs[portPart(to)]
 	if c == nil {
@@ -67,12 +61,28 @@ func (g *Group) Connect(from, to string, capacity int) {
 		tp.Set(reflect.ValueOf(c.channel))
 	}
 	c.senders++
-	cv := reflect.ValueOf(c)
-	fp.Set(cv)
-	fw.outputs[portPart(from)] = c
+	
+	fw := g.workerOf(from)
+	ppfv := strings.Split(portPart(from), ":")
+	fp := fw.port(ppfv[0])
+	if len(ppfv) == 1 {
+		if !fp.IsNil() {
+			fmt.Println("output already connected:", from)
+			// TODO: close the previous Output
+		}	
+		cv := reflect.ValueOf(c)
+		fp.Set(cv)
+		fw.outputs[portPart(from)] = c
+	} else { // it's not an Output, so it must be a map[string]Output
+		if fp.IsNil() {
+			fp.Set(reflect.ValueOf(map[string]Output{}))
+		}
+		// TODO: close the previous Output, if any
+		fp.Interface().(map[string]Output)[ppfv[1]] = c
+	}
 }
 
-// Set up a memo which needs to be sent to a worker on startup.
+// Set up a memo to be sent to a worker on startup.
 func (g *Group) Set(port string, v Memo) {
 	w := g.workerOf(port)
 	w.addToInbox(portPart(port), v)

@@ -35,7 +35,6 @@ type dispatchFront struct {
 	Out   Output
 	Rej   Output
 
-	replies Input
 	worker  string
 }
 

@@ -50,7 +50,7 @@ func (w *Work) port(p string) reflect.Value {
 				return fw.port(portPart(p)) // recursive
 			}
 		}
-		fmt.Println("port not found: " + p)
+		fmt.Println("port not found:", p)
 	}
 	return fv
 }
@@ -79,9 +79,14 @@ func (w *Work) forAllPorts(f func(string, reflect.Value)) {
 	for i := 0; i < we.NumField(); i++ {
 		fd := wt.Field(i)
 		ft := fd.Type.Name()
-		switch ft {
-		case "Input", "Output":
+		switch {
+		case ft == "Input" || ft == "Output":
 			f(ft, we.Field(i))
+		case fd.Type.String() == "map[string]flow.Output":
+			// TODO: hack, won't be sufficient when adding multi-in ports
+			for k, _ := range we.Field(i).Interface().(map[string]Output) {
+				f(k, we.Field(i))
+			}
 		}
 	}
 	return
@@ -99,6 +104,8 @@ func (w *Work) connectChannels() {
 				val.Set(reflect.ValueOf(null))
 			case "Output":
 				val.Set(reflect.ValueOf(sink))
+			default:
+				val.Interface().(map[string]Output)[typ] = sink
 			}
 		}
 	})

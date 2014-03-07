@@ -33,16 +33,16 @@
             "type": "Node-ookRelay"
         },
         {
+            "name": "dp",
+            "type": "Dispatcher"
+        },
+        {
             "name": "rb",
             "type": "Node-radioBlip"
         },
         {
             "name": "rn",
             "type": "Node-roomNode"
-        },
-        {
-            "name": "od",
-            "type": "Node-ookDcf"
         },
         {
             "name": "p",
@@ -80,6 +80,14 @@
         },
         {
             "from": "or.Out",
+            "to": "dp.In"
+        },
+        {
+            "from": "or.Type",
+            "to": "dp.Use"
+        },
+        {
+            "from": "dp.Out",
             "to": "rb.In"
         },
         {
@@ -88,10 +96,6 @@
         },
         {
             "from": "rn.Out",
-            "to": "od.In"
-        },
-        {
-            "from": "od.Out",
             "to": "p.In"
         }
     ],
