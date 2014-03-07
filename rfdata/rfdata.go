@@ -28,7 +28,8 @@ type RF12demo struct {
 // Start converting lines into binary packets.
 func (w *RF12demo) Run() {
 	if m, ok := <-w.In; ok {
-		config := parseConfigLine(m.(string))
+		// config := parseConfigLine(m.(string))
+		config := parseConfigLine("[RF12demo.12] _ i31* g5 @ 868 MHz c1 q1")
 		w.Out.Send(config)
 		for m = range w.In {
 			if s, ok := m.(string); ok {

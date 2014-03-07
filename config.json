@@ -21,6 +21,10 @@
             "type": "SketchType"
         },
         {
+            "name": "d1",
+            "type": "Dispatcher"
+        },
+        {
             "name": "nm",
             "type": "NodeMap"
         },
@@ -68,6 +72,14 @@
         },
         {
             "from": "st.Out",
+            "to": "d1.In"
+        },
+        {
+            "from": "st.Type",
+            "to": "d1.Use"
+        },
+        {
+            "from": "d1.Out",
             "to": "nm.In"
         },
         {

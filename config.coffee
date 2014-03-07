@@ -6,6 +6,7 @@ group =
     # { name: "w1", type: "SerialIn" }
     { name: "ts", type: "TimeStamp" }
     { name: "st", type: "SketchType" }
+    { name: "d1", type: "Dispatcher" }
     { name: "nm", type: "NodeMap" }
     { name: "hp", type: "Node-homePower" }
     { name: "or", type: "Node-ookRelay" }
@@ -19,7 +20,9 @@ group =
     { from: "rf.Out", to: "ts.In" }
     { from: "w1.Out", to: "ts.In" }
     { from: "ts.Out", to: "st.In" }
-    { from: "st.Out", to: "nm.In" }
+    { from: "st.Out", to: "d1.In" }
+    { from: "st.Type", to: "d1.Use" }
+    { from: "d1.Out", to: "nm.In" }
     { from: "nm.Out", to: "hp.In" }
     { from: "hp.Out", to: "or.In" }
     { from: "or.Out", to: "dp.In" }

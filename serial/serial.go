@@ -44,7 +44,9 @@ func (w *SerialIn) Run() {
 	if port, ok := <-w.Port; ok {
 		opt := rs232.Options{BitRate: 57600, DataBits: 8, StopBits: 1}
 		dev, err := rs232.Open(port.(string), opt)
-		check(err)
+		if err != nil {
+			panic(err)
+		}
 
 		scanner := bufio.NewScanner(dev)
 		for scanner.Scan() {
@@ -58,10 +60,9 @@ func (w *SerialIn) Run() {
 // Registers as "SketchType".
 type SketchType struct {
 	flow.Work
-	In     flow.Input
-	ViaOut flow.Output // send to dynamically added worker
-	ViaIn  flow.Input  // receive from dynamically added worker
-	Out    flow.Output
+	In   flow.Input
+	Type flow.Output
+	Out  flow.Output
 }
 
 // Start transforming the "[name...]" markers in the input stream.
@@ -69,32 +70,10 @@ func (w *SketchType) Run() {
 	for m := range w.In {
 		if s, ok := m.(string); ok {
 			if strings.HasPrefix(s, "[") && strings.Contains(s, "]") {
-				tag := "Sketch-" + s[1:strings.IndexAny(s, ".]")]
-				// FIXME: this code is a horrible hack
-				if _, ok := flow.Registry[tag]; ok {
-
-					g := w.MyGroup()
-					g.Add("(sketch)", tag)
-					g.Connect(w.MyName()+".ViaOut", "(sketch).In", 0)
-					g.Connect("(sketch).Out", w.MyName()+".ViaIn", 0)
-					g.Launch("(sketch)")
-
-					// start extra goroutine to copy ViaIn to Out
-					go func() {
-						for m := range w.ViaIn {
-							w.Out.Send(m)
-						}
-					}()
-				}
+				w.Type.Send("Sketch-" + s[1:strings.IndexAny(s, ".]")])
+				continue
 			}
 		}
-		w.ViaOut.Send(m)
-	}
-}
-
-// Generic error checking, panics if e is not nil.
-func check(e error) {
-	if e != nil {
-		panic(e)
+		w.Out.Send(m)
 	}
 }
