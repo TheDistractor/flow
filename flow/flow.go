@@ -10,19 +10,19 @@ var Version = "0.1.0"
 // The registry is the factory for all known types of workers.
 var Registry = map[string]func() Worker{}
 
-// Memo's are the generic type sent to, between, and from workers.
+// Memos are the generic type sent to, between, and from workers.
 type Memo interface{}
 
-// Input ports are used to receive memo's.
+// Input ports are used to receive memos.
 type Input <-chan Memo
 
-// Output ports are used to send memo's elsewhere.
+// Output ports are used to send memos elsewhere.
 type Output interface {
-	Send(v Memo)
-	Close()
+	Send(v Memo) // Send a memo through an output port.
+	Close()      // Detach the port, close channel when last one is gone.
 }
 
-// The worker is the basic unit of processing, shuffling memo's between ports.
+// The worker is the basic unit of processing, shuffling memos between ports.
 type Worker interface {
 	Run()
 
@@ -48,12 +48,12 @@ func (w *transformer) Run() {
 	}
 }
 
+// A connection is a ref-counted Input, it's closed when the count drops to 0.
 type connection struct {
 	channel chan Memo
 	senders int
 }
 
-// Send a memo through an output port.
 func (c *connection) Send(v Memo) {
 	c.channel <- v
 }
@@ -65,7 +65,7 @@ func (c *connection) Close() {
 	}
 }
 
-// use a fake sink for every output port not connected to anything else
+// Use a fake sink for every output port not connected to anything else.
 type fakeSink struct{}
 
 func (c *fakeSink) Send(m Memo) {

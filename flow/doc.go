@@ -94,6 +94,6 @@ To make a worker available by name in the registry, set up a factory method:
     ...
     g.Add("ll", "LineLen")
 
-Memo's are just a synonym for Go's "interface{}" type.
+Memo is a synonym for Go's generic "interface{}" type.
 */
 package flow
