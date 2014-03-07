@@ -30,9 +30,9 @@ func (w *SmaRelay) Run() {
 			}
 			result := map[string]int{
 				"<reading>": 1,
-				"acw": int(vec[2]),
-				"dcv1": int(vec[3]),
-				"dcv2": int(vec[4]),
+				"acw":       int(vec[2]),
+				"dcv1":      int(vec[3]),
+				"dcv2":      int(vec[4]),
 			}
 			if vec[0] != prev[0] {
 				result["yield"] = int(vec[0])
