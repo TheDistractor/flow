@@ -1,77 +1,98 @@
 package flow
 
 func init() {
-	Registry["Dispatcher"] = func() Worker { return &Dispatcher{} }
+	Registry["Dispatcher"] = func() Worker {
+		g := NewGroup()
+		g.AddWorker("front", &dispatchFront{})
+		g.AddWorker("back", &dispatchBack{})
+		g.Connect("front.Feeds:", "back.In", 0)  // fallback for marker
+		g.Connect("back.SwOut", "front.SwIn", 1) // must have room for reply
+		g.Map("In", "front.In")
+		g.Map("Use", "front.Use")
+		g.Map("Rej", "front.Rej")
+		g.Map("Out", "back.Out")
+		return g
+	}
 }
 
-// A dispatcher sends memos to new workers, as determined by the use port.
-// These workers must have an In and an Out port. The rest is sent to Rej.
-type Dispatcher struct {
-	Work
-	In  Input
-	Use Input
-	Out Output
-	Rej Output
+// A dispatcher sends memos to newly created workers, as set in the use port.
+// These workers must have an In and an Out port. Their output is merged into
+// a single Out port, the rest is sent to Rej. Registers as "Dispatcher".
+type Dispatcher Group
 
-	feeds   map[string]Output
+// The implementation uses a group with dispatchFront and dispatchBack workers.
+// Newly created workers are inserted "between" them, using Feeds as fanout.
+// Switching needs special care to drain the preceding worker output first.
+
+type marker string // special marker sent through to determine when to switch
+
+type dispatchFront struct {
+	Work
+	In    Input
+	Use   Input
+	SwIn  Input
+	Feeds map[string]Output
+	Out   Output
+	Rej   Output
+
 	replies Input
 	worker  string
 }
 
-type marker string // special marker sent through to determine when to switch
-
-// Start dispatching to the worker named in the Use port.
-func (w *Dispatcher) Run() {
+func (w *dispatchFront) Run() {
 	useChan := w.Use
 	for {
 		select {
 		case m := <-useChan:
-			if m == nil {
-				useChan = nil // stop listening
-			} else if feed, ok := w.feeds[w.worker]; ok {
-				useChan = nil                    // suspended
-				go feed.Send(marker(m.(string))) // will eventually fire
-			} else {
-				w.switchToWorker(m.(string))
+			useChan = nil // suspend
+			if m != nil {
+				// send a marker, will act on it when it comes back on SwIn
+				w.Feeds[w.worker].Send(marker(m.(string)))
+			}
+
+		case m := <-w.SwIn:
+			useChan = w.Use // resume
+			w.worker = string(m.(marker))
+			sw := w.worker
+			if w.Feeds[sw] == nil {
+				if Registry[sw] == nil {
+					w.Rej.Send(m) // report that no such worker was found
+					w.worker = ""
+				} else { // create, hook up, and launch the new worker
+					g := w.parent
+					g.Add(sw, sw)
+					g.Connect("front.Feeds:"+sw, sw+".In", 0)
+					g.Connect(sw+".Out", "back.In", 0)
+					g.Launch(sw)
+				}
 			}
 
 		case m := <-w.In:
 			if m == nil {
-				for _, f := range w.feeds {
-					f.Close()
-				}
-				// let feeds drain, ends when workers close replies port
-			} else if feed, ok := w.feeds[w.worker]; ok {
-				feed.Send(m)
-			} else {
-				w.Rej.Send(m)
-			}
-
-		case m, ok := <-w.replies:
-			if !ok {
 				return
 			}
-			if m, ok := m.(marker); ok {
-				// the marker came back, switch to the requested worker
-				w.switchToWorker(string(m))
-			} else {
-				w.Out.Send(m)
+			feed := w.Feeds[w.worker]
+			if feed == nil {
+				feed = w.Rej
 			}
+			feed.Send(m)
 		}
 	}
 }
 
-func (w *Dispatcher) switchToWorker(name string) {
-	if Registry[name] == nil {
-		w.Rej.Send(marker(name)) // report that no such worker was found
-		name = ""
-	}
-	w.worker = name
-	if name != "" && w.feeds[name] == nil {
-		g := w.parent
-		g.Add(name, name)
-		g.Connect(w.name+".feeds."+name, name+".In", 0)
-		g.Connect(name+".Out", w.name+".replies", 0)
-		// w.feeds[name] = ...
+type dispatchBack struct {
+	Work
+	In    Input
+	SwOut Output
+	Out   Output
+}
+
+func (w *dispatchBack) Run() {
+	for m := range w.In {
+		if _, ok := m.(marker); ok {
+			w.SwOut.Send(m)
+		} else {
+			w.Out.Send(m)
+		}
 	}
 }
