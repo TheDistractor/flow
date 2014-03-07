@@ -28,7 +28,7 @@ type RF12demo struct {
 // Start converting lines into binary packets.
 func (w *RF12demo) Run() {
 	if m, ok := <-w.In; ok {
-		// config := parseConfigLine(m.(string))
+		// TODO: config := parseConfigLine(m.(string))
 		config := parseConfigLine("[RF12demo.12] _ i31* g5 @ 868 MHz c1 q1")
 		w.Out.Send(config)
 		for m = range w.In {
@@ -84,9 +84,10 @@ func convertToBytes(s string) ([]byte, int) {
 // Registers as "NodeMap".
 type NodeMap struct {
 	flow.Work
-	In   flow.Input
-	Out  flow.Output
 	Info flow.Input
+	In   flow.Input
+	Type flow.Output
+	Out  flow.Output
 }
 
 // Start looking up node ID's in the node map.
@@ -105,9 +106,11 @@ func (w *NodeMap) Run() {
 				group = data["group"]
 			case data["<node>"] > 0:
 				key := fmt.Sprintf("RFg%di%d", group, data["<node>"])
-				typ := nodeMap[key]
-				if typ != "" {
-					w.Out.Send("<Node-" + typ + ">")
+				tag := nodeMap[key]
+				if tag != "" {
+					tag := "Node-" + tag
+					w.Type.Send(tag)
+					w.Out.Send("<" + tag + ">")
 				}
 			}
 		}

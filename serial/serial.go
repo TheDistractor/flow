@@ -70,8 +70,9 @@ func (w *SketchType) Run() {
 	for m := range w.In {
 		if s, ok := m.(string); ok {
 			if strings.HasPrefix(s, "[") && strings.Contains(s, "]") {
-				w.Type.Send("Sketch-" + s[1:strings.IndexAny(s, ".]")])
-				continue
+				tag := "Sketch-" + s[1:strings.IndexAny(s, ".]")]
+				w.Type.Send(tag)
+				// m = "<" + tag + ">"
 			}
 		}
 		w.Out.Send(m)

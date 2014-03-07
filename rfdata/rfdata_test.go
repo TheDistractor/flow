@@ -35,6 +35,7 @@ func ExampleNodeMap() {
 	// Lost map[string]int: map[<RF12demo>:1 group:5]
 	// Lost map[string]int: map[<node>:3]
 	// Lost map[string]int: map[<node>:4]
+	// Lost string: Node-roomNode
 	// Lost string: <Node-roomNode>
 	// Lost map[string]int: map[<node>:5]
 }
