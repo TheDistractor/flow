@@ -7,13 +7,13 @@ import (
 func init() {
 	Registry["Dispatcher"] = func() Worker {
 		g := NewGroup()
-		g.AddWorker("front", &dispatchFront{})
-		g.AddWorker("back", &dispatchBack{})
-		g.Connect("front.Feeds:", "back.In", 0)  // fallback for marker
-		g.Connect("back.SwOut", "front.SwIn", 1) // must have room for reply
-		g.Map("In", "front.In")
-		g.Map("Rej", "front.Rej")
-		g.Map("Out", "back.Out")
+		g.AddWorker("head", &dispatchHead{})
+		g.AddWorker("tail", &dispatchTail{})
+		g.Connect("head.Feeds:", "tail.In", 0)  // fallback for marker
+		g.Connect("tail.Back", "head.Reply", 1) // must have room for reply
+		g.Map("In", "head.In")
+		g.Map("Rej", "head.Rej")
+		g.Map("Out", "tail.Out")
 		return g
 	}
 }
@@ -23,7 +23,7 @@ func init() {
 // a single Out port, the rest is sent to Rej. Registers as "Dispatcher".
 type Dispatcher Group
 
-// The implementation uses a group with dispatchFront and dispatchBack workers.
+// The implementation uses a group with dispatchHead and dispatchTail workers.
 // Newly created workers are inserted "between" them, using Feeds as fanout.
 // Switching needs special care to drain the preceding worker output first.
 
@@ -31,29 +31,30 @@ type Dispatcher Group
 // TODO: relies on the marker's address, won't work through a remoted stream
 var marker struct{}
 
-type dispatchFront struct {
+type dispatchHead struct {
 	Work
 	In    Input
-	SwIn  Input
+	Reply Input
 	Feeds map[string]Output
 	Out   Output
 	Rej   Output
 }
 
-func (w *dispatchFront) Run() {
+func (w *dispatchHead) Run() {
 	worker := ""
 	for m := range w.In {
 		if tag, ok := m.(Tag); ok && tag.Tag == "dispatch" {
 			if tag.Val == worker {
 				continue
 			}
-			
-			// send a marker and act on it once it comes back on SwIn
+
+			// send a marker and act on it once it comes back on Reply
+			fmt.Println("send switch marker:", tag)
 			w.Feeds[worker].Send(marker)
 			fmt.Println("wait for switch to:", tag)
-			<-w.SwIn // TODO: add a timeout?
+			<-w.Reply // TODO: add a timeout?
 			fmt.Println("switching to:", tag)
-			
+
 			// perform the switch, now that previous output has drained
 			worker = tag.Val.(string)
 			if w.Feeds[worker] == nil {
@@ -64,16 +65,16 @@ func (w *dispatchFront) Run() {
 					fmt.Println("Dispatching to new worker:", worker)
 					g := w.parent
 					g.Add(worker, worker)
-					g.Connect("front.Feeds:"+worker, worker+".In", 0)
-					g.Connect(worker+".Out", "back.In", 0)
+					g.Connect("head.Feeds:"+worker, worker+".In", 0)
+					g.Connect(worker+".Out", "tail.In", 0)
 					g.Launch(worker)
 				}
 			}
-			
+
 			// pass through a "consumed" dispatch tag
 			m = Tag{"dispatched", worker}
 		}
-		
+
 		feed := w.Feeds[worker]
 		if feed == nil {
 			feed = w.Rej
@@ -82,18 +83,19 @@ func (w *dispatchFront) Run() {
 	}
 }
 
-type dispatchBack struct {
+type dispatchTail struct {
 	Work
-	In    Input
-	SwOut Output
-	Out   Output
+	In   Input
+	Back Output
+	Out  Output
 }
 
-func (w *dispatchBack) Run() {
+func (w *dispatchTail) Run() {
 	for m := range w.In {
 		if m == marker {
 			fmt.Println("switch marker seen")
-			w.SwOut.Send(m)
+			w.Back.Send(m)
+			fmt.Println("reply switch marker")
 		} else {
 			w.Out.Send(m)
 		}

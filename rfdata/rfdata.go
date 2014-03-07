@@ -96,7 +96,7 @@ func (w *NodeMap) Run() {
 		f := strings.Fields(m.(string))
 		nodeMap[f[0]] = f[1]
 	}
-	
+
 	var group int
 	for m := range w.In {
 		if data, ok := m.(map[string]int); ok {
@@ -113,7 +113,7 @@ func (w *NodeMap) Run() {
 			}
 			continue
 		}
-		
+
 		w.Out.Send(m)
 	}
 }

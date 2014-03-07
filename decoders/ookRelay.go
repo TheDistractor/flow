@@ -19,14 +19,14 @@ func init() {
 
 var ookDecoders = []string{
 	"Dcf", "Viso", "Emx", "Ksx", "Fsx", "Orsc", "Cres", "Kaku",
-	"Xrf", "Hez", "Elro", "?11", "?12", "?13", "?14", "?15",
+	"Xrf", "Hez", "Elro", "11?", "12?", "13?", "14?", "15?",
 }
 
 // Decoder for the "ookRelay.ino" sketch. Registers as "Node-ookRelay".
 type OokRelay struct {
 	flow.Work
-	In   flow.Input
-	Out  flow.Output
+	In  flow.Input
+	Out flow.Output
 }
 
 // Start decoding ookRelay packets
@@ -46,6 +46,7 @@ func (w *OokRelay) Run() {
 
 				offset += size
 			}
+			w.Out.Send(flow.Tag{"dispatch", ""})
 		} else {
 			w.Out.Send(m)
 		}

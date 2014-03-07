@@ -60,8 +60,8 @@ func (w *SerialIn) Run() {
 // Registers as "SketchType".
 type SketchType struct {
 	flow.Work
-	In   flow.Input
-	Out  flow.Output
+	In  flow.Input
+	Out flow.Output
 }
 
 // Start transforming the "[name...]" markers in the input stream.
