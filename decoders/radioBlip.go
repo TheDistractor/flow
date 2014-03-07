@@ -21,7 +21,7 @@ type RadioBlip struct {
 // Start decoding radioBlip packets
 func (w *RadioBlip) Run() {
 	for m := range w.In {
-		if v, ok := m.([]byte); ok {
+		if v, ok := m.([]byte); ok && len(v) >= 4 {
 			buf := bytes.NewBuffer(v[1:])
 			var ping uint32
 			err := binary.Read(buf, binary.LittleEndian, &ping)

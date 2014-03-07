@@ -5,7 +5,16 @@ import (
 )
 
 func init() {
-	flow.Registry["Node-ookRelay"] = func() flow.Worker { return &OokRelay{} }
+	flow.Registry["Node-ookRelay"] = func() flow.Worker {
+		g := flow.NewGroup()
+		g.AddWorker("or", &OokRelay{})
+		g.Add("dp", "Dispatcher")
+		// g.Connect("or.Out", "dp.In", 0)
+		g.Map("In", "or.In")
+		g.Map("Out", "or.Out")
+		g.Map("Rej", "dp.Rej")
+		return g
+	}
 }
 
 var ookDecoders = []string{
@@ -32,7 +41,7 @@ func (w *OokRelay) Run() {
 
 				// insert a new decoder request
 				tag := "Node-ook" + ookDecoders[typ]
-				w.Out.Send(&flow.Tag{"dispatch", tag})
+				w.Out.Send(flow.Tag{"dispatch", tag})
 				w.Out.Send(v[offset : offset+size])
 
 				offset += size

@@ -29,24 +29,8 @@
             "type": "NodeMap"
         },
         {
-            "name": "hp",
-            "type": "Node-homePower"
-        },
-        {
-            "name": "or",
-            "type": "Node-ookRelay"
-        },
-        {
-            "name": "dp",
+            "name": "d2",
             "type": "Dispatcher"
-        },
-        {
-            "name": "rb",
-            "type": "Node-radioBlip"
-        },
-        {
-            "name": "rn",
-            "type": "Node-roomNode"
         },
         {
             "name": "p",
@@ -80,26 +64,10 @@
         },
         {
             "from": "nm.Out",
-            "to": "hp.In"
+            "to": "d2.In"
         },
         {
-            "from": "hp.Out",
-            "to": "or.In"
-        },
-        {
-            "from": "or.Out",
-            "to": "dp.In"
-        },
-        {
-            "from": "dp.Out",
-            "to": "rb.In"
-        },
-        {
-            "from": "rb.Out",
-            "to": "rn.In"
-        },
-        {
-            "from": "rn.Out",
+            "from": "d2.Out",
             "to": "p.In"
         }
     ],

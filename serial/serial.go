@@ -70,8 +70,7 @@ func (w *SketchType) Run() {
 		if s, ok := m.(string); ok {
 			if strings.HasPrefix(s, "[") && strings.Contains(s, "]") {
 				tag := "Sketch-" + s[1:strings.IndexAny(s, ".]")]
-				w.Out.Send(&flow.Tag{"dispatch", tag})
-				// m = "<" + tag + ">"
+				m = flow.Tag{"dispatch", tag}
 			}
 		}
 		w.Out.Send(m)

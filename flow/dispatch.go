@@ -44,9 +44,15 @@ func (w *dispatchFront) Run() {
 	worker := ""
 	for m := range w.In {
 		if tag, ok := m.(Tag); ok && tag.Tag == "dispatch" {
+			if tag.Val == worker {
+				continue
+			}
+			
 			// send a marker and act on it once it comes back on SwIn
 			w.Feeds[worker].Send(marker)
+			fmt.Println("wait for switch to:", tag)
 			<-w.SwIn // TODO: add a timeout?
+			fmt.Println("switching to:", tag)
 			
 			// perform the switch, now that previous output has drained
 			worker = tag.Val.(string)
@@ -65,8 +71,9 @@ func (w *dispatchFront) Run() {
 			}
 			
 			// pass through a "consumed" dispatch tag
-			m = &Tag{"dispatched", worker}
+			m = Tag{"dispatched", worker}
 		}
+		
 		feed := w.Feeds[worker]
 		if feed == nil {
 			feed = w.Rej
@@ -85,6 +92,7 @@ type dispatchBack struct {
 func (w *dispatchBack) Run() {
 	for m := range w.In {
 		if m == marker {
+			fmt.Println("switch marker seen")
 			w.SwOut.Send(m)
 		} else {
 			w.Out.Send(m)
