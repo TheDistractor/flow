@@ -58,6 +58,9 @@ func (g *Group) Connect(from, to string, capacity int) {
 		c = &connection{channel: make(chan Memo, capacity)}
 		tw.inputs[portPart(to)] = c
 		tp := tw.port(portPart(to))
+		if !tp.IsValid() {
+			panic("cannot set to:" + to)
+		}
 		tp.Set(reflect.ValueOf(c.channel))
 	}
 	c.senders++

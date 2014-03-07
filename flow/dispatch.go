@@ -49,11 +49,11 @@ func (w *dispatchHead) Run() {
 			}
 
 			// send a marker and act on it once it comes back on Reply
-			fmt.Println("send switch marker:", tag)
+			println(fmt.Sprintln("send switch marker:", tag))
 			w.Feeds[worker].Send(marker)
-			fmt.Println("wait for switch to:", tag)
+			println(fmt.Sprintln("wait for switch to:", tag))
 			<-w.Reply // TODO: add a timeout?
-			fmt.Println("switching to:", tag)
+			println(fmt.Sprintln("switching to:", tag))
 
 			// perform the switch, now that previous output has drained
 			worker = tag.Val.(string)
@@ -62,7 +62,7 @@ func (w *dispatchHead) Run() {
 					w.Rej.Send(tag) // report that no such worker was found
 					worker = ""
 				} else { // create, hook up, and launch the new worker
-					fmt.Println("Dispatching to new worker:", worker)
+					println("Dispatching to new worker: " + worker)
 					g := w.parent
 					g.Add(worker, worker)
 					g.Connect("head.Feeds:"+worker, worker+".In", 0)
@@ -81,6 +81,12 @@ func (w *dispatchHead) Run() {
 		}
 		feed.Send(m)
 	}
+	println("dispatch head ends")
+	for _, o := range w.Feeds {
+		o.Close()
+	}
+	// w.Out.Close()
+	// w.Rej.Close()
 }
 
 type dispatchTail struct {
@@ -93,11 +99,14 @@ type dispatchTail struct {
 func (w *dispatchTail) Run() {
 	for m := range w.In {
 		if m == marker {
-			fmt.Println("switch marker seen")
+			println("switch marker seen")
 			w.Back.Send(m)
-			fmt.Println("reply switch marker")
+			println("reply switch marker")
 		} else {
 			w.Out.Send(m)
 		}
 	}
+	println("dispatch tail ends")
+	w.Back.Close()
+	w.Out.Close()
 }
