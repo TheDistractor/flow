@@ -45,6 +45,40 @@ func ExampleGroup_Map() {
 	// Lost string: abc
 }
 
+func ExampleNestedGroup() {
+	g1 := flow.NewGroup()
+	g1.Add("p", "Pipe")
+	g1.Map("In", "p.In")
+	g1.Map("Out", "p.Out")
+
+	g2 := flow.NewGroup()
+	g2.Add("p", "Pipe")
+	g2.Map("In", "p.In")
+	g2.Map("Out", "p.Out")
+
+	g3 := flow.NewGroup()
+	g3.AddWorker("g1", g1)
+	g3.AddWorker("g2", g2)
+	g3.Connect("g1.Out", "g2.In", 0)
+	g3.Map("In", "g1.In")
+	g3.Map("Out", "g2.Out")
+
+	g := flow.NewGroup()
+	g.Add("p1", "Pipe")
+	g.AddWorker("g", g3)
+	g.Add("p2", "Pipe")
+	g.Connect("p1.Out", "g.In", 0)
+	g.Connect("g.Out", "p2.In", 0)
+	g.Set("p1.In", "abc")
+	g.Set("p1.In", "def")
+	g.Set("p1.In", "ghi")
+	g.Run()
+	// Output:
+	// Lost string: abc
+	// Lost string: def
+	// Lost string: ghi
+}
+
 func BenchmarkRepeat0(b *testing.B) {
 	g := flow.NewGroup()
 	g.Add("r", "Repeater")
