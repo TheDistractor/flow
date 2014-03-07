@@ -1,7 +1,7 @@
 package flow
 
 import (
-	"fmt"
+	// "fmt"
 )
 
 func init() {
@@ -36,7 +36,6 @@ type dispatchHead struct {
 	In    Input
 	Reply Input
 	Feeds map[string]Output
-	Out   Output
 	Rej   Output
 }
 
@@ -49,11 +48,11 @@ func (w *dispatchHead) Run() {
 			}
 
 			// send a marker and act on it once it comes back on Reply
-			println(fmt.Sprintln("send switch marker:", tag))
+			// println(fmt.Sprintln("send switch marker:", tag))
 			w.Feeds[worker].Send(marker)
-			println(fmt.Sprintln("wait for switch to:", tag))
+			// println(fmt.Sprintln("wait for switch to:", tag))
 			<-w.Reply // TODO: add a timeout?
-			println(fmt.Sprintln("switching to:", tag))
+			// println(fmt.Sprintln("switching to:", tag))
 
 			// perform the switch, now that previous output has drained
 			worker = tag.Val.(string)
@@ -72,7 +71,8 @@ func (w *dispatchHead) Run() {
 			}
 
 			// pass through a "consumed" dispatch tag
-			m = Tag{"dispatched", worker}
+			w.Feeds[""].Send(Tag{"dispatched", worker})
+			continue
 		}
 
 		feed := w.Feeds[worker]
