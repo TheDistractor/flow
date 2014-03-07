@@ -1,5 +1,9 @@
 package flow
 
+import (
+	"fmt"
+)
+
 func init() {
 	Registry["Dispatcher"] = func() Worker {
 		g := NewGroup()
@@ -24,7 +28,9 @@ type Dispatcher Group
 // Newly created workers are inserted "between" them, using Feeds as fanout.
 // Switching needs special care to drain the preceding worker output first.
 
-type marker string // special marker sent through to determine when to switch
+// special marker sent through to determine when to switch
+// TODO: relies on the marker's address, won't work through a remoted stream
+var marker struct{}
 
 type dispatchFront struct {
 	Work
@@ -34,35 +40,31 @@ type dispatchFront struct {
 	Feeds map[string]Output
 	Out   Output
 	Rej   Output
-
-	worker  string
 }
 
 func (w *dispatchFront) Run() {
-	useChan := w.Use
+	worker := ""
 	for {
 		select {
-		case m := <-useChan:
-			useChan = nil // suspend
+		case m := <-w.Use:
 			if m != nil {
 				// send a marker, will act on it when it comes back on SwIn
-				w.Feeds[w.worker].Send(marker(m.(string)))
-			}
-
-		case m := <-w.SwIn:
-			useChan = w.Use // resume
-			w.worker = string(m.(marker))
-			sw := w.worker
-			if w.Feeds[sw] == nil {
-				if Registry[sw] == nil {
-					w.Rej.Send(m) // report that no such worker was found
-					w.worker = ""
-				} else { // create, hook up, and launch the new worker
-					g := w.parent
-					g.Add(sw, sw)
-					g.Connect("front.Feeds:"+sw, sw+".In", 0)
-					g.Connect(sw+".Out", "back.In", 0)
-					g.Launch(sw)
+				w.Feeds[worker].Send(marker)
+				<-w.SwIn
+				// perform the switch, now that previous output has drained
+				worker = m.(string)
+				if w.Feeds[worker] == nil {
+					if Registry[worker] == nil {
+						w.Rej.Send(m) // report that no such worker was found
+						worker = ""
+					} else { // create, hook up, and launch the new worker
+						fmt.Println("Dispatching to new worker:", worker)
+						g := w.parent
+						g.Add(worker, worker)
+						g.Connect("front.Feeds:"+worker, worker+".In", 0)
+						g.Connect(worker+".Out", "back.In", 0)
+						g.Launch(worker)
+					}
 				}
 			}
 
@@ -70,7 +72,7 @@ func (w *dispatchFront) Run() {
 			if m == nil {
 				return
 			}
-			feed := w.Feeds[w.worker]
+			feed := w.Feeds[worker]
 			if feed == nil {
 				feed = w.Rej
 			}
@@ -88,7 +90,7 @@ type dispatchBack struct {
 
 func (w *dispatchBack) Run() {
 	for m := range w.In {
-		if _, ok := m.(marker); ok {
+		if m == marker {
 			w.SwOut.Send(m)
 		} else {
 			w.Out.Send(m)

@@ -61,7 +61,7 @@ func (g *Group) Connect(from, to string, capacity int) {
 		tp.Set(reflect.ValueOf(c.channel))
 	}
 	c.senders++
-	
+
 	fw := g.workerOf(from)
 	ppfv := strings.Split(portPart(from), ":")
 	fp := fw.port(ppfv[0])
@@ -69,7 +69,7 @@ func (g *Group) Connect(from, to string, capacity int) {
 		if !fp.IsNil() {
 			fmt.Println("output already connected:", from)
 			// TODO: close the previous Output
-		}	
+		}
 		cv := reflect.ValueOf(c)
 		fp.Set(cv)
 		fw.outputs[portPart(from)] = c
