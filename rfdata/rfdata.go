@@ -86,7 +86,6 @@ type NodeMap struct {
 	flow.Work
 	Info flow.Input
 	In   flow.Input
-	Type flow.Output
 	Out  flow.Output
 }
 
@@ -106,10 +105,9 @@ func (w *NodeMap) Run() {
 				group = data["group"]
 			case data["<node>"] > 0:
 				key := fmt.Sprintf("RFg%di%d", group, data["<node>"])
-				tag := nodeMap[key]
-				if tag != "" {
-					tag := "Node-" + tag
-					w.Type.Send(tag)
+				if _, ok := nodeMap[key]; ok {
+					tag := "Node-" + nodeMap[key]
+					w.Out.Send(&flow.Tag{"dispatch", tag})
 					w.Out.Send("<" + tag + ">")
 				}
 			}

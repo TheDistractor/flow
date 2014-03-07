@@ -12,14 +12,13 @@ func init() {
 		g.Connect("front.Feeds:", "back.In", 0)  // fallback for marker
 		g.Connect("back.SwOut", "front.SwIn", 1) // must have room for reply
 		g.Map("In", "front.In")
-		g.Map("Use", "front.Use")
 		g.Map("Rej", "front.Rej")
 		g.Map("Out", "back.Out")
 		return g
 	}
 }
 
-// A dispatcher sends memos to newly created workers, as set in the use port.
+// A dispatcher sends memos to newly created workers, based on dispatch tags.
 // These workers must have an In and an Out port. Their output is merged into
 // a single Out port, the rest is sent to Rej. Registers as "Dispatcher".
 type Dispatcher Group
@@ -35,7 +34,6 @@ var marker struct{}
 type dispatchFront struct {
 	Work
 	In    Input
-	Use   Input
 	SwIn  Input
 	Feeds map[string]Output
 	Out   Output
@@ -44,40 +42,36 @@ type dispatchFront struct {
 
 func (w *dispatchFront) Run() {
 	worker := ""
-	for {
-		select {
-		case m := <-w.Use:
-			if m != nil {
-				// send a marker, will act on it when it comes back on SwIn
-				w.Feeds[worker].Send(marker)
-				<-w.SwIn
-				// perform the switch, now that previous output has drained
-				worker = m.(string)
-				if w.Feeds[worker] == nil {
-					if Registry[worker] == nil {
-						w.Rej.Send(m) // report that no such worker was found
-						worker = ""
-					} else { // create, hook up, and launch the new worker
-						fmt.Println("Dispatching to new worker:", worker)
-						g := w.parent
-						g.Add(worker, worker)
-						g.Connect("front.Feeds:"+worker, worker+".In", 0)
-						g.Connect(worker+".Out", "back.In", 0)
-						g.Launch(worker)
-					}
+	for m := range w.In {
+		if tag, ok := m.(Tag); ok && tag.Tag == "dispatch" {
+			// send a marker and act on it once it comes back on SwIn
+			w.Feeds[worker].Send(marker)
+			<-w.SwIn // TODO: add a timeout?
+			
+			// perform the switch, now that previous output has drained
+			worker = tag.Val.(string)
+			if w.Feeds[worker] == nil {
+				if Registry[worker] == nil {
+					w.Rej.Send(tag) // report that no such worker was found
+					worker = ""
+				} else { // create, hook up, and launch the new worker
+					fmt.Println("Dispatching to new worker:", worker)
+					g := w.parent
+					g.Add(worker, worker)
+					g.Connect("front.Feeds:"+worker, worker+".In", 0)
+					g.Connect(worker+".Out", "back.In", 0)
+					g.Launch(worker)
 				}
 			}
-
-		case m := <-w.In:
-			if m == nil {
-				return
-			}
-			feed := w.Feeds[worker]
-			if feed == nil {
-				feed = w.Rej
-			}
-			feed.Send(m)
+			
+			// pass through a "consumed" dispatch tag
+			m = &Tag{"dispatched", worker}
 		}
+		feed := w.Feeds[worker]
+		if feed == nil {
+			feed = w.Rej
+		}
+		feed.Send(m)
 	}
 }
 

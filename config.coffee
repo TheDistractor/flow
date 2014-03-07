@@ -21,12 +21,10 @@ group =
     { from: "w1.Out", to: "ts.In" }
     { from: "ts.Out", to: "st.In" }
     { from: "st.Out", to: "d1.In" }
-    { from: "st.Type", to: "d1.Use" }
     { from: "d1.Out", to: "nm.In" }
     { from: "nm.Out", to: "hp.In" }
     { from: "hp.Out", to: "or.In" }
     { from: "or.Out", to: "dp.In" }
-    { from: "or.Type", to: "dp.Use" }
     { from: "dp.Out", to: "rb.In" }
     { from: "rb.Out", to: "rn.In" }
     { from: "rn.Out", to: "p.In" }

@@ -17,41 +17,28 @@ var ookDecoders = []string{
 type OokRelay struct {
 	flow.Work
 	In   flow.Input
-	Type flow.Output
 	Out  flow.Output
 }
 
 // Start decoding ookRelay packets
 func (w *OokRelay) Run() {
-	active := false
 	for m := range w.In {
-		switch v := m.(type) {
+		if v, ok := m.([]byte); ok {
+			offset := 1
+			for offset < len(v) {
+				typ := int(v[offset] & 0x0F)
+				size := int(v[offset] >> 4)
+				offset++
 
-		case string:
-			active = v == "<Node-ookRelay>"
+				// insert a new decoder request
+				tag := "Node-ook" + ookDecoders[typ]
+				w.Out.Send(&flow.Tag{"dispatch", tag})
+				w.Out.Send(v[offset : offset+size])
 
-		case []byte:
-			if active {
-				offset := 1
-				for offset < len(v) {
-					typ := int(v[offset] & 0x0F)
-					size := int(v[offset] >> 4)
-					offset++
-
-					// insert a new decoder request
-					w.Type.Send("Node-ook" + ookDecoders[typ])
-					w.Out.Send("<Node-ook" + ookDecoders[typ] + ">")
-					w.Out.Send(v[offset : offset+size])
-
-					offset += size
-				}
-				continue
+				offset += size
 			}
-
-		default:
-			active = false
+		} else {
+			w.Out.Send(m)
 		}
-
-		w.Out.Send(m)
 	}
 }

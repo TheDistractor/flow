@@ -13,6 +13,12 @@ var Registry = map[string]func() Worker{}
 // Memos are the generic type sent to, between, and from workers.
 type Memo interface{}
 
+// A tag allows adding a descriptive string to a memo.
+type Tag struct {
+	Tag string
+	Val Memo
+}
+
 // Input ports are used to receive memos.
 type Input <-chan Memo
 

@@ -61,7 +61,6 @@ func (w *SerialIn) Run() {
 type SketchType struct {
 	flow.Work
 	In   flow.Input
-	Type flow.Output
 	Out  flow.Output
 }
 
@@ -71,7 +70,7 @@ func (w *SketchType) Run() {
 		if s, ok := m.(string); ok {
 			if strings.HasPrefix(s, "[") && strings.Contains(s, "]") {
 				tag := "Sketch-" + s[1:strings.IndexAny(s, ".]")]
-				w.Type.Send(tag)
+				w.Out.Send(&flow.Tag{"dispatch", tag})
 				// m = "<" + tag + ">"
 			}
 		}
