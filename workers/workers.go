@@ -60,7 +60,11 @@ func (w *Repeater) Run() {
 	if num, ok := <-w.Num; ok {
 		n := num.(int)
 		for m := range w.In {
-			for i := 0; i < n; i++ {
+			count := n
+			if _, ok = m.(flow.Tag); ok {
+				count = 1 // don't repeat tags, just pass them through
+			}
+			for i := 0; i < count; i++ {
 				w.Out.Send(m)
 			}
 		}
@@ -79,8 +83,12 @@ type Counter struct {
 
 // Start counting incoming memos.
 func (w *Counter) Run() {
-	for _ = range w.In {
-		w.count++
+	for m := range w.In {
+		if _, ok := m.(flow.Tag); ok {
+			w.Out.Send(m) // don't count tags, just pass them through
+		} else {
+			w.count++
+		}
 	}
 	w.Out.Send(w.count)
 }
