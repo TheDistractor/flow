@@ -5,7 +5,7 @@ func init() {
 		g := NewGroup()
 		g.AddWorker("head", &dispatchHead{})
 		g.AddWorker("tail", &dispatchTail{})
-		g.Connect("head.Feeds:", "tail.In", 0)  // fallback for marker
+		g.Connect("head.Feeds:", "tail.In", 0)  // keeps tail alive
 		g.Connect("tail.Back", "head.Reply", 1) // must have room for reply
 		g.Map("In", "head.In")
 		g.Map("Rej", "head.Rej")
@@ -23,10 +23,6 @@ type Dispatcher Group
 // Newly created workers are inserted "between" them, using Feeds as fanout.
 // Switching needs special care to drain the preceding worker output first.
 
-// special marker sent through to determine when to switch
-// TODO: relies on the marker's address, won't work through a remoted stream
-var marker struct{}
-
 type dispatchHead struct {
 	Work
 	In    Input
@@ -38,18 +34,14 @@ type dispatchHead struct {
 func (w *dispatchHead) Run() {
 	worker := ""
 	for m := range w.In {
-		if m == marker {
-			w.Feeds[""].Send(nil) // TODO: hack
-			continue
-		}
-
 		if tag, ok := m.(Tag); ok && tag.Tag == "dispatch" {
 			if tag.Val == worker {
 				continue
 			}
 
-			// send a marker and act on it once it comes back on Reply
-			w.Feeds[worker].Send(marker)
+			// send (unique!) marker and act on it once it comes back on Reply
+			// only drawback of sending an address, is that it can't be remoted
+			w.Feeds[worker].Send(w.parent)
 			<-w.Reply // TODO: add a timeout?
 
 			// perform the switch, now that previous output has drained
@@ -93,12 +85,9 @@ type dispatchTail struct {
 
 func (w *dispatchTail) Run() {
 	for m := range w.In {
-		if m == marker {
+		if m == w.parent {
 			w.Back.Send(m)
 		} else {
-			if m == nil {
-				m = marker // TODO: hack
-			}
 			w.Out.Send(m)
 		}
 	}
