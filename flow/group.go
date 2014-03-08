@@ -82,7 +82,6 @@ func (g *Group) Connect(from, to string, capacity int) {
 		}
 		cv := reflect.ValueOf(c)
 		fp.Set(cv)
-		fw.outputs[portPart(from)] = c
 	} else { // it's not an Output, so it must be a map[string]Output
 		if fp.IsNil() {
 			fp.Set(reflect.ValueOf(map[string]Output{}))
@@ -90,6 +89,7 @@ func (g *Group) Connect(from, to string, capacity int) {
 		// TODO: close the previous Output, if any
 		fp.Interface().(map[string]Output)[ppfv[1]] = c
 	}
+	fw.outputs[portPart(from)] = c
 }
 
 // Set up a memo to be sent to a worker on startup.

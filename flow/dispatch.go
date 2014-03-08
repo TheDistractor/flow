@@ -71,9 +71,6 @@ func (w *dispatchHead) Run() {
 		}
 		feed.Send(m)
 	}
-	for _, o := range w.Feeds {
-		o.Close()
-	}
 }
 
 type dispatchTail struct {
