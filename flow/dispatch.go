@@ -40,7 +40,6 @@ func (w *dispatchHead) Run() {
 			}
 
 			// send (unique!) marker and act on it once it comes back on Reply
-			// only drawback of sending an address, is that it can't be remoted
 			w.Feeds[worker].Send(Tag{"<marker>", w.parent})
 			<-w.Reply // TODO: add a timeout?
 
@@ -56,7 +55,7 @@ func (w *dispatchHead) Run() {
 					g.Add(worker, worker)
 					g.Connect("head.Feeds:"+worker, worker+".In", 0)
 					g.Connect(worker+".Out", "tail.In", 0)
-					g.launch(worker)
+					g.workers[worker].launch()
 				}
 			}
 

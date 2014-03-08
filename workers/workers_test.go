@@ -67,13 +67,13 @@ func ExampleAllWorkers() {
 
 func ExampleFanOut() {
 	g := flow.NewGroup()
-	g.Add("fo", "FanOut")
+	g.Add("f", "FanOut")
 	g.Add("c", "Counter")
 	g.Add("p", "Printer")
-	g.Connect("fo.Out:c", "c.In", 0)
-	g.Connect("fo.Out:p", "p.In", 0)
-	g.Set("fo.In", "abc")
-	g.Set("fo.In", "def")
+	g.Connect("f.Out:c", "c.In", 0)
+	g.Connect("f.Out:p", "p.In", 0)
+	g.Set("f.In", "abc")
+	g.Set("f.In", "def")
 	g.Run()
 	// Output:
 	// string: abc

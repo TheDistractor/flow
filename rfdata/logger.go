@@ -33,13 +33,13 @@ func (w *Logger) Run() {
 			case time.Time:
 				last = v
 			case string:
-				w.logOneLine(last, v)
+				w.logOneLine(last, v, "-") // TODO: port not known
 			}
 		}
 	}
 }
 
-func (w *Logger) logOneLine(asof time.Time, text string) {
+func (w *Logger) logOneLine(asof time.Time, text, port string) {
 	// figure out name of logfile based on UTC date, with daily rotation
 	year, month, day := asof.Date()
 	path := fmt.Sprintf("%s/%d", w.dir, year)
@@ -65,6 +65,6 @@ func (w *Logger) logOneLine(asof time.Time, text string) {
 	// 	L 01:02:03.537 usb-A40117UK OK 9 25 54 66 235 61 210 226 33 19
 	hour, min, sec := asof.Clock()
 	line := fmt.Sprintf("L %02d:%02d:%02d.%03d %s %s\n",
-		hour, min, sec, asof.Nanosecond()/1000000, "-", text)
+		hour, min, sec, asof.Nanosecond()/1000000, port, text)
 	w.fd.WriteString(line)
 }

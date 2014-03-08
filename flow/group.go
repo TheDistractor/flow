@@ -117,8 +117,3 @@ func (g *Group) Map(external, internal string) {
 	}
 	g.portMap[external] = internal
 }
-
-// Launch a dynamically added Worker
-func (g *Group) launch(name string) {
-	g.workers[name].launch()
-}
