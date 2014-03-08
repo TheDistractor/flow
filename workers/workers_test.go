@@ -65,6 +65,22 @@ func ExampleAllWorkers() {
 	// Lost int: 0
 }
 
+func ExampleFanOut() {
+	g := flow.NewGroup()
+	g.Add("fo", "FanOut")
+	g.Add("c", "Counter")
+	g.Add("p", "Printer")
+	g.Connect("fo.Out:c", "c.In", 0)
+	g.Connect("fo.Out:p", "p.In", 0)
+	g.Set("fo.In", "abc")
+	g.Set("fo.In", "def")
+	g.Run()
+	// Output:
+	// string: abc
+	// string: def
+	// Lost int: 2
+}
+
 func TestTimer(t *testing.T) {
 	g := flow.NewGroup()
 	g.Add("t", "Timer")

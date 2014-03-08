@@ -16,6 +16,7 @@ func init() {
 	flow.Registry["Printer"] = func() flow.Worker { return &Printer{} }
 	flow.Registry["Timer"] = func() flow.Worker { return &Timer{} }
 	flow.Registry["Clock"] = func() flow.Worker { return &Clock{} }
+	flow.Registry["FanOut"] = func() flow.Worker { return &FanOut{} }
 }
 
 // A sink eats up all the memos it receives. Registers as "Sink".
@@ -136,6 +137,23 @@ func (w *Clock) Run() {
 		t := time.NewTicker(rate.(time.Duration))
 		for m := range t.C {
 			w.Out.Send(m)
+		}
+	}
+}
+
+// A fanout sends out memos to each of its outputs, which is set up as map.
+// Registers as "FanOut".
+type FanOut struct {
+	flow.Work
+	In  flow.Input
+	Out map[string]flow.Output
+}
+
+// Start sending out memos to all output ports (does not make copies of them).
+func (w *FanOut) Run() {
+	for m := range w.In {
+		for _, o := range w.Out {
+			o.Send(m)
 		}
 	}
 }
