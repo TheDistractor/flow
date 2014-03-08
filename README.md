@@ -1,4 +1,4 @@
-# Flow
+![](gwtf.png)
 
 An experiment with dataflow programming in Go.
 Massively inspired by Paul Morrison's  
