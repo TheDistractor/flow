@@ -5,6 +5,8 @@ group =
     { name: "w1", type: "LogReplayer" }
     # { name: "w1", type: "SerialIn" }
     { name: "ts", type: "TimeStamp" }
+    { name: "fo", type: "FanOut" }
+    { name: "lg", type: "Logger" }
     { name: "st", type: "SketchType" }
     { name: "d1", type: "Dispatcher" }
     { name: "nm", type: "NodeMap" }
@@ -15,7 +17,9 @@ group =
     { from: "lr.Out", to: "w1.In" }
     { from: "rf.Out", to: "ts.In" }
     { from: "w1.Out", to: "ts.In" }
-    { from: "ts.Out", to: "st.In" }
+    { from: "ts.Out", to: "fo.In" }
+    { from: "fo.Out:lg", to: "lg.In" }
+    { from: "fo.Out:st", to: "st.In" }
     { from: "st.Out", to: "d1.In" }
     { from: "d1.Out", to: "nm.In" }
     { from: "nm.Out", to: "d2.In" }
@@ -41,6 +45,7 @@ group =
     
     { data: "[RF12demo.10] _ i31* g5 @ 868 MHz", to: "rf.In" }
     { data: "./rfdata/20121130.txt.gz", to: "lr.Name" }
+    { data: "./logger", to: "lg.Dir" }
     # { data: "/dev/tty.usbserial-A901ROSM", to: "w1.Port" }
   ]
 

@@ -17,6 +17,14 @@
             "type": "TimeStamp"
         },
         {
+            "name": "fo",
+            "type": "FanOut"
+        },
+        {
+            "name": "lg",
+            "type": "Logger"
+        },
+        {
             "name": "st",
             "type": "SketchType"
         },
@@ -52,6 +60,14 @@
         },
         {
             "from": "ts.Out",
+            "to": "fo.In"
+        },
+        {
+            "from": "fo.Out:lg",
+            "to": "lg.In"
+        },
+        {
+            "from": "fo.Out:st",
             "to": "st.In"
         },
         {
@@ -143,6 +159,10 @@
         {
             "data": "./rfdata/20121130.txt.gz",
             "to": "lr.Name"
+        },
+        {
+            "data": "./logger",
+            "to": "lg.Dir"
         }
     ]
 }
