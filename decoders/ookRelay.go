@@ -9,9 +9,9 @@ func init() {
 		g := flow.NewGroup()
 		g.AddWorker("or", &OokRelay{})
 		g.Add("dp", "Dispatcher")
-		// g.Connect("or.Out", "dp.In", 0)
+		g.Connect("or.Out", "dp.In", 0)
 		g.Map("In", "or.In")
-		g.Map("Out", "or.Out")
+		g.Map("Out", "dp.Out")
 		g.Map("Rej", "dp.Rej")
 		return g
 	}

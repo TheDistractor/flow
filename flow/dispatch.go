@@ -1,9 +1,5 @@
 package flow
 
-import (
-// "fmt"
-)
-
 func init() {
 	Registry["Dispatcher"] = func() Worker {
 		g := NewGroup()
@@ -42,17 +38,19 @@ type dispatchHead struct {
 func (w *dispatchHead) Run() {
 	worker := ""
 	for m := range w.In {
+		if m == marker {
+			w.Feeds[""].Send(nil) // TODO: hack
+			continue
+		}
+
 		if tag, ok := m.(Tag); ok && tag.Tag == "dispatch" {
 			if tag.Val == worker {
 				continue
 			}
 
 			// send a marker and act on it once it comes back on Reply
-			// println(fmt.Sprintln("send switch marker:", tag))
 			w.Feeds[worker].Send(marker)
-			// println(fmt.Sprintln("wait for switch to:", tag))
 			<-w.Reply // TODO: add a timeout?
-			// println(fmt.Sprintln("switching to:", tag))
 
 			// perform the switch, now that previous output has drained
 			worker = tag.Val.(string)
@@ -81,12 +79,9 @@ func (w *dispatchHead) Run() {
 		}
 		feed.Send(m)
 	}
-	println("dispatch head ends")
 	for _, o := range w.Feeds {
 		o.Close()
 	}
-	// w.Out.Close()
-	// w.Rej.Close()
 }
 
 type dispatchTail struct {
@@ -99,14 +94,12 @@ type dispatchTail struct {
 func (w *dispatchTail) Run() {
 	for m := range w.In {
 		if m == marker {
-			println("switch marker seen")
 			w.Back.Send(m)
-			println("reply switch marker")
 		} else {
+			if m == nil {
+				m = marker // TODO: hack
+			}
 			w.Out.Send(m)
 		}
 	}
-	println("dispatch tail ends")
-	w.Back.Close()
-	w.Out.Close()
 }
