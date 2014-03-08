@@ -34,14 +34,14 @@ type dispatchHead struct {
 func (w *dispatchHead) Run() {
 	worker := ""
 	for m := range w.In {
-		if tag, ok := m.(Tag); ok && tag.Tag == "dispatch" {
+		if tag, ok := m.(Tag); ok && tag.Tag == "<dispatch>" {
 			if tag.Val == worker {
 				continue
 			}
 
 			// send (unique!) marker and act on it once it comes back on Reply
 			// only drawback of sending an address, is that it can't be remoted
-			w.Feeds[worker].Send(w.parent)
+			w.Feeds[worker].Send(Tag{"<marker>", w.parent})
 			<-w.Reply // TODO: add a timeout?
 
 			// perform the switch, now that previous output has drained
@@ -61,7 +61,7 @@ func (w *dispatchHead) Run() {
 			}
 
 			// pass through a "consumed" dispatch tag
-			w.Feeds[""].Send(Tag{"dispatched", worker})
+			w.Feeds[""].Send(Tag{"<dispatched>", worker})
 			continue
 		}
 
@@ -82,7 +82,7 @@ type dispatchTail struct {
 
 func (w *dispatchTail) Run() {
 	for m := range w.In {
-		if m == w.parent {
+		if tag, ok := m.(Tag); ok && tag.Tag == "<marker>" && tag.Val == w.parent {
 			w.Back.Send(m)
 		} else {
 			w.Out.Send(m)

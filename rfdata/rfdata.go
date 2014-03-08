@@ -108,7 +108,7 @@ func (w *NodeMap) Run() {
 				key := fmt.Sprintf("RFg%di%d", group, data["<node>"])
 				if _, ok := nodeMap[key]; ok {
 					tag := "Node-" + nodeMap[key]
-					w.Out.Send(flow.Tag{"dispatch", tag})
+					w.Out.Send(flow.Tag{"<dispatch>", tag})
 				}
 			}
 			continue

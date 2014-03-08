@@ -41,7 +41,7 @@ func (w *OokRelay) Run() {
 
 				// insert a new decoder request
 				tag := "Node-ook" + ookDecoders[typ]
-				w.Out.Send(flow.Tag{"dispatch", tag})
+				w.Out.Send(flow.Tag{"<dispatch>", tag})
 				w.Out.Send(v[offset : offset+size])
 
 				offset += size
