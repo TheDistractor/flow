@@ -110,7 +110,7 @@ func (w *Work) closeChannels() {
 	}
 }
 
-func (w *Work) Launch() {
+func (w *Work) launch() {
 	w.parent.wait.Add(1)
 	go func() {
 		defer w.parent.wait.Done()

@@ -56,7 +56,7 @@ func (w *dispatchHead) Run() {
 					g.Add(worker, worker)
 					g.Connect("head.Feeds:"+worker, worker+".In", 0)
 					g.Connect(worker+".Out", "tail.In", 0)
-					g.Launch(worker)
+					g.launch(worker)
 				}
 			}
 

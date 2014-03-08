@@ -105,7 +105,7 @@ func (g *Group) Set(port string, v Memo) {
 // Start up the group, and return when it is finished.
 func (g *Group) Run() {
 	for _, w := range g.workers {
-		w.Launch()
+		w.launch()
 	}
 	g.wait.Wait()
 }
@@ -119,6 +119,6 @@ func (g *Group) Map(external, internal string) {
 }
 
 // Launch a dynamically added Worker
-func (g *Group) Launch(name string) {
-	g.workers[name].Launch()
+func (g *Group) launch(name string) {
+	g.workers[name].launch()
 }
