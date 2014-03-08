@@ -4,7 +4,7 @@ group =
     { name: "rf", type: "Pipe" } # used to inject an "[RF12demo...]" line
     { name: "w1", type: "LogReplayer" }
     # { name: "w1", type: "SerialIn" }
-    # { name: "ts", type: "TimeStamp" }
+    { name: "ts", type: "TimeStamp" }
     { name: "st", type: "SketchType" }
     { name: "d1", type: "Dispatcher" }
     { name: "nm", type: "NodeMap" }
@@ -13,9 +13,9 @@ group =
   ]
   connections: [
     { from: "lr.Out", to: "w1.In" }
-    { from: "rf.Out", to: "st.In" }
-    { from: "w1.Out", to: "st.In" }
-    # { from: "ts.Out", to: "st.In" }
+    { from: "rf.Out", to: "ts.In" }
+    { from: "w1.Out", to: "ts.In" }
+    { from: "ts.Out", to: "st.In" }
     { from: "st.Out", to: "d1.In" }
     { from: "d1.Out", to: "nm.In" }
     { from: "nm.Out", to: "d2.In" }

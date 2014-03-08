@@ -13,6 +13,10 @@
             "type": "LogReplayer"
         },
         {
+            "name": "ts",
+            "type": "TimeStamp"
+        },
+        {
             "name": "st",
             "type": "SketchType"
         },
@@ -40,10 +44,14 @@
         },
         {
             "from": "rf.Out",
-            "to": "st.In"
+            "to": "ts.In"
         },
         {
             "from": "w1.Out",
+            "to": "ts.In"
+        },
+        {
+            "from": "ts.Out",
             "to": "st.In"
         },
         {
