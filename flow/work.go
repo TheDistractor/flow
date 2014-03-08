@@ -26,16 +26,6 @@ func (w *Work) initWork(wi Worker, nm string, gr *Group) *Work {
 	return w
 }
 
-// Return the group of this worker.
-func (w *Work) MyGroup() *Group {
-	return w.parent
-}
-
-// Return the name of this worker.
-func (w *Work) MyName() string {
-	return w.name
-}
-
 func (w *Work) port(p string) reflect.Value {
 	wp := reflect.ValueOf(w.worker)
 	wv := wp.Elem()
