@@ -1,7 +1,6 @@
 package flow
 
 import (
-	"fmt"
 	"reflect"
 	"strings"
 )
@@ -92,16 +91,18 @@ func (w *Work) setOutput(port string, c *connection) {
 	fp := w.portValue(ppfv[0])
 	if len(ppfv) == 1 {
 		if !fp.IsNil() {
-			fmt.Println("output already connected:", w.name+"."+port)
-			// TODO: close the previous Output
+			panic("output already connected: " + w.name + "." + port)
 		}
 		fp.Set(reflect.ValueOf(c))
 	} else { // it's not an Output, so it must be a map[string]Output
 		if fp.IsNil() {
 			fp.Set(reflect.ValueOf(map[string]Output{}))
 		}
-		// TODO: close the previous Output, if any
-		fp.Interface().(map[string]Output)[ppfv[1]] = c
+		outputs := fp.Interface().(map[string]Output)
+		if _, ok := outputs[ppfv[1]]; ok {
+			panic("output already connected: " + w.name + "." + port)
+		}
+		outputs[ppfv[1]] = c
 	}
 	c.senders++
 	w.outputs[port] = c
