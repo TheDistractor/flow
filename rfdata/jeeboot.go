@@ -53,24 +53,22 @@ type IntelHexToBin struct {
 	Out flow.Output
 }
 
-// Start reading ":..." lines. Anything else cause the data to be flushed out.
+// Start reading ":..." lines. Anything else causes the data to be flushed out.
 func (w *IntelHexToBin) Run() {
 	var buf bytes.Buffer
 	for m := range w.In {
-		if t, ok := m.(string); ok {
-			if strings.HasPrefix(t, ":") {
-				b, err := hex.DecodeString(t[1:])
-				if err != nil {
-					panic(err)
+		if t, ok := m.(string); ok && strings.HasPrefix(t, ":") {
+			b, err := hex.DecodeString(t[1:])
+			if err != nil {
+				panic(err)
+			}
+			// TODO: probably doesn't handle hex files over 64 KB
+			if b[3] == 0 {
+				if buf.Len() == 0 {
+					addr := int(b[1]) + int(b[2])<<8
+					w.Out.Send(flow.Tag{"<addr>", addr})
 				}
-				// TODO: probably doesn't handle hex files over 64 KB
-				if b[3] == 0 {
-					if buf.Len() == 0 {
-						addr := int(b[1]) + int(b[2])<<8
-						w.Out.Send(flow.Tag{"<addr>", addr})
-					}
-					buf.Write(b[4 : 4+b[0]])
-				}
+				buf.Write(b[4 : 4+b[0]])
 			}
 		} else {
 			if buf.Len() > 0 {
