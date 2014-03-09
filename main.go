@@ -4,6 +4,7 @@ package main
 import (
 	"io/ioutil"
 	"os"
+	"sort"
 
 	"github.com/jcw/flow/flow"
 
@@ -17,6 +18,12 @@ import (
 )
 
 func main() {
+	if len(os.Args) > 1 && os.Args[1] == "-v" {
+		println("Flow " + flow.Version + "\n")
+		printRegistry()
+		os.Exit(0)
+	}
+
 	configFile := "config.json"
 	if len(os.Args) > 1 {
 		configFile = os.Args[1]
@@ -32,4 +39,23 @@ func main() {
 		panic(err)
 	}
 	g.Run()
+}
+
+func printRegistry() {
+	keys := []string{}
+	for k := range flow.Registry {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	s := ""
+	for _, k := range keys {
+		if len(s)+len(k) > 78 {
+			println(s)
+			s = ""
+		}
+		s += k + " "
+	}
+	if len(s) > 0 {
+		println(s)
+	}
 }
