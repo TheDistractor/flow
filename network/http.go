@@ -32,7 +32,16 @@ func (w *HttpServer) Run() {
 	mux := http.NewServeMux() // don't use default to allow multiple instances
 	for m := range w.Handlers {
 		tag := m.(flow.Tag)
-		mux.Handle(tag.Tag, &flowHandler{tag.Val.(http.Handler), w})
+		switch v := tag.Val.(type) {
+		case string:
+			h := http.FileServer(http.Dir(v))
+			if v != "/" {
+				h = http.StripPrefix(tag.Tag, h)
+			}
+			mux.Handle(tag.Tag, &flowHandler{h, w})
+		case http.Handler:
+			mux.Handle(tag.Tag, &flowHandler{v, w})
+		}
 	}
 	m := <-w.Start
 	go func() {
