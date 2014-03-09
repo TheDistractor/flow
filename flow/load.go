@@ -13,7 +13,7 @@ type config struct {
 		Buf      int
 	}
 	Requests []struct {
-		Data, To string
+		Tag, Data, To string
 	}
 }
 
@@ -29,7 +29,11 @@ func (g *Group) LoadJSON(data []byte) error {
 			g.Connect(c.From, c.To, c.Buf)
 		}
 		for _, r := range conf.Requests {
-			g.Set(r.To, r.Data)
+			if r.Tag != "" {
+				g.Set(r.To, Tag{r.Tag, r.Data})
+			} else {
+				g.Set(r.To, r.Data)
+			}
 		}
 	}
 	return err
