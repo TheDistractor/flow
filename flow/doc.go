@@ -25,8 +25,8 @@ Then set a few initial values to send and start the whole thing up:
     g.Set("r.In", "abc")
     g.Run()
 
-Run will return once all workers have finished. The output will be "lost" since
-the output port is not connected to anything, so it will show up as follows:
+Run returns once all workers have finished. The output shows up as "lost" since
+the output has not been connected:
 
     Lost int: 3
 
@@ -50,7 +50,7 @@ Since the output port has been wired up this time, the output will now be:
 Definitions of workers, connections, and initial set requests can be loaded
 from a JSON description:
 
-	data, _ := ioutil.ReadFile("config.json")
+    data, _ := ioutil.ReadFile("config.json")
     g.LoadJSON(data)
 
 Te define your own worker, create a type which embeds Work and defines Run():
