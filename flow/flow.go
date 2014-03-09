@@ -95,8 +95,9 @@ func portPart(s string) string {
 	return s[n+1:]
 }
 
-// generate a nice stack trace, see https://code.google.com/p/gonicetrace/
-func dontPanic() {
+// Call this as "defer flow.DontPanic()" for a concise stack trace on panics.
+func DontPanic() {
+	// generate a nice stack trace, see https://code.google.com/p/gonicetrace/
 	if e := recover(); e != nil {
 		fmt.Fprintf(os.Stderr, "\nPANIC: %v\n", e)
 		for skip := 1; skip < 20; skip++ {

@@ -48,6 +48,7 @@ func (w *HttpServer) Run() {
 	m := <-w.Start
 	go func() {
 		// will stay running until an error is returned or the app ends
+		defer flow.DontPanic()
 		panic(http.ListenAndServe(m.(string), mux))
 	}()
 	// TODO: this is a hack to make sure the server is ready
@@ -74,6 +75,7 @@ func createHandler(tag, s string) http.Handler {
 }
 
 func wsHandler(ws *websocket.Conn) {
+	defer flow.DontPanic()
 	defer ws.Close()
 
 	tag := ws.Request().Header.Get("Sec-Websocket-Protocol")
