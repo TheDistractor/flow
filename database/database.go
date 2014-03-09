@@ -54,6 +54,7 @@ func openDatabase(name string) *openDb {
 	return odb
 }
 
+// LevelDB is a multi-purpose worker to get, put, and scan keys in a database.
 type LevelDB struct {
 	flow.Work
 	Name flow.Input
@@ -65,6 +66,7 @@ type LevelDB struct {
 	odb *openDb
 }
 
+// Open the database and start listening to incoming get/put/keys requests.
 func (w *LevelDB) Run() {
 	if name, ok := <-w.Name; ok {
 		w.odb = openDatabase(name.(string))
@@ -78,7 +80,8 @@ func (w *LevelDB) Run() {
 					w.Get = nil
 					active--
 				} else {
-					w.Out.Send(w.get(m.(string)))
+					key := m.(string)
+					w.Out.Send(flow.Tag{key, w.get(key)})
 				}
 			case m, ok := <-w.Put:
 				if !ok {
