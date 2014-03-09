@@ -2,6 +2,7 @@ package network
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/jcw/flow/flow"
 )
@@ -38,4 +39,7 @@ func (w *HttpServer) Run() {
 		// will stay running until an error is returned or the app ends
 		panic(http.ListenAndServe(m.(string), mux))
 	}()
+	// TODO: this is a hack to make sure the server is ready
+	// better would be to interlock the goroutine with the listener being ready
+	time.Sleep(10 * time.Millisecond)
 }
