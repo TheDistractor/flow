@@ -2,6 +2,7 @@
 package main
 
 import (
+	"io/ioutil"
 	"os"
 
 	"github.com/jcw/flow/flow"
@@ -22,6 +23,13 @@ func main() {
 	}
 
 	g := flow.NewGroup()
-	g.LoadFile(configFile)
+	data, err := ioutil.ReadFile(configFile)
+	if err != nil {
+		panic(err)
+	}
+	err = g.LoadJSON(data)
+	if err != nil {
+		panic(err)
+	}
 	g.Run()
 }

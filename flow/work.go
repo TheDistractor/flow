@@ -92,7 +92,7 @@ func (w *Work) setOutput(port string, c *connection) {
 	fp := w.portValue(ppfv[0])
 	if len(ppfv) == 1 {
 		if !fp.IsNil() {
-			fmt.Println("output already connected:", w.name + "." + port)
+			fmt.Println("output already connected:", w.name+"."+port)
 			// TODO: close the previous Output
 		}
 		fp.Set(reflect.ValueOf(c))

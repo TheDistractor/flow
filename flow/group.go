@@ -50,8 +50,8 @@ func (g *Group) workerOf(s string) *Work {
 
 // Connect an output port with an input port.
 func (g *Group) Connect(from, to string, capacity int) {
-	c := g.workerOf(to).getInput(portPart(to), capacity)	
-	g.workerOf(from).setOutput(portPart(from), c)	
+	c := g.workerOf(to).getInput(portPart(to), capacity)
+	g.workerOf(from).setOutput(portPart(from), c)
 }
 
 // Set up a memo to be sent to a worker on startup.
