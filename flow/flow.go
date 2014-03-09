@@ -2,6 +2,8 @@ package flow
 
 import (
 	"fmt"
+	"os"
+	"runtime"
 	"strings"
 )
 
@@ -91,4 +93,24 @@ func workerPart(s string) string {
 func portPart(s string) string {
 	n := strings.IndexRune(s, '.')
 	return s[n+1:]
+}
+
+// generate a nice stack trace, see https://code.google.com/p/gonicetrace/
+func dontPanic() {
+	if e := recover(); e != nil {
+		fmt.Fprintf(os.Stderr, "\nPANIC: %v\n", e)
+		for skip := 1; skip < 20; skip++ {
+			pc, file, line, ok := runtime.Caller(skip)
+			if !ok {
+				break
+			}
+			if strings.HasSuffix(file, ".go") {
+				name := runtime.FuncForPC(pc).Name()
+				name = name[strings.LastIndex(name, "/")+1:]
+				fmt.Fprintf(os.Stderr, "%s:%d %s()\n", file, line, name)
+			}
+		}
+		println("EXIT")
+		os.Exit(1)
+	}
 }

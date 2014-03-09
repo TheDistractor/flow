@@ -118,6 +118,7 @@ func (w *Work) launch() {
 	w.group.wait.Add(1)
 	go func() {
 		defer w.group.wait.Done()
+		defer dontPanic()
 
 		w.processInbox()
 		w.connectChannels()
