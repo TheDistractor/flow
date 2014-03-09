@@ -2,7 +2,6 @@ package flow
 
 import (
 	"fmt"
-	"reflect"
 	"strings"
 	"sync"
 )
@@ -19,6 +18,7 @@ func NewGroup() *Group {
 // A group is a collection of inter-connected workers.
 type Group struct {
 	Work
+
 	workers map[string]*Work
 	portMap map[string]string
 	inbox   map[string][]Memo
@@ -41,55 +41,17 @@ func (g *Group) AddWorker(name string, w Worker) {
 }
 
 func (g *Group) workerOf(s string) *Work {
-	return g.workers[workerPart(s)]
-}
-
-func workerPart(s string) string {
-	n := strings.IndexRune(s, '.')
-	if n < 0 {
-		n = len(s)
+	w, ok := g.workers[workerPart(s)]
+	if !ok {
+		panic("worker not found for: " + s)
 	}
-	return s[:n]
-}
-
-func portPart(s string) string {
-	n := strings.IndexRune(s, '.')
-	return s[n+1:]
+	return w
 }
 
 // Connect an output port with an input port.
 func (g *Group) Connect(from, to string, capacity int) {
-	tw := g.workerOf(to)
-	c := tw.inputs[portPart(to)]
-	if c == nil {
-		c = &connection{channel: make(chan Memo, capacity)}
-		tw.inputs[portPart(to)] = c
-		tp := tw.port(portPart(to))
-		if !tp.IsValid() {
-			panic("cannot set to:" + to)
-		}
-		tp.Set(reflect.ValueOf(c.channel))
-	}
-	c.senders++
-
-	fw := g.workerOf(from)
-	ppfv := strings.Split(portPart(from), ":")
-	fp := fw.port(ppfv[0])
-	if len(ppfv) == 1 {
-		if !fp.IsNil() {
-			fmt.Println("output already connected:", from)
-			// TODO: close the previous Output
-		}
-		cv := reflect.ValueOf(c)
-		fp.Set(cv)
-	} else { // it's not an Output, so it must be a map[string]Output
-		if fp.IsNil() {
-			fp.Set(reflect.ValueOf(map[string]Output{}))
-		}
-		// TODO: close the previous Output, if any
-		fp.Interface().(map[string]Output)[ppfv[1]] = c
-	}
-	fw.outputs[portPart(from)] = c
+	c := g.workerOf(to).getInput(portPart(to), capacity)	
+	g.workerOf(from).setOutput(portPart(from), c)	
 }
 
 // Set up a memo to be sent to a worker on startup.

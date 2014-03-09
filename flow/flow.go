@@ -2,6 +2,7 @@ package flow
 
 import (
 	"fmt"
+	"strings"
 )
 
 // Version of this package.
@@ -79,3 +80,15 @@ func (c *fakeSink) Send(m Memo) {
 }
 
 func (c *fakeSink) Close() {}
+
+// extract "a" from "a.b"
+func workerPart(s string) string {
+	n := strings.IndexRune(s, '.')
+	return s[:n]
+}
+
+// extract "b" from "a.b", also works if only "b" is given
+func portPart(s string) string {
+	n := strings.IndexRune(s, '.')
+	return s[n+1:]
+}

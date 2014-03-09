@@ -3,6 +3,7 @@ package flow
 import (
 	"fmt"
 	"reflect"
+	"strings"
 )
 
 // Work keeps track of internal details about a worker.
@@ -26,18 +27,20 @@ func (w *Work) initWork(wi Worker, nm string, gr *Group) *Work {
 	return w
 }
 
-func (w *Work) port(p string) reflect.Value {
-	// if it's a group, check for mapped ports
+func (w *Work) workerValue() reflect.Value {
+	return reflect.ValueOf(w.worker).Elem()
+}
+
+func (w *Work) portValue(port string) reflect.Value {
+	pp := portPart(port)
+	// if it's a group, look up mapped ports
 	if g, ok := w.worker.(*Group); ok {
-		if p, ok := g.portMap[p]; ok {
-			return g.workerOf(p).port(portPart(p)) // recursive
-		}
+		p := g.portMap[pp]
+		return g.workerOf(p).portValue(p) // recursive
 	}
-	wp := reflect.ValueOf(w.worker)
-	wv := wp.Elem()
-	fv := wv.FieldByName(p)
+	fv := w.workerValue().FieldByName(pp)
 	if !fv.IsValid() {
-		fmt.Println("port not found:", p)
+		panic("port not found: " + port)
 	}
 	return fv
 }
@@ -46,8 +49,7 @@ func (w *Work) processInbox() {
 	for dest, memos := range w.group.inbox {
 		if workerPart(dest) == w.name {
 			c := make(chan Memo, len(memos))
-			dp := w.port(portPart(dest))
-			dp.Set(reflect.ValueOf(c))
+			w.portValue(dest).Set(reflect.ValueOf(c))
 			for _, m := range memos {
 				c <- m
 			}
@@ -56,43 +58,53 @@ func (w *Work) processInbox() {
 	}
 }
 
-func (w *Work) forAllPorts(f func(string, reflect.Value)) {
-	wv := reflect.ValueOf(w.worker)
-	we := wv.Elem()
-	wt := we.Type()
-	for i := 0; i < we.NumField(); i++ {
-		fd := wt.Field(i)
-		ft := fd.Type.Name()
-		switch {
-		case ft == "Input" || ft == "Output":
-			f(ft, we.Field(i))
-		case fd.Type.String() == "map[string]flow.Output":
-			// TODO: hack, won't be sufficient when adding multi-in ports
-			for k, _ := range we.Field(i).Interface().(map[string]Output) {
-				f(k, we.Field(i))
-			}
-		}
-	}
-	return
-}
-
 func (w *Work) connectChannels() {
 	sink := &fakeSink{}
 	null := make(chan Memo)
 	close(null)
 
-	w.forAllPorts(func(typ string, val reflect.Value) {
-		if val.IsNil() {
-			switch typ {
-			case "Input":
-				val.Set(reflect.ValueOf(null))
-			case "Output":
-				val.Set(reflect.ValueOf(sink))
-			default:
-				val.Interface().(map[string]Output)[typ] = sink
+	we := w.workerValue()
+	for i := 0; i < we.NumField(); i++ {
+		fe := we.Field(i)
+		if fe.CanSet() && fe.Kind() != reflect.Struct && fe.IsNil() {
+			switch fe.Type().String() {
+			case "flow.Input":
+				fe.Set(reflect.ValueOf(null))
+			case "flow.Output":
+				fe.Set(reflect.ValueOf(sink))
 			}
 		}
-	})
+	}
+}
+
+func (w *Work) getInput(port string, capacity int) *connection {
+	c := w.inputs[port]
+	if c == nil {
+		c = &connection{channel: make(chan Memo, capacity)}
+		w.portValue(port).Set(reflect.ValueOf(c.channel))
+		w.inputs[port] = c
+	}
+	return c
+}
+
+func (w *Work) setOutput(port string, c *connection) {
+	ppfv := strings.Split(port, ":")
+	fp := w.portValue(ppfv[0])
+	if len(ppfv) == 1 {
+		if !fp.IsNil() {
+			fmt.Println("output already connected:", w.name + "." + port)
+			// TODO: close the previous Output
+		}
+		fp.Set(reflect.ValueOf(c))
+	} else { // it's not an Output, so it must be a map[string]Output
+		if fp.IsNil() {
+			fp.Set(reflect.ValueOf(map[string]Output{}))
+		}
+		// TODO: close the previous Output, if any
+		fp.Interface().(map[string]Output)[ppfv[1]] = c
+	}
+	c.senders++
+	w.outputs[port] = c
 }
 
 func (w *Work) closeChannels() {
