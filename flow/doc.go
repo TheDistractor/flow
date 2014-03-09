@@ -48,9 +48,10 @@ Since the output port has been wired up this time, the output will now be:
     int: 3
 
 Definitions of workers, connections, and initial set requests can be loaded
-from a JSON description. See Group.LoadFile() and Group.LoadString(), e.g.
+from a JSON description:
 
-    g.LoadFile("config.json")
+	data, _ := ioutil.ReadFile("config.json")
+    g.LoadJSON(data)
 
 Te define your own worker, create a type which embeds Work and defines Run():
 
