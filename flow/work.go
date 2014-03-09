@@ -9,49 +9,50 @@ import (
 type Work struct {
 	worker  Worker
 	name    string
-	parent  *Group
+	group   *Group
 	inputs  map[string]*connection
 	outputs map[string]*connection
 }
 
 func (w *Work) initWork(wi Worker, nm string, gr *Group) *Work {
-	if w.parent != nil {
+	if w.group != nil {
 		panic("worker is already in use: " + nm)
 	}
 	w.worker = wi
 	w.name = nm
-	w.parent = gr
+	w.group = gr
 	w.inputs = map[string]*connection{}
 	w.outputs = map[string]*connection{}
 	return w
 }
 
 func (w *Work) port(p string) reflect.Value {
+	// if it's a group, check for mapped ports
+	if g, ok := w.worker.(*Group); ok {
+		if p, ok := g.portMap[p]; ok {
+			return g.workerOf(p).port(portPart(p)) // recursive
+		}
+	}
 	wp := reflect.ValueOf(w.worker)
 	wv := wp.Elem()
 	fv := wv.FieldByName(p)
 	if !fv.IsValid() {
-		// maybe it's a group with mapped ports
-		if g, ok := w.worker.(*Group); ok {
-			if p, ok := g.portMap[p]; ok {
-				fw := g.workerOf(p)
-				return fw.port(portPart(p)) // recursive
-			}
-		}
 		fmt.Println("port not found:", p)
 	}
 	return fv
 }
 
 func (w *Work) processInbox() {
-	for dest, memos := range w.parent.inbox[w.name] {
-		c := make(chan Memo, len(memos))
-		dp := w.port(dest)
-		dp.Set(reflect.ValueOf(c))
-		for _, m := range memos {
-			c <- m
+	for dest, memos := range w.group.inbox {
+		if workerPart(dest) == w.name {
+			c := make(chan Memo, len(memos))
+			dp := w.port(portPart(dest))
+			dp.Set(reflect.ValueOf(c))
+			for _, m := range memos {
+				c <- m
+			}
+			close(c)
 		}
-		close(c)
 	}
 }
 
@@ -101,9 +102,9 @@ func (w *Work) closeChannels() {
 }
 
 func (w *Work) launch() {
-	w.parent.wait.Add(1)
+	w.group.wait.Add(1)
 	go func() {
-		defer w.parent.wait.Done()
+		defer w.group.wait.Done()
 
 		w.processInbox()
 		w.connectChannels()

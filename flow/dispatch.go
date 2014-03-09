@@ -40,7 +40,7 @@ func (w *dispatchHead) Run() {
 			}
 
 			// send (unique!) marker and act on it once it comes back on Reply
-			w.Feeds[worker].Send(Tag{"<marker>", w.parent})
+			w.Feeds[worker].Send(Tag{"<marker>", w.group})
 			<-w.Reply // TODO: add a timeout?
 
 			// perform the switch, now that previous output has drained
@@ -51,7 +51,7 @@ func (w *dispatchHead) Run() {
 					worker = ""
 				} else { // create, hook up, and launch the new worker
 					println("Dispatching to new worker: " + worker)
-					g := w.parent
+					g := w.group
 					g.Add(worker, worker)
 					g.Connect("head.Feeds:"+worker, worker+".In", 0)
 					g.Connect(worker+".Out", "tail.In", 0)
@@ -81,7 +81,7 @@ type dispatchTail struct {
 
 func (w *dispatchTail) Run() {
 	for m := range w.In {
-		if tag, ok := m.(Tag); ok && tag.Tag == "<marker>" && tag.Val == w.parent {
+		if tag, ok := m.(Tag); ok && tag.Tag == "<marker>" && tag.Val == w.group {
 			w.Back.Send(m)
 		} else {
 			w.Out.Send(m)
