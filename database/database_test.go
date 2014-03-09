@@ -15,46 +15,18 @@ func init() {
 	println(dbPath)
 }
 
-type dbFeed struct {
-	flow.Work
-	ToGet, ToPut, ToKeys flow.Output
-}
-
-func (w *dbFeed) Run() {
-	w.ToPut.Send([]string{"a/b", "123"})
-	w.ToPut.Send([]string{"a/c", "456"})
-	w.ToGet.Send("a/b")
-	w.ToKeys.Send("a/")
-	w.ToPut.Send([]string{"a/b"})
-	w.ToGet.Send("a/b")
-	w.ToKeys.Send("a/")
-	w.ToPut.Send([]string{"a/c"})
-}
-
 func ExampleLevelDB() {
-	// type dbFeed struct {
-	//     flow.Work
-	//     ToGet, ToPut, ToKeys flow.Output
-	// }
-	//
-	// func (w *dbFeed) Run() {
-	//     w.ToPut.Send([]string{"a/b", "123"})
-	//     w.ToPut.Send([]string{"a/c", "456"})
-	//     w.ToGet.Send("a/b")
-	//     w.ToKeys.Send("a/")
-	//     w.ToPut.Send([]string{"a/b"})
-	//     w.ToGet.Send("a/b")
-	//     w.ToKeys.Send("a/")
-	//     w.ToPut.Send([]string{"a/c"})
-	// }
-
 	g := flow.NewGroup()
 	g.Add("db", "LevelDB")
-	g.AddWorker("feed", &dbFeed{})
-	g.Connect("feed.ToPut", "db.Put", 0)
-	g.Connect("feed.ToGet", "db.Get", 0)
-	g.Connect("feed.ToKeys", "db.Keys", 0)
 	g.Set("db.Name", dbPath)
+	g.Set("db.In", flow.Tag{"a/b", "123"})
+	g.Set("db.In", flow.Tag{"a/c", "456"})
+	g.Set("db.In", flow.Tag{"<get>", "a/b"})
+	g.Set("db.In", flow.Tag{"<keys>", "a/"})
+	g.Set("db.In", flow.Tag{"a/b", nil})
+	g.Set("db.In", flow.Tag{"<get>", "a/b"})
+	g.Set("db.In", flow.Tag{"<keys>", "a/"})
+	g.Set("db.In", flow.Tag{"a/c", nil})
 	g.Run()
 	// Output:
 	// Lost flow.Tag: {<get> a/b}

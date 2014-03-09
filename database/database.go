@@ -55,12 +55,11 @@ func openDatabase(name string) *openDb {
 }
 
 // LevelDB is a multi-purpose worker to get, put, and scan keys in a database.
+// Expects flow.Tag values on its input port. Registers itself as "LevelDB".
 type LevelDB struct {
 	flow.Work
 	Name flow.Input
-	Get  flow.Input
-	Put  flow.Input
-	Keys flow.Input
+	In   flow.Input
 	Out  flow.Output
 
 	odb *openDb
@@ -72,39 +71,22 @@ func (w *LevelDB) Run() {
 		w.odb = openDatabase(name.(string))
 		defer w.odb.Release()
 
-		active := 3
-		for active > 0 {
-			select {
-			case m, ok := <-w.Get:
-				if !ok {
-					w.Get = nil
-					active--
-				} else {
-					key := m.(string)
-					w.Out.Send(flow.Tag{"<get>", key})
+		for m := range w.In {
+			if tag, ok := m.(flow.Tag); ok {
+				switch tag.Tag {
+				case "<get>":
+					key := tag.Val.(string)
+					w.Out.Send(m)
 					w.Out.Send(w.get(key))
-				}
-			case m, ok := <-w.Put:
-				if !ok {
-					w.Put = nil
-					active--
-				} else {
-					args := m.([]string)
-					if len(args) < 2 {
-						w.put(args[0], nil)
-					} else {
-						w.put(args[0], args[1])
-					}
-				}
-			case m, ok := <-w.Keys:
-				if !ok {
-					w.Keys = nil
-					active--
-				} else {
-					prefix := m.(string)
-					w.Out.Send(flow.Tag{"<keys>", prefix})
+				case "<keys>":
+					prefix := tag.Val.(string)
+					w.Out.Send(m)
 					w.Out.Send(w.keys(prefix))
+				default:
+					w.put(tag.Tag, tag.Val)
 				}
+			} else {
+				w.Out.Send(m)
 			}
 		}
 	}
