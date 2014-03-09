@@ -1,4 +1,5 @@
 // This application can exercise the "flow" package via a JSON config file.
+// Use the "-v" flag for a list of built-in (i.e. pre-registered) workers.
 package main
 
 import (
@@ -21,6 +22,7 @@ func main() {
 	if len(os.Args) > 1 && os.Args[1] == "-v" {
 		println("Flow " + flow.Version + "\n")
 		printRegistry()
+		println("\nDocumentation at http://godoc.org/github.com/jcw/flow")
 		os.Exit(0)
 	}
 
@@ -47,15 +49,15 @@ func printRegistry() {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
-	s := ""
+	s := " "
 	for _, k := range keys {
 		if len(s)+len(k) > 78 {
 			println(s)
-			s = ""
+			s = " "
 		}
-		s += k + " "
+		s += " " + k
 	}
-	if len(s) > 0 {
+	if len(s) > 1 {
 		println(s)
 	}
 }
