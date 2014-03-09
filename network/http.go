@@ -1,7 +1,6 @@
 package network
 
 import (
-	"net"
 	"net/http"
 
 	"github.com/jcw/flow/flow"
@@ -36,14 +35,7 @@ func (w *HttpServer) Run() {
 	}
 	m := <-w.Start
 	go func() {
-		server := &http.Server{Handler: mux}
-		listener, err := net.Listen("tcp", m.(string))
-		if err != nil {
-			panic(err)
-		}
-		go server.Serve(listener)
-		// stay around until the Start input port is closed
-		<-w.Start
-		listener.Close()
+		// will stay running until an error is returned or the app ends
+		panic(http.ListenAndServe(m.(string), mux))
 	}()
 }
