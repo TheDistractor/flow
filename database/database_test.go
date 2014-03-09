@@ -57,9 +57,13 @@ func ExampleLevelDB() {
 	g.Set("db.Name", dbPath)
 	g.Run()
 	// Output:
-	// Lost flow.Tag: {a/b 123}
+	// Lost flow.Tag: {<get> a/b}
+	// Lost string: 123
+	// Lost flow.Tag: {<keys> a/}
 	// Lost []string: [b c]
-	// Lost flow.Tag: {a/b <nil>}
+	// Lost flow.Tag: {<get> a/b}
+	// Lost <nil>: <nil>
+	// Lost flow.Tag: {<keys> a/}
 	// Lost []string: [c]
 }
 

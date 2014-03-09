@@ -81,7 +81,8 @@ func (w *LevelDB) Run() {
 					active--
 				} else {
 					key := m.(string)
-					w.Out.Send(flow.Tag{key, w.get(key)})
+					w.Out.Send(flow.Tag{"<get>", key})
+					w.Out.Send(w.get(key))
 				}
 			case m, ok := <-w.Put:
 				if !ok {
@@ -100,7 +101,9 @@ func (w *LevelDB) Run() {
 					w.Keys = nil
 					active--
 				} else {
-					w.Out.Send(w.keys(m.(string)))
+					prefix := m.(string)
+					w.Out.Send(flow.Tag{"<keys>", prefix})
+					w.Out.Send(w.keys(prefix))
 				}
 			}
 		}
