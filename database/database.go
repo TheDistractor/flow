@@ -4,6 +4,7 @@ package database
 import (
 	"encoding/json"
 	"strings"
+	"sync"
 
 	"github.com/jcw/flow/flow"
 	"github.com/syndtr/goleveldb/leveldb"
@@ -14,6 +15,45 @@ func init() {
 	flow.Registry["LevelDB"] = func() flow.Worker { return &LevelDB{} }
 }
 
+var (
+	dbMutex sync.Mutex
+	dbMap   = map[string]*openDb{}
+)
+
+type openDb struct {
+	name string
+	db   *leveldb.DB
+	refs int
+}
+
+func (odb *openDb) Release() {
+	dbMutex.Lock()
+	defer dbMutex.Unlock()
+
+	odb.refs--
+	if odb.refs <= 0 {
+		odb.db.Close()
+		delete(dbMap, odb.name)
+	}
+}
+
+func openDatabase(name string) *openDb {
+	dbMutex.Lock()
+	defer dbMutex.Unlock()
+
+	odb, ok := dbMap[name]
+	if !ok {
+		db, err := leveldb.OpenFile(name, nil)
+		if err != nil {
+			panic(err)
+		}
+		odb = &openDb{name, db, 0}
+		dbMap[name] = odb
+	}
+	odb.refs++
+	return odb
+}
+
 type LevelDB struct {
 	flow.Work
 	Name flow.Input
@@ -22,17 +62,13 @@ type LevelDB struct {
 	Keys flow.Input
 	Out  flow.Output
 
-	db *leveldb.DB
+	odb *openDb
 }
 
 func (w *LevelDB) Run() {
 	if name, ok := <-w.Name; ok {
-		var err error
-		w.db, err = leveldb.OpenFile(name.(string), nil)
-		if err != nil {
-			panic(err)
-		}
-		defer w.db.Close()
+		w.odb = openDatabase(name.(string))
+		defer w.odb.Release()
 
 		active := 3
 		for active > 0 {
@@ -69,7 +105,7 @@ func (w *LevelDB) Run() {
 }
 
 func (w *LevelDB) get(key string) (any interface{}) {
-	data, err := w.db.Get([]byte(key), nil)
+	data, err := w.odb.db.Get([]byte(key), nil)
 	if err == leveldb.ErrNotFound {
 		return nil
 	}
@@ -89,9 +125,9 @@ func (w *LevelDB) put(key string, value interface{}) {
 		if err != nil {
 			panic(err)
 		}
-		w.db.Put([]byte(key), data, nil)
+		w.odb.db.Put([]byte(key), data, nil)
 	} else {
-		w.db.Delete([]byte(key), nil)
+		w.odb.db.Delete([]byte(key), nil)
 	}
 }
 
@@ -121,7 +157,7 @@ func (w *LevelDB) iterateOverKeys(from, to string, fun func(string, []byte)) {
 		slice.Limit = append(slice.Start, 0xFF)
 	}
 
-	iter := w.db.NewIterator(slice, nil)
+	iter := w.odb.db.NewIterator(slice, nil)
 	defer iter.Release()
 
 	for iter.Next() {
