@@ -25,8 +25,8 @@ Then set a few initial values to send and start the whole thing up:
     g.Set("r.In", "abc")
     g.Run()
 
-Run returns once all workers have finished. The output shows up as "lost" since
-the output has not been connected:
+Run returns once all workers have finished. Output shows up as "lost" since the
+output hasn't been connected:
 
     Lost int: 3
 
@@ -35,7 +35,7 @@ a mapping from external port names to internal ones is needed to expose them:
 
     g.Map("MyOut", "c.out")
 
-Once mapped, a group can be used like any other worker:
+Once its ports have been mapped, the group can be used inside another group:
 
     g2 := flow.NewGroup()
     g2.AddWorker("g", g)
@@ -51,7 +51,9 @@ Definitions of workers, connections, and initial set requests can be loaded
 from a JSON description:
 
     data, _ := ioutil.ReadFile("config.json")
+	g := flow.NewGroup()
     g.LoadJSON(data)
+	g.Run()
 
 Te define your own worker, create a type which embeds Work and defines Run():
 

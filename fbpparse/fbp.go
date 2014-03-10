@@ -1,3 +1,4 @@
+// The (very early) start of an FBP parser.
 package fbpparse
 
 import (
