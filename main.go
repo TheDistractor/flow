@@ -3,8 +3,8 @@
 package main
 
 import (
+	"flag"
 	"io/ioutil"
-	"os"
 	"sort"
 
 	"github.com/jcw/flow/flow"
@@ -18,29 +18,32 @@ import (
 	_ "github.com/jcw/flow/workers"
 )
 
+var verbose = flag.Bool("v", false, "show version and overview of the registry")
+
 func main() {
-	if len(os.Args) > 1 && os.Args[1] == "-v" {
+	flag.Parse()
+	
+	if *verbose {
 		println("Flow " + flow.Version + "\n")
 		printRegistry()
 		println("\nDocumentation at http://godoc.org/github.com/jcw/flow")
-		os.Exit(0)
-	}
+	} else {
+		configFile := flag.Arg(0)
+		if configFile == "" {
+			configFile = "config.json"
+		}
 
-	configFile := "config.json"
-	if len(os.Args) > 1 {
-		configFile = os.Args[1]
+		g := flow.NewGroup()
+		data, err := ioutil.ReadFile(configFile)
+		if err != nil {
+			panic(err)
+		}
+		err = g.LoadJSON(data)
+		if err != nil {
+			panic(err)
+		}
+		g.Run()
 	}
-
-	g := flow.NewGroup()
-	data, err := ioutil.ReadFile(configFile)
-	if err != nil {
-		panic(err)
-	}
-	err = g.LoadJSON(data)
-	if err != nil {
-		panic(err)
-	}
-	g.Run()
 }
 
 func printRegistry() {
