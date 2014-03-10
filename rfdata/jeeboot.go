@@ -30,9 +30,7 @@ func (w *ReadTextFile) Run() {
 	for m := range w.In {
 		if name, ok := m.(string); ok {
 			file, err := os.Open(name)
-			if err != nil {
-				panic(err)
-			}
+			flow.Check(err)
 			scanner := bufio.NewScanner(file)
 			w.Out.Send(flow.Tag{"<open>", name})
 			for scanner.Scan() {
@@ -59,9 +57,7 @@ func (w *IntelHexToBin) Run() {
 	for m := range w.In {
 		if t, ok := m.(string); ok && strings.HasPrefix(t, ":") {
 			b, err := hex.DecodeString(t[1:])
-			if err != nil {
-				panic(err)
-			}
+			flow.Check(err)
 			// TODO: probably doesn't handle hex files over 64 KB
 			if b[3] == 0 {
 				if buf.Len() == 0 {

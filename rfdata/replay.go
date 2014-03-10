@@ -36,20 +36,14 @@ func (w *LogReader) Run() {
 		name := m.(string)
 		var file io.Reader
 		file, err := os.Open(name)
-		if err != nil {
-			panic(err)
-		}
+		flow.Check(err)
 		if path.Ext(name) == ".gz" {
 			file, err = gzip.NewReader(file)
-			if err != nil {
-				panic(err)
-			}
+			flow.Check(err)
 		}
 		// Mon Jan 2 15:04:05 -0700 MST 2006
 		day, err := time.Parse("20060102", path.Base(name)[:8])
-		if err != nil {
-			panic(err)
-		}
+		flow.Check(err)
 		yr, mo, dy := day.Date()
 		lastDev := ""
 
@@ -58,9 +52,7 @@ func (w *LogReader) Run() {
 			m := re.FindStringSubmatch(scanner.Text())
 			// Mon Jan 2 15:04:05 -0700 MST 2006
 			tod, err := time.Parse("15:04:05.000", m[1])
-			if err != nil {
-				panic(err)
-			}
+			flow.Check(err)
 			w.Out.Send(tod.AddDate(yr, int(mo)-1, dy-1))
 			if m[2] != lastDev {
 				w.Out.Send("<" + m[2] + ">")

@@ -26,9 +26,7 @@ func (w *JavaScript) Run() {
 		// define a callback for send memos to Out
 		engine.Set("emitOut", func(call otto.FunctionCall) otto.Value {
 			out, err := call.Argument(0).Export()
-			if err != nil {
-				panic(err)
-			}
+			flow.Check(err)
 			w.Out.Send(out)
 			return otto.UndefinedValue()
 		})

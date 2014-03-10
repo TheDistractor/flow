@@ -44,9 +44,7 @@ func (w *Logger) logOneLine(asof time.Time, text, port string) {
 	year, month, day := asof.Date()
 	path := fmt.Sprintf("%s/%d", w.dir, year)
 	err := os.MkdirAll(path, os.ModePerm)
-	if err != nil {
-		panic(err)
-	}
+	flow.Check(err)
 	// e.g. "./logger/2014/20140122.txt"
 	datePath := fmt.Sprintf("%s/%d.txt", path, (year*100+int(month))*100+day)
 
@@ -56,9 +54,7 @@ func (w *Logger) logOneLine(asof time.Time, text, port string) {
 		}
 		mode := os.O_WRONLY | os.O_APPEND | os.O_CREATE
 		fd, err := os.OpenFile(datePath, mode, os.ModePerm)
-		if err != nil {
-			panic(err)
-		}
+		flow.Check(err)
 		w.fd = fd
 	}
 	// append a new log entry, here is an example of the format used:

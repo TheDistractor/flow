@@ -44,9 +44,7 @@ func openDatabase(name string) *openDb {
 	odb, ok := dbMap[name]
 	if !ok {
 		db, err := leveldb.OpenFile(name, nil)
-		if err != nil {
-			panic(err)
-		}
+		flow.Check(err)
 		odb = &openDb{name, db, 0}
 		dbMap[name] = odb
 	}
@@ -97,22 +95,16 @@ func (w *LevelDB) get(key string) (any interface{}) {
 	if err == leveldb.ErrNotFound {
 		return nil
 	}
-	if err != nil {
-		panic(err)
-	}
+	flow.Check(err)
 	err = json.Unmarshal(data, &any)
-	if err != nil {
-		panic(err)
-	}
+	flow.Check(err)
 	return
 }
 
 func (w *LevelDB) put(key string, value interface{}) {
 	if value != nil {
 		data, err := json.Marshal(value)
-		if err != nil {
-			panic(err)
-		}
+		flow.Check(err)
 		w.odb.db.Put([]byte(key), data, nil)
 	} else {
 		w.odb.db.Delete([]byte(key), nil)

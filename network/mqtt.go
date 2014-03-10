@@ -27,14 +27,10 @@ type MqttSub struct {
 func (w *MqttSub) Run() {
 	if port, ok := <-w.Port; ok {
 		sock, err := net.Dial("tcp", port.(string))
-		if err != nil {
-			panic(err)
-		}
+		flow.Check(err)
 		client := mqtt.NewClientConn(sock)
 		err = client.Connect("", "")
-		if err != nil {
-			panic(err)
-		}
+		flow.Check(err)
 
 		if topic, ok := <-w.Topic; ok {
 			client.Subscribe([]proto.TopicQos{{
@@ -60,14 +56,10 @@ type MqttPub struct {
 func (w *MqttPub) Run() {
 	if port, ok := <-w.Port; ok {
 		sock, err := net.Dial("tcp", port.(string))
-		if err != nil {
-			panic(err)
-		}
+		flow.Check(err)
 		client := mqtt.NewClientConn(sock)
 		err = client.Connect("", "")
-		if err != nil {
-			panic(err)
-		}
+		flow.Check(err)
 
 		if m, ok := <-w.In; ok {
 			msg := m.([]string)
@@ -90,9 +82,7 @@ type MqttServer struct {
 func (w *MqttServer) Run() {
 	if port, ok := <-w.Port; ok {
 		listener, err := net.Listen("tcp", port.(string))
-		if err != nil {
-			panic(err)
-		}
+		flow.Check(err)
 		server := mqtt.NewServer(listener)
 		server.Start()
 		<-server.Done

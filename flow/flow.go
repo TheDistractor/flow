@@ -99,6 +99,13 @@ func portPart(s string) string {
 	return s[n+1:]
 }
 
+// Utility to check for errors and panic if the arg is not nil.
+func Check(err interface{}) {
+	if err != nil {
+		panic(err)
+	}
+}
+
 // Call this as "defer flow.DontPanic()" for a concise stack trace on panics.
 func DontPanic() {
 	// generate a nice stack trace, see https://code.google.com/p/gonicetrace/

@@ -46,9 +46,7 @@ func (w *SerialPort) Run() {
 	if port, ok := <-w.Port; ok {
 		opt := rs232.Options{BitRate: 57600, DataBits: 8, StopBits: 1}
 		dev, err := rs232.Open(port.(string), opt)
-		if err != nil {
-			panic(err)
-		}
+		flow.Check(err)
 		defer dev.Close()
 
 		// separate process to copy data out to the serial port

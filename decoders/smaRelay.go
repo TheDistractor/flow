@@ -25,9 +25,7 @@ func (w *SmaRelay) Run() {
 		if v, ok := m.([]byte); ok && len(v) >= 12 {
 			buf := bytes.NewBuffer(v[1:])
 			err := binary.Read(buf, binary.LittleEndian, &vec)
-			if err != nil {
-				panic(err)
-			}
+			flow.Check(err)
 			result := map[string]int{
 				"<reading>": 1,
 				"acw":       int(vec[2]),

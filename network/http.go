@@ -106,9 +106,7 @@ func (w *wsHead) Run() {
 		if err == io.EOF {
 			break
 		}
-		if err != nil {
-			panic(err)
-		}
+		flow.Check(err)
 		w.Out.Send(msg)
 	}
 }
@@ -123,8 +121,6 @@ type wsTail struct {
 func (w *wsTail) Run() {
 	for m := range w.In {
 		err := websocket.JSON.Send(w.ws, m)
-		if err != nil {
-			panic(err)
-		}
+		flow.Check(err)
 	}
 }

@@ -25,9 +25,7 @@ func (w *RadioBlip) Run() {
 			buf := bytes.NewBuffer(v[1:])
 			var ping uint32
 			err := binary.Read(buf, binary.LittleEndian, &ping)
-			if err != nil {
-				panic(err)
-			}
+			flow.Check(err)
 
 			result := map[string]int{
 				"<reading>": 1,
