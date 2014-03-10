@@ -7,6 +7,7 @@ import (
 	"flag"
 	"io/ioutil"
 	"sort"
+	"time"
 
 	"github.com/jcw/flow/flow"
 
@@ -21,6 +22,7 @@ import (
 
 var (
 	verbose    = flag.Bool("v", false, "show version and registry contents")
+	wait       = flag.Bool("w", false, "wait forever, don't exit main")
 	configFile = flag.String("c", "config.json", "use configuration file")
 	appMain    = flag.String("r", "main", "which registered group to run")
 )
@@ -47,6 +49,9 @@ func main() {
 	} else {
 		if factory, ok := flow.Registry[*appMain]; ok {
 			factory().Run()
+			if *wait {
+				time.Sleep(1e6 * time.Hour)
+			}
 		} else {
 			panic(*appMain + " not found in: " + *configFile)
 		}

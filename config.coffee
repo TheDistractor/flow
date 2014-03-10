@@ -77,4 +77,27 @@ groups.serial =
     { data: "/dev/tty.usbserial-A901ROSM", to: "sp.Port" }
   ]
 
+# simple jeebus setup, with dummy websocket support
+groups.jeebus =
+  workers: [
+    { name: "http", type: "HttpServer" }
+  ]
+  requests: [
+    { tag: "/", data: "../jeebus/app",  to: "http.Handlers" }
+    { tag: "/base/", data: "../jeebus/base",  to: "http.Handlers" }
+    { tag: "/common/", data: "../jeebus/common",  to: "http.Handlers" }
+    { tag: "/ws", data: "<websocket>",  to: "http.Handlers" }
+    { data: ":3000",  to: "http.Start" }
+  ]
+
+# define the websocket handler as just a pipe back to the browser for now
+groups["WebSocket-jeebus"] =
+  workers: [
+    { name: "p", type: "Pipe" }
+  ]
+  mappings: [
+    { external: "In", internal: "p.In" }
+    { external: "Out", internal: "p.Out" }
+  ]
+
 console.log JSON.stringify groups, null, 4
