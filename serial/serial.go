@@ -35,8 +35,8 @@ func (w *TimeStamp) Run() {
 type SerialPort struct {
 	flow.Work
 	Port flow.Input
-	In   flow.Input
-	Out  flow.Output
+	To   flow.Input
+	From flow.Output
 }
 
 // Start processing text lines to and from the serial interface.
@@ -53,7 +53,7 @@ func (w *SerialPort) Run() {
 
 		// separate process to copy data out to the serial port
 		go func() {
-			for m := range w.In {
+			for m := range w.To {
 				switch v := m.(type) {
 				case string:
 					dev.Write([]byte(v + "\n"))
@@ -71,7 +71,7 @@ func (w *SerialPort) Run() {
 
 		scanner := bufio.NewScanner(dev)
 		for scanner.Scan() {
-			w.Out.Send(scanner.Text())
+			w.From.Send(scanner.Text())
 		}
 	}
 }

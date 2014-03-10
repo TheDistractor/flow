@@ -23,7 +23,7 @@
     ],
     "connections": [
         {
-            "from": "sp.Out",
+            "from": "sp.From",
             "to": "st.In"
         },
         {

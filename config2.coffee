@@ -9,7 +9,7 @@ group =
     { name: "d2", type: "Dispatcher" }
   ]
   connections: [
-    { from: "sp.Out", to: "st.In" }
+    { from: "sp.From", to: "st.In" }
     { from: "st.Out", to: "d1.In" }
     { from: "d1.Out", to: "nm.In" }
     { from: "nm.Out", to: "d2.In" }
