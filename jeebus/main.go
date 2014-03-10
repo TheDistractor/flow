@@ -20,17 +20,7 @@ func main() {
 	defer flow.DontPanic()
 
 	// started for each websocket connection with protocol type "jeebus"
-	flow.Registry["WebSocket-jeebus"] = func() flow.Worker {
-		trace := flow.Transformer(func(m flow.Memo) flow.Memo {
-			fmt.Println("ws:", m)
-			return m
-		})
-		g := flow.NewGroup()
-		g.AddWorker("t", trace)
-		g.Map("In", "t.In")
-		g.Map("Out", "t.Out")
-		return g
-	}
+	flow.Registry["WebSocket-jeebus"] = jeeBusHandler
 
 	g := flow.NewGroup()
 	g.Add("http", "HttpServer")
@@ -43,4 +33,16 @@ func main() {
 
 	println("listening on http://localhost:3000/")
 	time.Sleep(1e6 * time.Hour)
+}
+
+func jeeBusHandler() flow.Worker {
+	trace := flow.Transformer(func(m flow.Memo) flow.Memo {
+		fmt.Println("ws:", m)
+		return m
+	})
+	g := flow.NewGroup()
+	g.AddWorker("t", trace)
+	g.Map("In", "t.In")
+	g.Map("Out", "t.Out")
+	return g
 }

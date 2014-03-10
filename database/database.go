@@ -26,7 +26,7 @@ type openDb struct {
 	refs int
 }
 
-func (odb *openDb) Release() {
+func (odb *openDb) release() {
 	dbMutex.Lock()
 	defer dbMutex.Unlock()
 
@@ -55,7 +55,7 @@ func openDatabase(name string) *openDb {
 }
 
 // LevelDB is a multi-purpose worker to get, put, and scan keys in a database.
-// Expects flow.Tag values on its input port. Registers itself as "LevelDB".
+// Acts on tags received on the input port. Registers itself as "LevelDB".
 type LevelDB struct {
 	flow.Work
 	Name flow.Input
@@ -69,7 +69,7 @@ type LevelDB struct {
 func (w *LevelDB) Run() {
 	if name, ok := <-w.Name; ok {
 		w.odb = openDatabase(name.(string))
-		defer w.odb.Release()
+		defer w.odb.release()
 
 		for m := range w.In {
 			if tag, ok := m.(flow.Tag); ok {
