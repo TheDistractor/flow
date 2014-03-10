@@ -13,6 +13,7 @@ import (
 
 	_ "github.com/jcw/flow/database"
 	_ "github.com/jcw/flow/decoders"
+	_ "github.com/jcw/flow/fbpparse"
 	_ "github.com/jcw/flow/javascript"
 	_ "github.com/jcw/flow/network"
 	_ "github.com/jcw/flow/rfdata"

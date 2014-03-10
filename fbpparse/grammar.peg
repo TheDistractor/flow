@@ -1,0 +1,54 @@
+# adapted from https://github.com/noflo/fbp/blob/master/grammar/fbp.peg (MIT)
+
+package fbpparse
+
+type Fbp Peg {
+}
+
+start <- line* _ !.
+
+line <-
+	_ "EXPORT=" [A-Za-z.0-9_]+ ":" [A-Z0-9_]+ _ LineTerminator?
+  / _ "INPORT=" [A-Za-z0-9_]+ "." [A-Z0-9_]+ ":" [A-Z0-9_]+ _ LineTerminator?
+  / _ "OUTPORT=" [A-Za-z0-9_]+ "." [A-Z0-9_]+ ":" [A-Z0-9_]+ _ LineTerminator?
+  / comment [\n\r]?
+  / _ [\n\r]
+  / _ connection _ LineTerminator?
+
+LineTerminator <- _ ","? comment? [\n\r]?
+
+comment <- _ "#" anychar*
+
+connection <-
+	bridge _ "->" _ connection
+  / bridge
+
+bridge <-
+	port _ node _ port
+  / iip
+  / rightlet
+  / leftlet
+
+leftlet <- node _ port
+
+iip <- "'" iipchar* "'"
+
+rightlet <- port _ node
+
+node <- [a-zA-Z0-9_]+ component?
+
+component <- "(" [a-zA-Z/\-0-9_]* compMeta? ")"
+
+compMeta <- ":" [a-zA-Z/]+
+
+port <- [A-Z.0-9_]+ __
+
+anychar <- [^\n\r]
+
+iipchar <-
+	[\\][']
+  / [^']
+
+_ <- [ \t]*
+
+__ <- [ \t]+
