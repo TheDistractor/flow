@@ -13,6 +13,7 @@ func ExampleFbpParser() {
 	    Authentication() OUT -> IN GreetUser(HelloController) OUT -> IN WriteResponse(HTTP/WriteResponse) OUT -> IN Send(HTTP/SendResponse)
 	    'hello.jade' -> SOURCE ReadTemplate(ReadFile) OUT -> TEMPLATE Render(Template)
 	    GreetUser() DATA -> OPTIONS Render() OUT -> STRING WriteResponse()
+		INPORT=ABC.DEF:123
 	`)
 	g.Run()
 	// Output:

@@ -40,6 +40,7 @@ func (w *FbpParser) parseFbp(lines []string) {
 		fbp.Init()
 		err := fbp.Parse()
 		flow.Check(err)
+		// fbp.Execute()
 		w.Out.Send(true)
 		// fbp.PrintSyntaxTree()
 	}
