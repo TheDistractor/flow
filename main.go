@@ -3,6 +3,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"io/ioutil"
 	"sort"
@@ -21,28 +22,48 @@ import (
 var verbose = flag.Bool("v", false, "show version and overview of the registry")
 
 func main() {
+	defer flow.DontPanic()
 	flag.Parse()
-	
+
+	configFile := flag.Arg(0)
+	if configFile == "" {
+		configFile = "config.json"
+	}
+	data, err := ioutil.ReadFile(configFile)
+	flow.Check(err)
+
+	var definitions map[string]json.RawMessage
+	err = json.Unmarshal(data, &definitions)
+	flow.Check(err)
+
+	for name, def := range definitions {
+		registerGroup(name, def)
+	}
+
 	if *verbose {
 		println("Flow " + flow.Version + "\n")
 		printRegistry()
 		println("\nDocumentation at http://godoc.org/github.com/jcw/flow")
 	} else {
-		configFile := flag.Arg(0)
-		if configFile == "" {
-			configFile = "config.json"
+		app := flag.Arg(1)
+		if app == "" {
+			app = "main"
 		}
 
+		if factory, ok := flow.Registry[app]; ok {
+			factory().Run()
+		} else {
+			panic(app + " not found in: " + configFile)
+		}
+	}
+}
+
+func registerGroup(name string, def []byte) {
+	flow.Registry[name] = func() flow.Worker {
 		g := flow.NewGroup()
-		data, err := ioutil.ReadFile(configFile)
-		if err != nil {
-			panic(err)
-		}
-		err = g.LoadJSON(data)
-		if err != nil {
-			panic(err)
-		}
-		g.Run()
+		err := g.LoadJSON(def)
+		flow.Check(err)
+		return g
 	}
 }
 

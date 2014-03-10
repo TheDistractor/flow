@@ -1,4 +1,6 @@
-group = 
+groups = {}
+
+groups.main = 
   workers: [
     { name: "lr", type: "LogReader" }
     { name: "rf", type: "Pipe" } # used to inject an "[RF12demo...]" line
@@ -47,4 +49,4 @@ group =
     { data: "./logger", to: "lg.Dir" }
   ]
 
-console.log JSON.stringify group, null, 4
+console.log JSON.stringify groups, null, 4
