@@ -1,4 +1,4 @@
-// This application can exercise the "flow" package via a JSON config file.
+// This application exercises the "flow" package via a JSON config file.
 // Use the "-v" flag for a list of built-in (i.e. pre-registered) workers.
 package main
 
@@ -19,17 +19,17 @@ import (
 	_ "github.com/jcw/flow/workers"
 )
 
-var verbose = flag.Bool("v", false, "show version and overview of the registry")
+var (
+	verbose    = flag.Bool("v", false, "show version and registry contents")
+	configFile = flag.String("c", "config.json", "use configuration file")
+	appMain    = flag.String("r", "main", "which registered group to run")
+)
 
 func main() {
 	defer flow.DontPanic()
 	flag.Parse()
 
-	configFile := flag.Arg(0)
-	if configFile == "" {
-		configFile = "config.json"
-	}
-	data, err := ioutil.ReadFile(configFile)
+	data, err := ioutil.ReadFile(*configFile)
 	flow.Check(err)
 
 	var definitions map[string]json.RawMessage
@@ -45,15 +45,10 @@ func main() {
 		printRegistry()
 		println("\nDocumentation at http://godoc.org/github.com/jcw/flow")
 	} else {
-		app := flag.Arg(1)
-		if app == "" {
-			app = "main"
-		}
-
-		if factory, ok := flow.Registry[app]; ok {
+		if factory, ok := flow.Registry[*appMain]; ok {
 			factory().Run()
 		} else {
-			panic(app + " not found in: " + configFile)
+			panic(*appMain + " not found in: " + *configFile)
 		}
 	}
 }
