@@ -15,6 +15,9 @@ type config struct {
 	Requests []struct {
 		Tag, Data, To string
 	}
+	Mappings []struct {
+		External, Internal string
+	}
 }
 
 // Load a group from a JSON description in a string.
@@ -34,6 +37,9 @@ func (g *Group) LoadJSON(data []byte) error {
 			} else {
 				g.Set(r.To, r.Data)
 			}
+		}
+		for _, c := range conf.Mappings {
+			g.Map(c.External, c.Internal)
 		}
 	}
 	return err
