@@ -12,7 +12,7 @@ import (
 
 func init() {
 	flow.Registry["TimeStamp"] = func() flow.Worker { return &TimeStamp{} }
-	flow.Registry["SerialIn"] = func() flow.Worker { return &SerialIn{} }
+	flow.Registry["SerialPort"] = func() flow.Worker { return &SerialPort{} }
 	flow.Registry["SketchType"] = func() flow.Worker { return &SketchType{} }
 }
 
@@ -31,22 +31,43 @@ func (w *TimeStamp) Run() {
 	}
 }
 
-// Line-oriented serial input port, opened once the Port input is set.
-type SerialIn struct {
+// Line-oriented serial port, opened once the Port input is set.
+type SerialPort struct {
 	flow.Work
 	Port flow.Input
+	In   flow.Input
 	Out  flow.Output
 }
 
-// Start processing incoming text lines from the serial interface.
-// Registers as "SerialIn".
-func (w *SerialIn) Run() {
+// Start processing text lines to and from the serial interface.
+// Send a bool to adjust RTS or an int to pulse DTR for that many milliseconds.
+// Registers as "SerialPort".
+func (w *SerialPort) Run() {
 	if port, ok := <-w.Port; ok {
 		opt := rs232.Options{BitRate: 57600, DataBits: 8, StopBits: 1}
 		dev, err := rs232.Open(port.(string), opt)
 		if err != nil {
 			panic(err)
 		}
+		defer dev.Close()
+
+		// separate process to copy data out to the serial port
+		go func() {
+			for m := range w.In {
+				switch v := m.(type) {
+				case string:
+					dev.Write([]byte(v + "\n"))
+				case []byte:
+					dev.Write(v)
+				case int:
+					dev.SetDTR(true) // pulse DTR to reset
+					time.Sleep(time.Duration(v) * time.Millisecond)
+					dev.SetDTR(false)
+				case bool:
+					dev.SetRTS(v)
+				}
+			}
+		}()
 
 		scanner := bufio.NewScanner(dev)
 		for scanner.Scan() {

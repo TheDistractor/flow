@@ -3,7 +3,6 @@ group =
     { name: "lr", type: "LogReader" }
     { name: "rf", type: "Pipe" } # used to inject an "[RF12demo...]" line
     { name: "w1", type: "LogReplayer" }
-    # { name: "w1", type: "SerialIn" }
     { name: "ts", type: "TimeStamp" }
     { name: "fo", type: "FanOut" }
     { name: "lg", type: "Logger" }
@@ -46,7 +45,6 @@ group =
     { data: "[RF12demo.10] _ i31* g5 @ 868 MHz", to: "rf.In" }
     { data: "./rfdata/20121130.txt.gz", to: "lr.Name" }
     { data: "./logger", to: "lg.Dir" }
-    # { data: "/dev/tty.usbserial-A901ROSM", to: "w1.Port" }
   ]
 
 console.log JSON.stringify group, null, 4

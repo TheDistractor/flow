@@ -1,8 +1,8 @@
 {
     "workers": [
         {
-            "name": "w1",
-            "type": "SerialIn"
+            "name": "sp",
+            "type": "SerialPort"
         },
         {
             "name": "st",
@@ -23,7 +23,7 @@
     ],
     "connections": [
         {
-            "from": "w1.Out",
+            "from": "sp.Out",
             "to": "st.In"
         },
         {
@@ -70,7 +70,7 @@
         },
         {
             "data": "/dev/tty.usbserial-A901ROSM",
-            "to": "w1.Port"
+            "to": "sp.Port"
         }
     ]
 }

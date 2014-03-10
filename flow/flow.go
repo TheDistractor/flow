@@ -86,6 +86,10 @@ func (c *fakeSink) Close() {}
 // extract "a" from "a.b"
 func workerPart(s string) string {
 	n := strings.IndexRune(s, '.')
+	// TODO: shouldn't be needed, just use ".port" iso "port"
+	// if n < 0 {
+	// 	n = 0
+	// }
 	return s[:n]
 }
 

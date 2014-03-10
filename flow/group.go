@@ -41,6 +41,10 @@ func (g *Group) AddWorker(name string, w Worker) {
 }
 
 func (g *Group) workerOf(s string) *Work {
+	// TODO: migth be useful for extending an existing group
+	// if workerPart(s) == "" && g.portMap[s] != "" {
+	// 	s = g.portMap[s] // unnamed workers can use the group's port map
+	// }
 	w, ok := g.workers[workerPart(s)]
 	if !ok {
 		panic("worker not found for: " + s)

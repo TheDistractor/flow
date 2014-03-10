@@ -2,14 +2,14 @@
 
 group = 
   workers: [
-    { name: "w1", type: "SerialIn" }
+    { name: "sp", type: "SerialPort" }
     { name: "st", type: "SketchType" }
     { name: "d1", type: "Dispatcher" }
     { name: "nm", type: "NodeMap" }
     { name: "d2", type: "Dispatcher" }
   ]
   connections: [
-    { from: "w1.Out", to: "st.In" }
+    { from: "sp.Out", to: "st.In" }
     { from: "st.Out", to: "d1.In" }
     { from: "d1.Out", to: "nm.In" }
     { from: "nm.Out", to: "d2.In" }
@@ -23,7 +23,7 @@ group =
     { data: "RFg5i18 p1scanner", to: "nm.Info" }
     { data: "RFg5i19 ookRelay",  to: "nm.Info" }
     
-    { data: "/dev/tty.usbserial-A901ROSM", to: "w1.Port" }
+    { data: "/dev/tty.usbserial-A901ROSM", to: "sp.Port" }
   ]
 
 console.log JSON.stringify group, null, 4
