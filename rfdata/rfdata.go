@@ -20,9 +20,10 @@ func init() {
 // Registers as "Sketch-RF12demo".
 type RF12demo struct {
 	flow.Work
-	In  flow.Input
-	Out flow.Output
-	Rej flow.Output
+	In  flow.Input  // serial input, as tex lines
+	Out flow.Output // <node> map, followed by []byte packet
+	Oob flow.Output // the same, for out-of-band packets
+	Rej flow.Output // unrecognised strings
 }
 
 // Start converting lines into binary packets.
@@ -39,8 +40,13 @@ func (w *RF12demo) Run() {
 					if rssi != 0 {
 						info["rssi"] = rssi
 					}
-					w.Out.Send(info)
-					w.Out.Send(data)
+					if data[0]&0xA0 == 0xA0 {
+						w.Oob.Send(info)
+						w.Oob.Send(data)
+					} else {
+						w.Out.Send(info)
+						w.Out.Send(data)
+					}
 				} else {
 					w.Rej.Send(m)
 				}
@@ -92,23 +98,30 @@ type NodeMap struct {
 // Start looking up node ID's in the node map.
 func (w *NodeMap) Run() {
 	nodeMap := map[string]string{}
+	locations := map[string]string{}
 	for m := range w.Info {
-		f := strings.Fields(m.(string))
+		f := strings.SplitN(m.(string), " ", 3)
 		nodeMap[f[0]] = f[1]
+		if len(f) > 2 {
+			locations[f[0]] = f[2]
+		}
 	}
 
 	var group int
 	for m := range w.In {
 		if data, ok := m.(map[string]int); ok {
 			w.Out.Send(m)
+
 			switch {
 			case data["<RF12demo>"] > 0:
 				group = data["group"]
 			case data["<node>"] > 0:
 				key := fmt.Sprintf("RFg%di%d", group, data["<node>"])
-				if _, ok := nodeMap[key]; ok {
-					tag := "Node-" + nodeMap[key]
-					w.Out.Send(flow.Tag{"<dispatch>", tag})
+				if loc, ok := locations[key]; ok {
+					w.Out.Send(flow.Tag{"<location>", loc})
+				}
+				if tag, ok := nodeMap[key]; ok {
+					w.Out.Send(flow.Tag{"<dispatch>", "Node-" + tag})
 				}
 			}
 			continue

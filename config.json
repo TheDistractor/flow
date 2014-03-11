@@ -90,7 +90,7 @@
         ],
         "requests": [
             {
-                "data": "RFg5i2 roomNode",
+                "data": "RFg5i2 roomNode boekenkast JC",
                 "to": "nm.Info"
             },
             {
@@ -98,15 +98,15 @@
                 "to": "nm.Info"
             },
             {
-                "data": "RFg5i4 roomNode",
+                "data": "RFg5i4 roomNode washok",
                 "to": "nm.Info"
             },
             {
-                "data": "RFg5i5 roomNode",
+                "data": "RFg5i5 roomNode woonkamer",
                 "to": "nm.Info"
             },
             {
-                "data": "RFg5i6 roomNode",
+                "data": "RFg5i6 roomNode hal vloer",
                 "to": "nm.Info"
             },
             {
@@ -118,15 +118,15 @@
                 "to": "nm.Info"
             },
             {
-                "data": "RFg5i11 roomNode",
+                "data": "RFg5i11 roomNode logeerkamer",
                 "to": "nm.Info"
             },
             {
-                "data": "RFg5i12 roomNode",
+                "data": "RFg5i12 roomNode boekenkast L",
                 "to": "nm.Info"
             },
             {
-                "data": "RFg5i13 roomNode",
+                "data": "RFg5i13 roomNode raam halfhoog",
                 "to": "nm.Info"
             },
             {
@@ -146,11 +146,11 @@
                 "to": "nm.Info"
             },
             {
-                "data": "RFg5i23 roomNode",
+                "data": "RFg5i23 roomNode gang boven",
                 "to": "nm.Info"
             },
             {
-                "data": "RFg5i24 roomNode",
+                "data": "RFg5i24 roomNode zolderkamer",
                 "to": "nm.Info"
             },
             {

@@ -28,22 +28,22 @@ groups.main =
     { from: "d2.Out", to: "p.In" }
   ]
   requests: [
-    { data: "RFg5i2 roomNode",   to: "nm.Info" }
+    { data: "RFg5i2 roomNode boekenkast JC",   to: "nm.Info" }
     { data: "RFg5i3 radioBlip",  to: "nm.Info" }
-    { data: "RFg5i4 roomNode",   to: "nm.Info" }
-    { data: "RFg5i5 roomNode",   to: "nm.Info" }
-    { data: "RFg5i6 roomNode",   to: "nm.Info" }
+    { data: "RFg5i4 roomNode washok",   to: "nm.Info" }
+    { data: "RFg5i5 roomNode woonkamer",   to: "nm.Info" }
+    { data: "RFg5i6 roomNode hal vloer",   to: "nm.Info" }
     { data: "RFg5i9 homePower",  to: "nm.Info" }
     { data: "RFg5i10 roomNode",  to: "nm.Info" }
-    { data: "RFg5i11 roomNode",  to: "nm.Info" }
-    { data: "RFg5i12 roomNode",  to: "nm.Info" }
-    { data: "RFg5i13 roomNode",  to: "nm.Info" }
+    { data: "RFg5i11 roomNode logeerkamer",  to: "nm.Info" }
+    { data: "RFg5i12 roomNode boekenkast L",  to: "nm.Info" }
+    { data: "RFg5i13 roomNode raam halfhoog",  to: "nm.Info" }
     { data: "RFg5i14 otRelay",   to: "nm.Info" }
     { data: "RFg5i15 smaRelay",  to: "nm.Info" }
     { data: "RFg5i18 p1scanner", to: "nm.Info" }
     { data: "RFg5i19 ookRelay",  to: "nm.Info" }
-    { data: "RFg5i23 roomNode",  to: "nm.Info" }
-    { data: "RFg5i24 roomNode",  to: "nm.Info" }
+    { data: "RFg5i23 roomNode gang boven",  to: "nm.Info" }
+    { data: "RFg5i24 roomNode zolderkamer",  to: "nm.Info" }
     
     { data: "[RF12demo.10] _ i31* g5 @ 868 MHz", to: "rf.In" }
     { data: "./rfdata/20121130.txt.gz", to: "lr.Name" }

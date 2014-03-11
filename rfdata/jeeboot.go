@@ -162,13 +162,7 @@ type upgradeRequest struct {
 	SwCheck uint16 // current crc checksum over entire download
 }
 
-type upgradeReply struct {
-	Variant uint8  // variant of remote node, 1..250 freely available
-	Board   uint8  // type of remote node, 100..250 freely available
-	SwId    uint16 // assigned software ID
-	SwSize  uint16 // software download size, in units of 16 bytes
-	SwCheck uint16 // crc checksum over entire download
-}
+type upgradeReply upgradeRequest // same layout
 
 type downloadRequest struct {
 	SwId    uint16 // current software ID
