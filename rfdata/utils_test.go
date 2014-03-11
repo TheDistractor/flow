@@ -20,11 +20,11 @@ func ExampleReadTextFile() {
 	g.Add("r", "ReadTextFile")
 	g.Add("c", "Counter")
 	g.Connect("r.Out", "c.In", 0)
-	g.Set("r.In", "./BlinkAvr1.hex")
+	g.Set("r.In", "./blinkAvr1.hex")
 	g.Run()
 	// Output:
-	// Lost flow.Tag: {<open> ./BlinkAvr1.hex}
-	// Lost flow.Tag: {<close> ./BlinkAvr1.hex}
+	// Lost flow.Tag: {<open> ./blinkAvr1.hex}
+	// Lost flow.Tag: {<close> ./blinkAvr1.hex}
 	// Lost int: 47
 }
 
@@ -40,13 +40,13 @@ func ExampleIntelHexToBin() {
 	}))
 	g.Connect("r.Out", "b.In", 0)
 	g.Connect("b.Out", "n.In", 0)
-	g.Set("r.In", "./BlinkAvr1.hex")
+	g.Set("r.In", "./blinkAvr1.hex")
 	g.Run()
 	// Output:
-	// Lost flow.Tag: {<open> ./BlinkAvr1.hex}
+	// Lost flow.Tag: {<open> ./blinkAvr1.hex}
 	// Lost flow.Tag: {<addr> 0}
 	// Lost int: 726
-	// Lost flow.Tag: {<close> ./BlinkAvr1.hex}
+	// Lost flow.Tag: {<close> ./blinkAvr1.hex}
 }
 
 func ExampleBinaryFill() {
