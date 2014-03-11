@@ -21,9 +21,9 @@ type JeeBoot struct {
 	In  flow.Input
 	Out flow.Output
 
-	dev    string
-	config Config
-	fw     map[uint16]Firmware
+	dev string
+	cfg config
+	fw  map[uint16]firmware
 }
 
 // Start decoding JeeBoot packets.
@@ -49,15 +49,15 @@ func convertReplyToCmd(reply interface{}) string {
 	return cmd[1:len(cmd)-1] + ",0s"
 }
 
-type HwIdStruct struct{ Board, Group, Node, SwId float64 }
-type SwIdStruct struct{ File string }
+type hwIdStruct struct{ Board, Group, Node, SwId float64 }
+type swIdStruct struct{ File string }
 
-type Config struct {
-	HwId map[string]HwIdStruct // map 16-byte hwID to assigned pairing info
-	SwId map[string]SwIdStruct // map each swId to a filename
+type config struct {
+	HwId map[string]hwIdStruct // map 16-byte hwID to assigned pairing info
+	SwId map[string]swIdStruct // map each swId to a filename
 }
 
-func (c *Config) LookupHwId(hwId []byte) (board, group, node uint8) {
+func (c *config) LookupHwId(hwId []byte) (board, group, node uint8) {
 	key := hex.EncodeToString(hwId)
 	if info, ok := c.HwId[key]; ok {
 		board = uint8(info.Board)
@@ -67,7 +67,7 @@ func (c *Config) LookupHwId(hwId []byte) (board, group, node uint8) {
 	return
 }
 
-func (c *Config) LookupSwId(group, node uint8) uint16 {
+func (c *config) LookupSwId(group, node uint8) uint16 {
 	for _, h := range c.HwId {
 		if group == uint8(h.Group) && node == uint8(h.Node) {
 			return uint16(h.SwId)
@@ -76,46 +76,46 @@ func (c *Config) LookupSwId(group, node uint8) uint16 {
 	return 0
 }
 
-// func loadConfig() (config Config) {
+// func loadConfig() (cfg config) {
 // 	// TODO: this sort of dynamic decoding is still very tedious
 //
 // 	hkeys, err := client.Call("db-keys", "/jeeboot/hwid/")
 // 	flow.Check(err)
-// 	config.HwId = make(map[string]HwIdStruct)
+// 	cfg.HwId = make(map[string]hwIdStruct)
 // 	for _, k := range hkeys.([]interface{}) {
 // 		v, err := client.Call("db-get", "/jeeboot/hwid/"+k.(string))
 // 		flow.Check(err)
-// 		var hs HwIdStruct
+// 		var hs hwIdStruct
 // 		err = json.Unmarshal([]byte(v.(string)), &hs)
 // 		flow.Check(err)
-// 		config.HwId[k.(string)] = hs
+// 		cfg.HwId[k.(string)] = hs
 // 	}
 //
 // 	fkeys, err := client.Call("db-keys", "/jeeboot/swid/")
 // 	flow.Check(err)
-// 	config.SwId = make(map[string]SwIdStruct)
+// 	cfg.SwId = make(map[string]swIdStruct)
 // 	for _, k := range fkeys.([]interface{}) {
 // 		v, err := client.Call("db-get", "/jeeboot/swid/"+k.(string))
 // 		flow.Check(err)
-// 		var ss SwIdStruct
+// 		var ss swIdStruct
 // 		err = json.Unmarshal([]byte(v.(string)), &ss)
 // 		flow.Check(err)
-// 		config.SwId[k.(string)] = ss
+// 		cfg.SwId[k.(string)] = ss
 // 	}
 //
-// 	fmt.Printf("CONFIG %d hw %d fw\n", len(config.HwId), len(config.SwId))
+// 	fmt.Printf("CONFIG %d hw %d fw\n", len(cfg.HwId), len(cfg.SwId))
 // 	return
 // }
 
-type Firmware struct {
+type firmware struct {
 	name string
 	crc  uint16
 	data []byte
 }
 
-// func loadAllFirmware(config Config) map[uint16]Firmware {
-// 	fw := make(map[uint16]Firmware)
-// 	for key, name := range config.SwId {
+// func loadAllFirmware(cfg config) map[uint16]firmware {
+// 	fw := make(map[uint16]firmware)
+// 	for key, name := range cfg.SwId {
 // 		swId, err := strconv.Atoi(key)
 // 		flow.Check(err)
 // 		fw[uint16(swId)] = readFirmware(name.File)
@@ -123,15 +123,15 @@ type Firmware struct {
 // 	return fw
 // }
 //
-// func readFirmware(name string) Firmware {
+// func readFirmware(name string) firmware {
 // 	buf := readIntelHexFile(name)
 // 	data := padToBinaryMultiple(buf, 64)
 // 	fmt.Printf("data %d -> %d bytes\n", buf.Len(), len(data))
 //
-// 	return Firmware{name, calculateCrc(data), data}
+// 	return firmware{name, calculateCrc(data), data}
 // }
 
-type PairingRequest struct {
+type pairingRequest struct {
 	Variant uint8     // variant of remote node, 1..250 freely available
 	Board   uint8     // type of remote node, 100..250 freely available
 	Group   uint8     // current network group, 1..250 or 0 if unpaired
@@ -140,13 +140,13 @@ type PairingRequest struct {
 	HwId    [16]uint8 // unique hardware ID or 0's if not available
 }
 
-type PairingAssign struct {
+type pairingAssign struct {
 	Variant uint8     // variant of remote node, 1..250 freely available
 	Board   uint8     // type of remote node, 100..250 freely available
 	HwId    [16]uint8 // freshly assigned hardware ID for boards which need it
 }
 
-type PairingReply struct {
+type pairingReply struct {
 	Variant uint8     // variant of remote node, 1..250 freely available
 	Board   uint8     // type of remote node, 100..250 freely available
 	Group   uint8     // assigned network group, 1..250
@@ -154,7 +154,7 @@ type PairingReply struct {
 	ShKey   [16]uint8 // shared key or 0's if not used
 }
 
-type UpgradeRequest struct {
+type upgradeRequest struct {
 	Variant uint8  // variant of remote node, 1..250 freely available
 	Board   uint8  // type of remote node, 100..250 freely available
 	SwId    uint16 // current software ID 0 if unknown
@@ -162,7 +162,7 @@ type UpgradeRequest struct {
 	SwCheck uint16 // current crc checksum over entire download
 }
 
-type UpgradeReply struct {
+type upgradeReply struct {
 	Variant uint8  // variant of remote node, 1..250 freely available
 	Board   uint8  // type of remote node, 100..250 freely available
 	SwId    uint16 // assigned software ID
@@ -170,12 +170,12 @@ type UpgradeReply struct {
 	SwCheck uint16 // crc checksum over entire download
 }
 
-type DownloadRequest struct {
+type downloadRequest struct {
 	SwId    uint16 // current software ID
 	SwIndex uint16 // current download index, as multiple of payload size
 }
 
-type DownloadReply struct {
+type downloadReply struct {
 	SwIdXor uint16    // current software ID xor current download index
 	Data    [64]uint8 // download payload
 }
@@ -185,31 +185,31 @@ func (w *JeeBoot) respondToRequest(req []byte) interface{} {
 	switch len(req) - 1 {
 
 	case 22:
-		var preq PairingRequest
+		var preq pairingRequest
 		hdr := unpackReq(req, &preq)
 		// if HwId is all zeroes, we need to issue a new random value
 		if preq.HwId == [16]byte{} {
-			reply := PairingAssign{Board: preq.Board}
+			reply := pairingAssign{Board: preq.Board}
 			copy(reply.HwId[:], newRandomId())
 			fmt.Printf("assigning fresh hardware ID %x for board %d hdr %08b\n",
 				reply.HwId, preq.Board, hdr)
 			return reply
 		}
-		board, group, node := w.config.LookupHwId(preq.HwId[:])
+		board, group, node := w.cfg.LookupHwId(preq.HwId[:])
 		if board == preq.Board && group != 0 && node != 0 {
 			fmt.Printf("pair %x board %d hdr %08b\n", preq.HwId, board, hdr)
-			reply := PairingReply{Board: board, Group: group, NodeId: node}
+			reply := pairingReply{Board: board, Group: group, NodeId: node}
 			return reply
 		}
 		fmt.Printf("pair %x board %d - no entry\n", preq.HwId, board)
 
 	case 8:
-		var ureq UpgradeRequest
+		var ureq upgradeRequest
 		hdr := unpackReq(req, &ureq)
 		group, node := uint8(212), hdr&0x1F // FIXME hard-coded for now
-		// UpgradeRequest can be used as reply as well, it has the same fields
+		// upgradeRequest can be used as reply as well, it has the same fields
 		reply := &ureq
-		reply.SwId = w.config.LookupSwId(group, node)
+		reply.SwId = w.cfg.LookupSwId(group, node)
 		fw := w.fw[reply.SwId]
 		reply.SwSize = uint16(len(fw.data) >> 4)
 		reply.SwCheck = fw.crc
@@ -217,11 +217,11 @@ func (w *JeeBoot) respondToRequest(req []byte) interface{} {
 		return reply
 
 	case 4:
-		var dreq DownloadRequest
+		var dreq downloadRequest
 		hdr := unpackReq(req, &dreq)
 		fw := w.fw[dreq.SwId]
 		offset := 64 * dreq.SwIndex // FIXME hard-coded
-		reply := DownloadReply{SwIdXor: dreq.SwId ^ dreq.SwIndex}
+		reply := downloadReply{SwIdXor: dreq.SwId ^ dreq.SwIndex}
 		fmt.Println("len", len(fw.data), "offset", offset, offset+64)
 		for i, v := range fw.data[offset : offset+64] {
 			reply.Data[i] = v ^ uint8(211*i)
