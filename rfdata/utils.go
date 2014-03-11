@@ -43,7 +43,7 @@ func (w *ReadTextFile) Run() {
 	}
 }
 
-// IntelHexToBin takes lines of text and converts it to one large []byte value.
+// IntelHexToBin takes lines of text and converts them to a large []byte value.
 // Inserts an <addr> tag before the data. Registers as "IntelHexToBin".
 type IntelHexToBin struct {
 	flow.Work
