@@ -14,7 +14,7 @@ func init() {
 	flow.Registry["ReadTextFile"] = func() flow.Worker { return &ReadTextFile{} }
 	flow.Registry["IntelHexToBin"] = func() flow.Worker { return &IntelHexToBin{} }
 	flow.Registry["BinaryFill"] = func() flow.Worker { return &BinaryFill{} }
-	flow.Registry["CalcCrc"] = func() flow.Worker { return &CalcCrc{} }
+	flow.Registry["CalcCrc16"] = func() flow.Worker { return &CalcCrc16{} }
 }
 
 // ReadTextFile takes strings and replaces them by the lines of that file.
@@ -103,35 +103,30 @@ func (w *BinaryFill) Run() {
 	}
 }
 
+// CalcCrc16 takes []byte values and adds its CRC-16 as <crc16> tag after it.
+// Registers as "CalcCrc16".
+type CalcCrc16 struct {
+	flow.Work
+	In  flow.Input
+	Out flow.Output
+}
+
 var crcTable = []uint16{
 	0x0000, 0xCC01, 0xD801, 0x1400, 0xF001, 0x3C00, 0x2800, 0xE401,
 	0xA001, 0x6C00, 0x7800, 0xB401, 0x5000, 0x9C01, 0x8801, 0x4400,
 }
 
-func calculateCrc(buf []byte) uint16 {
-	var crc uint16 = 0xFFFF
-	for _, data := range buf {
-		crc = crc>>4 ^ crcTable[crc&0x0F] ^ crcTable[data&0x0F]
-		crc = crc>>4 ^ crcTable[crc&0x0F] ^ crcTable[data>>4]
-	}
-	return crc
-}
-
-// CalcCrc takes []byte values and adds its CRC as <crc16> tag after it.
-// Registers as "CalcCrc".
-type CalcCrc struct {
-	flow.Work
-	In  flow.Input
-	Len flow.Input
-	Out flow.Output
-}
-
 // Start looking for []byte values, everything else is passed through unchanged.
-func (w *CalcCrc) Run() {
+func (w *CalcCrc16) Run() {
 	for m := range w.In {
 		if data, ok := m.([]byte); ok {
 			w.Out.Send(m)
-			m = flow.Tag{"<crc16>", calculateCrc(data)}
+			var crc uint16 = 0xFFFF
+			for _, b := range data {
+				crc = crc>>4 ^ crcTable[crc&0x0F] ^ crcTable[b&0x0F]
+				crc = crc>>4 ^ crcTable[crc&0x0F] ^ crcTable[b>>4]
+			}
+			m = flow.Tag{"<crc16>", crc}
 		}
 		w.Out.Send(m)
 	}
