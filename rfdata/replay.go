@@ -73,7 +73,7 @@ type LogReplayer struct {
 
 // Start reading log entries, and replay them as if they happened today.
 func (w *LogReplayer) Run() {
-	const MS_PER_DAY = 86400000
+	const MillisPerDay = 86400000
 	// collect all log entries into two arrays (easier to search that way)
 	var times []int
 	var texts []string
@@ -83,16 +83,16 @@ func (w *LogReplayer) Run() {
 		case time.Time:
 			t = v
 		case string:
-			times = append(times, int((t.UnixNano()/1000000)%MS_PER_DAY))
+			times = append(times, int((t.UnixNano()/1000000)%MillisPerDay))
 			texts = append(texts, v)
 		}
 	}
 	// add a final entry to wrap back to the beginning on each new day
 	// this avoids having to special-case searching past the last entry
-	times = append(times, times[0]+MS_PER_DAY)
+	times = append(times, times[0]+MillisPerDay)
 	for {
 		// find best candidate using binary search
-		ms := int((time.Now().UnixNano() / 1000000) % MS_PER_DAY)
+		ms := int((time.Now().UnixNano() / 1000000) % MillisPerDay)
 		i := sort.SearchInts(times, ms)
 		// sleep until it's time for that next entry
 		time.Sleep(time.Duration(times[i]-ms) * time.Millisecond)

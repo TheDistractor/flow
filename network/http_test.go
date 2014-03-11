@@ -9,9 +9,9 @@ import (
 	_ "github.com/jcw/flow/workers"
 )
 
-func ExampleHttpServer() {
+func ExampleHTTPServer() {
 	g := flow.NewGroup()
-	g.Add("s", "HttpServer")
+	g.Add("s", "HTTPServer")
 	g.Set("s.Handlers", flow.Tag{"/blah/", "../flow"})
 	g.Set("s.Start", ":12345")
 	g.Run()

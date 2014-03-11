@@ -88,9 +88,8 @@ func TestTimer(t *testing.T) {
 	g.Run()
 }
 
-func TestClock(t *testing.T) {
-	t.Skip("skipping clock test, never ends.")
-	// The following test code never ends, comment out the above to try it out
+func ExampleClock() {
+	// The following example never ends.
 	g := flow.NewGroup()
 	g.Add("c", "Clock")
 	g.Set("c.Rate", time.Second)

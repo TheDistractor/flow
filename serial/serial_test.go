@@ -9,7 +9,7 @@ import (
 
 func TestSerial(t *testing.T) {
 	t.Skip("skipping serial test, never ends and needs hardware.")
-	// The following test code never ends, comment out the above to try it out
+	// The following example never ends, comment out the above to try it out
 	g := flow.NewGroup()
 	g.Add("s", "SerialPort")
 	g.Add("t", "SketchType")

@@ -247,7 +247,7 @@
         "workers": [
             {
                 "name": "http",
-                "type": "HttpServer"
+                "type": "HTTPServer"
             }
         ],
         "requests": [

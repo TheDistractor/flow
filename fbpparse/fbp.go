@@ -11,12 +11,14 @@ func init() {
 	flow.Registry["FbpParser"] = func() flow.Worker { return &FbpParser{} }
 }
 
+// FbpParser processes a graph definition in FBP syntax.
 type FbpParser struct {
 	flow.Work
 	In  flow.Input
 	Out flow.Output
 }
 
+// Start collecting lines and parse the resulting string.
 func (w *FbpParser) Run() {
 	lines := []string{}
 	for m := range w.In {

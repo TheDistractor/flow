@@ -80,7 +80,7 @@ groups.serial =
 # simple jeebus setup, with dummy websocket support
 groups.jeebus =
   workers: [
-    { name: "http", type: "HttpServer" }
+    { name: "http", type: "HTTPServer" }
   ]
   requests: [
     { tag: "/", data: "../jeebus/app",  to: "http.Handlers" }

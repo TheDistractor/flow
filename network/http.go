@@ -11,11 +11,11 @@ import (
 )
 
 func init() {
-	flow.Registry["HttpServer"] = func() flow.Worker { return &HttpServer{} }
+	flow.Registry["HTTPServer"] = func() flow.Worker { return &HTTPServer{} }
 }
 
-// HttpServer is a worker which sets up an HTTP server.
-type HttpServer struct {
+// HTTPServer is a worker which sets up an HTTP server.
+type HTTPServer struct {
 	flow.Work
 	Handlers flow.Input
 	Start    flow.Input
@@ -24,7 +24,7 @@ type HttpServer struct {
 
 type flowHandler struct {
 	h http.Handler
-	s *HttpServer
+	s *HTTPServer
 }
 
 func (fh *flowHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
@@ -33,7 +33,7 @@ func (fh *flowHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 }
 
 // Set up the handlers, then start the server and start processing requests.
-func (w *HttpServer) Run() {
+func (w *HTTPServer) Run() {
 	mux := http.NewServeMux() // don't use default to allow multiple instances
 	for m := range w.Handlers {
 		tag := m.(flow.Tag)

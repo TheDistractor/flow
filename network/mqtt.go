@@ -10,13 +10,13 @@ import (
 )
 
 func init() {
-	flow.Registry["MqttSub"] = func() flow.Worker { return &MqttSub{} }
-	flow.Registry["MqttPub"] = func() flow.Worker { return &MqttPub{} }
-	flow.Registry["MqttServer"] = func() flow.Worker { return &MqttServer{} }
+	flow.Registry["MQTTSub"] = func() flow.Worker { return &MQTTSub{} }
+	flow.Registry["MQTTPub"] = func() flow.Worker { return &MQTTPub{} }
+	flow.Registry["MQTTServer"] = func() flow.Worker { return &MQTTServer{} }
 }
 
-// MqttSub can subscribe to MQTT. Registers as "MqttSub".
-type MqttSub struct {
+// MQTTSub can subscribe to MQTT. Registers as "MQTTSub".
+type MQTTSub struct {
 	flow.Work
 	Port  flow.Input
 	Topic flow.Input
@@ -24,7 +24,7 @@ type MqttSub struct {
 }
 
 // Start listening and subscribing to MQTT.
-func (w *MqttSub) Run() {
+func (w *MQTTSub) Run() {
 	if port, ok := <-w.Port; ok {
 		sock, err := net.Dial("tcp", port.(string))
 		flow.Check(err)
@@ -45,15 +45,15 @@ func (w *MqttSub) Run() {
 	}
 }
 
-// MqttPub can publish to MQTT. Registers as "MqttPub".
-type MqttPub struct {
+// MQTTPub can publish to MQTT. Registers as "MQTTPub".
+type MQTTPub struct {
 	flow.Work
 	Port flow.Input
 	In   flow.Input
 }
 
 // Start publishing to MQTT.
-func (w *MqttPub) Run() {
+func (w *MQTTPub) Run() {
 	if port, ok := <-w.Port; ok {
 		sock, err := net.Dial("tcp", port.(string))
 		flow.Check(err)
@@ -72,14 +72,14 @@ func (w *MqttPub) Run() {
 	}
 }
 
-// MqttServer is an embedded MQTT server. Registers as "MqttServer".
-type MqttServer struct {
+// MQTTServer is an embedded MQTT server. Registers as "MQTTServer".
+type MQTTServer struct {
 	flow.Work
 	Port flow.Input
 }
 
 // Start the MQTT server.
-func (w *MqttServer) Run() {
+func (w *MQTTServer) Run() {
 	if port, ok := <-w.Port; ok {
 		listener, err := net.Listen("tcp", port.(string))
 		flow.Check(err)

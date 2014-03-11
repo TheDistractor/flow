@@ -10,6 +10,7 @@ func init() {
 	flow.Registry["JavaScript"] = func() flow.Worker { return &JavaScript{} }
 }
 
+// JavaScript engine, using the github.com/robertkrimen/otto package.
 type JavaScript struct {
 	flow.Work
 	In  flow.Input
