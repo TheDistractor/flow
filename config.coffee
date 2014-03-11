@@ -100,4 +100,22 @@ groups["WebSocket-jeebus"] =
     { external: "Out", internal: "p.Out" }
   ]
 
+# jeeboot server test
+groups.jeeboot =
+  workers: [
+    { name: "sp", type: "SerialPort" }
+    { name: "rf", type: "Sketch-RF12demo" }
+    { name: "sk", type: "Sink" }
+    { name: "jb", type: "JeeBoot" }
+  ]
+  connections: [
+    { from: "sp.From", to: "rf.In" }
+    { from: "rf.Out", to: "sk.In" }
+    { from: "rf.Rej", to: "sk.In" }
+    { from: "rf.Oob", to: "jb.In" }
+  ]
+  requests: [
+    { data: "/dev/tty.usbserial-A901ROSM", to: "sp.Port" }
+  ]
+
 console.log JSON.stringify groups, null, 4
