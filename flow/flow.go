@@ -61,8 +61,10 @@ func (w *transformer) Run() {
 
 // A connection is a ref-counted Input, it's closed when the count drops to 0.
 type connection struct {
-	channel chan Memo
-	senders int
+	channel  chan Memo
+	senders  int
+	capacity int
+	dest     *Work
 }
 
 func (c *connection) Send(v Memo) {
@@ -71,7 +73,7 @@ func (c *connection) Send(v Memo) {
 
 func (c *connection) Close() {
 	c.senders--
-	if c.senders == 0 {
+	if c.senders == 0 && c.channel != nil {
 		close(c.channel)
 	}
 }

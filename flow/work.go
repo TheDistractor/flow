@@ -67,11 +67,13 @@ func (w *Work) connectChannels() {
 	we := w.workerValue()
 	for i := 0; i < we.NumField(); i++ {
 		fe := we.Field(i)
-		if fe.CanSet() && fe.Kind() != reflect.Struct && fe.IsNil() {
-			switch fe.Type().String() {
-			case "flow.Input":
+		switch fe.Type().String() {
+		case "flow.Input":
+			if fe.IsNil() {
 				fe.Set(reflect.ValueOf(null))
-			case "flow.Output":
+			}
+		case "flow.Output":
+			if fe.IsNil() {
 				fe.Set(reflect.ValueOf(sink))
 			}
 		}
@@ -81,9 +83,12 @@ func (w *Work) connectChannels() {
 func (w *Work) getInput(port string, capacity int) *connection {
 	c := w.inputs[port]
 	if c == nil {
-		c = &connection{channel: make(chan Memo, capacity)}
+		c = &connection{channel: make(chan Memo, capacity), dest: w}
 		w.portValue(port).Set(reflect.ValueOf(c.channel))
 		w.inputs[port] = c
+	}
+	if capacity > c.capacity {
+		c.capacity = capacity
 	}
 	return c
 }
@@ -113,6 +118,9 @@ func (w *Work) setOutput(port string, c *connection) {
 func (w *Work) closeChannels() {
 	for _, c := range w.outputs {
 		c.Close()
+	}
+	for _, c := range w.inputs {
+		c.channel = nil
 	}
 }
 
