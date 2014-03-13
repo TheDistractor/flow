@@ -3,15 +3,19 @@ package flow
 import (
 	"reflect"
 	"strings"
+	"sync"
 
 	"github.com/golang/glog"
 )
 
 // Work keeps track of internal details about a worker.
 type Work struct {
-	worker  Worker
-	name    string
-	group   *Group
+	worker Worker
+	name   string
+	group  *Group
+	alive  bool
+
+	mutex   sync.Mutex
 	inputs  map[string]*connection
 	outputs map[string]*connection
 }
@@ -46,45 +50,12 @@ func (w *Work) portValue(port string) reflect.Value {
 	return fv
 }
 
-func (w *Work) processInbox() {
-	for dest, memos := range w.group.inbox {
-		if workerPart(dest) == w.name {
-			c := make(chan Memo, len(memos))
-			w.portValue(dest).Set(reflect.ValueOf(c))
-			for _, m := range memos {
-				c <- m
-			}
-			close(c)
-		}
-	}
-}
-
-func (w *Work) connectChannels() {
-	sink := &fakeSink{}
-	null := make(chan Memo)
-	close(null)
-
-	we := w.workerValue()
-	for i := 0; i < we.NumField(); i++ {
-		fe := we.Field(i)
-		switch fe.Type().String() {
-		case "flow.Input":
-			if fe.IsNil() {
-				fe.Set(reflect.ValueOf(null))
-			}
-		case "flow.Output":
-			if fe.IsNil() {
-				fe.Set(reflect.ValueOf(sink))
-			}
-		}
-	}
-}
-
 func (w *Work) getInput(port string, capacity int) *connection {
 	c := w.inputs[port]
 	if c == nil {
+		pv := w.portValue(port)
 		c = &connection{channel: make(chan Memo, capacity), dest: w}
-		w.portValue(port).Set(reflect.ValueOf(c.channel))
+		pv.Set(reflect.ValueOf(c.channel))
 		w.inputs[port] = c
 	}
 	if capacity > c.capacity {
@@ -115,7 +86,51 @@ func (w *Work) setOutput(port string, c *connection) {
 	w.outputs[port] = c
 }
 
+func (w *Work) processInbox() {
+	for dest, memos := range w.group.inbox {
+		if workerPart(dest) == w.name {
+			c := make(chan Memo, len(memos))
+			w.portValue(dest).Set(reflect.ValueOf(c))
+			for _, m := range memos {
+				c <- m
+			}
+			close(c)
+		}
+	}
+}
+
+func (w *Work) connectChannels() {
+	sink := &fakeSink{}
+	null := make(chan Memo)
+	close(null)
+
+	w.mutex.Lock()
+	defer w.mutex.Unlock()
+
+	we := w.workerValue()
+	for i := 0; i < we.NumField(); i++ {
+		fe := we.Field(i)
+		switch fe.Type().String() {
+		case "flow.Input":
+			if fe.IsNil() {
+				fe.Set(reflect.ValueOf(null))
+			}
+		case "flow.Output":
+			if fe.IsNil() {
+				fe.Set(reflect.ValueOf(sink))
+			}
+		}
+	}
+
+	w.alive = true
+}
+
 func (w *Work) closeChannels() {
+	w.mutex.Lock()
+	defer w.mutex.Unlock()
+
+	w.alive = false
+
 	for _, c := range w.outputs {
 		c.Close()
 	}
