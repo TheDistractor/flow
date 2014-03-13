@@ -217,6 +217,10 @@ func (w *JeeBoot) respondToRequest(req []byte) interface{} {
 		offset := 64 * dreq.SwIndex // FIXME hard-coded
 		reply := downloadReply{SwIDXor: dreq.SwID ^ dreq.SwIndex}
 		fmt.Println("len", len(fw.data), "offset", offset, offset+64)
+		if int(offset+64) > len(fw.data) {
+			fmt.Printf("no data at %d..%d\n", offset, offset+64)
+			return &struct{ SwIDXor uint16 }{SwIDXor: dreq.SwID ^ dreq.SwIndex}
+		}
 		for i, v := range fw.data[offset : offset+64] {
 			reply.Data[i] = v ^ uint8(211*i)
 		}
