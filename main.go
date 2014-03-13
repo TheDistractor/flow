@@ -9,6 +9,7 @@ import (
 	"sort"
 	"time"
 
+	"github.com/golang/glog"
 	"github.com/jcw/flow/flow"
 
 	_ "github.com/jcw/flow/database"
@@ -22,15 +23,16 @@ import (
 )
 
 var (
-	verbose    = flag.Bool("v", false, "show version and registry contents")
+	verbose    = flag.Bool("V", false, "show version and registry contents")
 	wait       = flag.Bool("w", false, "wait forever, don't exit main")
 	configFile = flag.String("c", "config.json", "use configuration file")
 	appMain    = flag.String("r", "main", "which registered group to run")
 )
 
 func main() {
-	defer flow.DontPanic()
-	flag.Parse()
+	defer flow.DontPanic() // generate concise panic messages
+	defer glog.Flush()     // flush logs before exiting
+	flag.Parse()           // required
 
 	data, err := ioutil.ReadFile(*configFile)
 	flow.Check(err)
@@ -49,12 +51,13 @@ func main() {
 		println("\nDocumentation at http://godoc.org/github.com/jcw/flow")
 	} else {
 		if factory, ok := flow.Registry[*appMain]; ok {
+			glog.Info("started")
 			factory().Run()
 			if *wait {
 				time.Sleep(1e6 * time.Hour)
 			}
 		} else {
-			panic(*appMain + " not found in: " + *configFile)
+			glog.Fatalln(*appMain, "not found in:", *configFile)
 		}
 	}
 }

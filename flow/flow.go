@@ -5,6 +5,8 @@ import (
 	"os"
 	"runtime"
 	"strings"
+
+	"github.com/golang/glog"
 )
 
 // Version of this package.
@@ -123,6 +125,7 @@ func DontPanic() {
 			}
 		}
 		println("EXIT")
+		glog.Flush()
 		os.Exit(1)
 	}
 }
