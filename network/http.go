@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"code.google.com/p/go.net/websocket"
+	"github.com/golang/glog"
 	"github.com/jcw/flow/flow"
 )
 
@@ -49,7 +50,8 @@ func (w *HTTPServer) Run() {
 	go func() {
 		// will stay running until an error is returned or the app ends
 		defer flow.DontPanic()
-		panic(http.ListenAndServe(m.(string), mux))
+		err := http.ListenAndServe(m.(string), mux)
+		glog.Fatal(err)
 	}()
 	// TODO: this is a hack to make sure the server is ready
 	// better would be to interlock the goroutine with the listener being ready
@@ -64,14 +66,14 @@ func createHandler(tag, s string) http.Handler {
 	if s == "<websocket>" {
 		return websocket.Handler(wsHandler)
 	}
-	if strings.ContainsAny(s, "./") {
-		h := http.FileServer(http.Dir(s))
-		if s != "/" {
-			h = http.StripPrefix(tag, h)
-		}
-		return h
+	if !strings.ContainsAny(s, "./") {
+		glog.Fatalln("cannot create handler for:", s)
 	}
-	panic("cannot create handler for: " + s)
+	h := http.FileServer(http.Dir(s))
+	if s != "/" {
+		h = http.StripPrefix(tag, h)
+	}
+	return h
 }
 
 func wsHandler(ws *websocket.Conn) {

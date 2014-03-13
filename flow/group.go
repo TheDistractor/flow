@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 	"sync"
+
+	"github.com/golang/glog"
 )
 
 // Initialise a new group.
@@ -47,7 +49,7 @@ func (g *Group) workerOf(s string) *Work {
 	// }
 	w, ok := g.workers[workerPart(s)]
 	if !ok {
-		panic("worker not found for: " + s)
+		glog.Fatalln("worker not found for:", s)
 	}
 	return w
 }
@@ -74,7 +76,7 @@ func (g *Group) Run() {
 // Map an external port to an internal one.
 func (g *Group) Map(external, internal string) {
 	if strings.Contains(external, ".") {
-		panic("external port should not include a dot: " + external)
+		glog.Fatalln("external port should not include a dot:", external)
 	}
 	g.portMap[external] = internal
 }

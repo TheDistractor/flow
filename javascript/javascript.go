@@ -4,6 +4,7 @@ package javascript
 import (
 	"github.com/jcw/flow/flow"
 	"github.com/robertkrimen/otto"
+	"github.com/golang/glog"
 )
 
 func init() {
@@ -34,7 +35,7 @@ func (w *JavaScript) Run() {
 
 		// process the command input
 		if _, err := engine.Run(cmd.(string)); err != nil {
-			panic(err)
+			glog.Fatal(err)
 		}
 
 		// only start the processing loop if the "onIn" handler exists

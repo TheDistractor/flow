@@ -104,7 +104,7 @@ func portPart(s string) string {
 // Utility to check for errors and panic if the arg is not nil.
 func Check(err interface{}) {
 	if err != nil {
-		panic(err)
+		glog.Fatal(err)
 	}
 }
 

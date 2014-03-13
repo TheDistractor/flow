@@ -3,6 +3,8 @@ package flow
 import (
 	"reflect"
 	"strings"
+
+	"github.com/golang/glog"
 )
 
 // Work keeps track of internal details about a worker.
@@ -16,7 +18,7 @@ type Work struct {
 
 func (w *Work) initWork(wi Worker, nm string, gr *Group) *Work {
 	if w.group != nil {
-		panic("worker is already in use: " + nm)
+		glog.Fatalln("worker is already in use:", nm)
 	}
 	w.worker = wi
 	w.name = nm
@@ -39,7 +41,7 @@ func (w *Work) portValue(port string) reflect.Value {
 	}
 	fv := w.workerValue().FieldByName(pp)
 	if !fv.IsValid() {
-		panic("port not found: " + port)
+		glog.Fatalln("port not found:", port)
 	}
 	return fv
 }
@@ -91,7 +93,7 @@ func (w *Work) setOutput(port string, c *connection) {
 	fp := w.portValue(ppfv[0])
 	if len(ppfv) == 1 {
 		if !fp.IsNil() {
-			panic("output already connected: " + w.name + "." + port)
+			glog.Fatalf("output already connected: %s.%s", w.name, port)
 		}
 		fp.Set(reflect.ValueOf(c))
 	} else { // it's not an Output, so it must be a map[string]Output
@@ -100,7 +102,7 @@ func (w *Work) setOutput(port string, c *connection) {
 		}
 		outputs := fp.Interface().(map[string]Output)
 		if _, ok := outputs[ppfv[1]]; ok {
-			panic("output already connected: " + w.name + "." + port)
+			glog.Fatalf("output already connected: %s.%s", w.name, port)
 		}
 		outputs[ppfv[1]] = c
 	}
