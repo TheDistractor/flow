@@ -113,6 +113,7 @@ groups.jeeboot =
     { from: "rf.Out", to: "sk.In" }
     { from: "rf.Rej", to: "sk.In" }
     { from: "rf.Oob", to: "jb.In" }
+    { from: "jb.Out", to: "sp.To" }
   ]
   requests: [
     { data: "/dev/tty.usbserial-A901ROSM", to: "sp.Port" }

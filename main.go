@@ -50,8 +50,8 @@ func main() {
 		printRegistry()
 		println("\nDocumentation at http://godoc.org/github.com/jcw/flow")
 	} else {
+		glog.Infof("Flow %s, registry size %d", flow.Version, len(flow.Registry))
 		if factory, ok := flow.Registry[*appMain]; ok {
-			glog.Info("started")
 			factory().Run()
 			if *wait {
 				time.Sleep(1e6 * time.Hour)
@@ -59,6 +59,7 @@ func main() {
 		} else {
 			glog.Fatalln(*appMain, "not found in:", *configFile)
 		}
+		glog.Infof("Flow %s, normal exit", flow.Version)
 	}
 }
 

@@ -2,9 +2,9 @@
 package javascript
 
 import (
+	"github.com/golang/glog"
 	"github.com/jcw/flow/flow"
 	"github.com/robertkrimen/otto"
-	"github.com/golang/glog"
 )
 
 func init() {
