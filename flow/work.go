@@ -53,9 +53,7 @@ func (w *Work) portValue(port string) reflect.Value {
 func (w *Work) getInput(port string, capacity int) *connection {
 	c := w.inputs[port]
 	if c == nil {
-		pv := w.portValue(port)
 		c = &connection{channel: make(chan Memo, capacity), dest: w}
-		pv.Set(reflect.ValueOf(c.channel))
 		w.inputs[port] = c
 	}
 	if capacity > c.capacity {
@@ -90,28 +88,20 @@ func (w *Work) setupChannels() {
 	// make sure all the inbox connections have also been set up
 	for dest, memos := range w.group.inbox {
 		if workerPart(dest) == w.name {
-			w.getInput(dest, len(memos))
+			w.getInput(dest, len(memos)) // will add connection to input map
 		}
 	}
 
-	for k, v := range w.inputs {
-		name := w.name + "." + k
-		println("AAA", name, v.capacity, len(w.group.inbox[name]))
-		if ins, ok := w.group.inbox[name]; ok && len(ins) > v.capacity {
-			println(name, len(ins), v.capacity)
-			v.capacity = len(ins)
+	for p, c := range w.inputs {
+		// create a channel with the proper capacity
+		c.channel = make(chan Memo, c.capacity)
+		w.portValue(p).Set(reflect.ValueOf(c.channel))
+		// fill it with memos from the inbox, if any
+		for _, m := range w.group.inbox[p] {
+			c.channel <- m
 		}
-		println(k, v, v.capacity)
-	}
-}
-
-func (w *Work) processInbox() {
-	for dest, memos := range w.group.inbox {
-		if workerPart(dest) == w.name {
-			c := w.getInput(dest, len(memos))
-			for _, m := range memos {
-				c.channel <- m
-			}
+		// close the channel if there is no other feed
+		if c.senders == 0 {
 			close(c.channel)
 		}
 	}
@@ -159,7 +149,6 @@ func (w *Work) launch() {
 	w.alive = true
 	w.group.wait.Add(1)
 	w.setupChannels()
-	w.processInbox()
 	w.dummyChannels()
 
 	go func() {
