@@ -3,18 +3,15 @@ package flow
 import (
 	"reflect"
 	"strings"
-	"sync"
 
 	"github.com/golang/glog"
 )
 
 // Work keeps track of internal details about a worker.
 type Work struct {
-	worker Worker
-	name   string
-	group  *Group
-
-	mutex   sync.Mutex
+	worker  Worker
+	name    string
+	group   *Group
 	alive   bool
 	inputs  map[string]*connection
 	outputs map[string]*connection
@@ -147,14 +144,15 @@ func (w *Work) closeChannels() {
 	}
 }
 
-func (w *Work) launch() {
-	w.mutex.Lock()
-	defer w.mutex.Unlock()
-
-	if w.alive {
-		return
+func (w *Work) sendTo(c *connection, v Memo) {
+	if !w.alive {
+		w.launch()
 	}
 
+	c.channel <- v
+}
+
+func (w *Work) launch() {
 	w.alive = true
 	w.group.wait.Add(1)
 	w.setupChannels()
@@ -170,11 +168,8 @@ func (w *Work) launch() {
 			}
 		}
 
-		w.mutex.Lock()
-		defer w.mutex.Unlock()
-		w.alive = false
-
 		w.closeChannels()
+		w.alive = false
 	}()
 }
 

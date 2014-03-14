@@ -39,12 +39,16 @@ func ExampleGroup_Map() {
 	g := flow.NewGroup()
 	g.AddWorker("wg", wg)
 	g.Set("wg.MyIn", "abc")
+	g.Set("wg.MyIn", "def")
 
 	g.Run()
 	// Output:
 	// Lost string: abc
 	// Lost string: abc
 	// Lost string: abc
+	// Lost string: def
+	// Lost string: def
+	// Lost string: def
 }
 
 func ExampleNestedGroup() {

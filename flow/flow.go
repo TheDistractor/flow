@@ -54,7 +54,8 @@ type transformer struct {
 }
 
 func (w *transformer) Run() {
-	if m, ok := <-w.In; ok {
+	for m := range w.In {
+		// if m, ok := <-w.In; ok {
 		w.Out.Send(w.fun(m))
 	}
 }
@@ -68,9 +69,7 @@ type connection struct {
 }
 
 func (c *connection) Send(v Memo) {
-	c.dest.launch()
-	// TODO: there's still a race condition if c.dest dies here
-	c.channel <- v
+	c.dest.sendTo(c, v)
 }
 
 func (c *connection) Close() {
