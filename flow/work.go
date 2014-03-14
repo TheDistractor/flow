@@ -85,6 +85,11 @@ func (w *Work) setOutput(port string, c *connection) {
 }
 
 func (w *Work) setupChannels() {
+	we := w.workerValue()
+	sink := &fakeSink{}
+	null := make(chan Memo)
+	close(null)
+
 	// make sure all the inbox connections have also been set up
 	for dest, memos := range w.group.inbox {
 		if workerPart(dest) == w.name {
@@ -92,6 +97,15 @@ func (w *Work) setupChannels() {
 		}
 	}
 
+	// connect all dangling outputs to a fake sink
+	for i := 0; i < we.NumField(); i++ {
+		fe := we.Field(i)
+		if fe.Type().String() == "flow.Output" && fe.IsNil() {
+			fe.Set(reflect.ValueOf(sink))
+		}
+	}
+
+	// set up and pre-fill all the input ports
 	for p, c := range w.inputs {
 		// create a channel with the proper capacity
 		c.channel = make(chan Memo, c.capacity)
@@ -105,25 +119,12 @@ func (w *Work) setupChannels() {
 			close(c.channel)
 		}
 	}
-}
 
-func (w *Work) dummyChannels() {
-	sink := &fakeSink{}
-	null := make(chan Memo)
-	close(null)
-
-	we := w.workerValue()
+	// set all remaining inputs to a dummy null input
 	for i := 0; i < we.NumField(); i++ {
 		fe := we.Field(i)
-		switch fe.Type().String() {
-		case "flow.Input":
-			if fe.IsNil() {
-				fe.Set(reflect.ValueOf(null))
-			}
-		case "flow.Output":
-			if fe.IsNil() {
-				fe.Set(reflect.ValueOf(sink))
-			}
+		if fe.Type().String() == "flow.Input" && fe.IsNil() {
+			fe.Set(reflect.ValueOf(null))
 		}
 	}
 }
@@ -149,7 +150,6 @@ func (w *Work) launch() {
 	w.alive = true
 	w.group.wait.Add(1)
 	w.setupChannels()
-	w.dummyChannels()
 
 	go func() {
 		defer w.group.wait.Done()
