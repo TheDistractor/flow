@@ -10,7 +10,7 @@ import (
 )
 
 // Version of this package.
-var Version = "0.1.0"
+var Version = "0.2.0"
 
 // The registry is the factory for all known types of workers.
 var Registry = map[string]func() Worker{}
