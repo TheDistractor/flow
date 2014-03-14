@@ -89,13 +89,9 @@ func (c *fakeSink) Send(m Memo) {
 
 func (c *fakeSink) Close() {}
 
-// extract "a" from "a.b"
+// extract "a" from "a.b", panics if there's no dot in the string
 func workerPart(s string) string {
 	n := strings.IndexRune(s, '.')
-	// TODO: shouldn't be needed, just use ".port" iso "port"
-	// if n < 0 {
-	// 	n = 0
-	// }
 	return s[:n]
 }
 

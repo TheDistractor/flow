@@ -126,9 +126,7 @@ func (w *Work) closeChannels() {
 	}
 	for p, c := range w.inputs {
 		c.channel = nil
-		pv := w.portValue(p)
-		// pv.Set(reflect.Zero(pv.Type()))
-		pv.Set(reflect.ValueOf(c.channel))
+		w.portValue(p).Set(reflect.ValueOf(c.channel))
 	}
 }
 
