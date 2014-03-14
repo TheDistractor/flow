@@ -104,9 +104,6 @@ func (w *Work) connectChannels() {
 	null := make(chan Memo)
 	close(null)
 
-	w.mutex.Lock()
-	defer w.mutex.Unlock()
-
 	we := w.workerValue()
 	for i := 0; i < we.NumField(); i++ {
 		fe := we.Field(i)
@@ -121,33 +118,43 @@ func (w *Work) connectChannels() {
 			}
 		}
 	}
-
-	w.alive = true
 }
 
 func (w *Work) closeChannels() {
-	w.mutex.Lock()
-	defer w.mutex.Unlock()
-
-	w.alive = false
-
 	for _, c := range w.outputs {
 		c.Close()
 	}
-	for _, c := range w.inputs {
+	for p, c := range w.inputs {
 		c.channel = nil
+		pv := w.portValue(p)
+		// pv.Set(reflect.Zero(pv.Type()))
+		pv.Set(reflect.ValueOf(c.channel))
 	}
 }
 
 func (w *Work) launch() {
+	w.mutex.Lock()
+	defer w.mutex.Unlock()
+
+	if w.alive {
+		return
+	}
+
+	w.alive = true
 	w.group.wait.Add(1)
+	w.processInbox()
+	w.connectChannels()
+
 	go func() {
 		defer w.group.wait.Done()
 		defer DontPanic()
 
-		w.processInbox()
-		w.connectChannels()
 		w.worker.Run()
+
+		w.mutex.Lock()
+		defer w.mutex.Unlock()
+		w.alive = false
+
 		w.closeChannels()
 	}()
 }

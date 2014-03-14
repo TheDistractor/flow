@@ -68,6 +68,8 @@ type connection struct {
 }
 
 func (c *connection) Send(v Memo) {
+	c.dest.launch()
+	// TODO: there's still a race condition if c.dest dies here
 	c.channel <- v
 }
 
