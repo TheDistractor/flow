@@ -1,16 +1,19 @@
 package flow
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"runtime"
+	"sort"
 	"strings"
 
 	"github.com/golang/glog"
 )
 
 // Version of this package.
-var Version = "0.2.0"
+var Version = "0.9.0"
 
 // The registry is the factory for all known types of workers.
 var Registry = map[string]func() Worker{}
@@ -124,5 +127,51 @@ func DontPanic() {
 			}
 		}
 		glog.Fatal("EXIT")
+	}
+}
+
+// AddToRegistry adds group definitions from a JSON file to the registry.
+func AddToRegistry(filename string) error {
+	data, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return err
+	}
+	var definitions map[string]json.RawMessage
+	err = json.Unmarshal(data, &definitions)
+	if err != nil {
+		return err
+	}
+	for name, def := range definitions {
+		registerGroup(name, def)
+	}
+	return nil
+}
+
+func registerGroup(name string, def []byte) {
+	Registry[name] = func() Worker {
+		g := NewGroup()
+		err := g.LoadJSON(def)
+		Check(err)
+		return g
+	}
+}
+
+// Print a compact list of the registry entries on standard output.
+func PrintRegistry() {
+	keys := []string{}
+	for k := range Registry {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	s := " "
+	for _, k := range keys {
+		if len(s)+len(k) > 78 {
+			println(s)
+			s = " "
+		}
+		s += " " + k
+	}
+	if len(s) > 1 {
+		println(s)
 	}
 }
