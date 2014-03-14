@@ -19,11 +19,9 @@ func ExampleTransformer() {
 	})
 
 	g := flow.NewGroup()
-	g.Add("p", "Pipe")
 	g.AddWorker("u", upper)
-	g.Connect("p.Out", "u.In", 0)
-	g.Set("p.In", "abc")
-	g.Set("p.In", "def")
+	g.Set("u.In", "abc")
+	g.Set("u.In", "def")
 	g.Run()
 	// Output:
 	// Lost string: ABC

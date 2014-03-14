@@ -128,6 +128,15 @@ func (w *Work) setupChannels() {
 	}
 }
 
+func (w *Work) isFinished() bool {
+	for _, c := range w.inputs {
+		if len(c.channel) > 0 {
+			return false
+		}
+	}
+	return true
+}
+
 func (w *Work) closeChannels() {
 	for p, c := range w.inputs {
 		c.channel = nil
@@ -154,7 +163,12 @@ func (w *Work) launch() {
 		defer w.group.wait.Done()
 		defer DontPanic()
 
-		w.worker.Run()
+		for {
+			w.worker.Run()
+			if w.isFinished() {
+				break
+			}
+		}
 
 		w.mutex.Lock()
 		defer w.mutex.Unlock()
