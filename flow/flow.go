@@ -54,7 +54,7 @@ type transformer struct {
 }
 
 func (w *transformer) Run() {
-	for m := range w.In {
+	if m, ok := <-w.In; ok {
 		w.Out.Send(w.fun(m))
 	}
 }
