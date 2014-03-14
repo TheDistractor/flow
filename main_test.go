@@ -9,10 +9,8 @@ func Example() {
 	g.Add("pipe", "Pipe")
 	g.Add("printer", "Printer")
 	g.Add("repeater", "Repeater")
-	g.Add("serial", "SerialPort")
 	g.Add("sink", "Sink")
 	g.Add("timer", "Timer")
-	g.Add("timestamp", "TimeStamp")
 	g.Run()
 	// Output:
 	// Lost int: 0
