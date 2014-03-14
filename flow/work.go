@@ -86,20 +86,38 @@ func (w *Work) setOutput(port string, c *connection) {
 	w.outputs[port] = c
 }
 
+func (w *Work) setupChannels() {
+	// make sure all the inbox connections have also been set up
+	for dest, memos := range w.group.inbox {
+		if workerPart(dest) == w.name {
+			w.getInput(dest, len(memos))
+		}
+	}
+
+	for k, v := range w.inputs {
+		name := w.name + "." + k
+		println("AAA", name, v.capacity, len(w.group.inbox[name]))
+		if ins, ok := w.group.inbox[name]; ok && len(ins) > v.capacity {
+			println(name, len(ins), v.capacity)
+			v.capacity = len(ins)
+		}
+		println(k, v, v.capacity)
+	}
+}
+
 func (w *Work) processInbox() {
 	for dest, memos := range w.group.inbox {
 		if workerPart(dest) == w.name {
-			c := make(chan Memo, len(memos))
-			w.portValue(dest).Set(reflect.ValueOf(c))
+			c := w.getInput(dest, len(memos))
 			for _, m := range memos {
-				c <- m
+				c.channel <- m
 			}
-			close(c)
+			close(c.channel)
 		}
 	}
 }
 
-func (w *Work) connectChannels() {
+func (w *Work) dummyChannels() {
 	sink := &fakeSink{}
 	null := make(chan Memo)
 	close(null)
@@ -140,8 +158,9 @@ func (w *Work) launch() {
 
 	w.alive = true
 	w.group.wait.Add(1)
+	w.setupChannels()
 	w.processInbox()
-	w.connectChannels()
+	w.dummyChannels()
 
 	go func() {
 		defer w.group.wait.Done()
