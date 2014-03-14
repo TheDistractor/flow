@@ -13,9 +13,9 @@ type Work struct {
 	worker Worker
 	name   string
 	group  *Group
-	alive  bool
 
 	mutex   sync.Mutex
+	alive   bool
 	inputs  map[string]*connection
 	outputs map[string]*connection
 }
@@ -69,10 +69,10 @@ func (w *Work) setOutput(port string, c *connection) {
 		if !fp.IsNil() {
 			glog.Fatalf("output already connected: %s.%s", w.name, port)
 		}
-		fp.Set(reflect.ValueOf(c))
+		setValue(fp, c)
 	} else { // it's not an Output, so it must be a map[string]Output
 		if fp.IsNil() {
-			fp.Set(reflect.ValueOf(map[string]Output{}))
+			setValue(fp, map[string]Output{})
 		}
 		outputs := fp.Interface().(map[string]Output)
 		if _, ok := outputs[ppfv[1]]; ok {
@@ -85,11 +85,6 @@ func (w *Work) setOutput(port string, c *connection) {
 }
 
 func (w *Work) setupChannels() {
-	we := w.workerValue()
-	sink := &fakeSink{}
-	null := make(chan Memo)
-	close(null)
-
 	// make sure all the inbox connections have also been set up
 	for dest, memos := range w.group.inbox {
 		if workerPart(dest) == w.name {
@@ -97,19 +92,11 @@ func (w *Work) setupChannels() {
 		}
 	}
 
-	// connect all dangling outputs to a fake sink
-	for i := 0; i < we.NumField(); i++ {
-		fe := we.Field(i)
-		if fe.Type().String() == "flow.Output" && fe.IsNil() {
-			fe.Set(reflect.ValueOf(sink))
-		}
-	}
-
 	// set up and pre-fill all the input ports
 	for p, c := range w.inputs {
 		// create a channel with the proper capacity
 		c.channel = make(chan Memo, c.capacity)
-		w.portValue(p).Set(reflect.ValueOf(c.channel))
+		setValue(w.portValue(p), c.channel)
 		// fill it with memos from the inbox, if any
 		for _, m := range w.group.inbox[p] {
 			c.channel <- m
@@ -120,22 +107,34 @@ func (w *Work) setupChannels() {
 		}
 	}
 
-	// set all remaining inputs to a dummy null input
+	// set dangling inputs to a null input and dangling outputs to a fake sink
+	sink := &fakeSink{}
+	null := make(chan Memo)
+	close(null)
+
+	we := w.workerValue()
 	for i := 0; i < we.NumField(); i++ {
 		fe := we.Field(i)
-		if fe.Type().String() == "flow.Input" && fe.IsNil() {
-			fe.Set(reflect.ValueOf(null))
+		switch fe.Type().String() {
+		case "flow.Input":
+			if fe.IsNil() {
+				setValue(fe, null)
+			}
+		case "flow.Output":
+			if fe.IsNil() {
+				setValue(fe, sink)
+			}
 		}
 	}
 }
 
 func (w *Work) closeChannels() {
-	for _, c := range w.outputs {
-		c.Close()
-	}
 	for p, c := range w.inputs {
 		c.channel = nil
-		w.portValue(p).Set(reflect.ValueOf(c.channel))
+		setValue(w.portValue(p), c.channel)
+	}
+	for _, c := range w.outputs {
+		c.Close()
 	}
 }
 
@@ -163,4 +162,8 @@ func (w *Work) launch() {
 
 		w.closeChannels()
 	}()
+}
+
+func setValue(val reflect.Value, any interface{}) {
+	val.Set(reflect.ValueOf(any))
 }
