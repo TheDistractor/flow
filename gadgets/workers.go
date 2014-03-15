@@ -17,6 +17,7 @@ func init() {
 	flow.Registry["Timer"] = func() flow.Circuitry { return &Timer{} }
 	flow.Registry["Clock"] = func() flow.Circuitry { return &Clock{} }
 	flow.Registry["FanOut"] = func() flow.Circuitry { return &FanOut{} }
+	flow.Registry["Forever"] = func() flow.Circuitry { return &Forever{} }
 }
 
 // A sink eats up all the messages it receives. Registers as "Sink".
@@ -156,4 +157,14 @@ func (w *FanOut) Run() {
 			o.Send(m)
 		}
 	}
+}
+
+// Forever does just what the name says: run forever (and do nothing at all)
+type Forever struct {
+	flow.Gadget
+}
+
+// Start running (nearly) forever.
+func (w *Forever) Run() {
+	time.Sleep(1e6 * time.Hour)
 }
