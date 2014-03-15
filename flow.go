@@ -56,10 +56,10 @@ type transformer struct {
 	fun func(Message) Message
 }
 
-func (w *transformer) Run() {
-	for m := range w.In {
-		// if m, ok := <-w.In; ok {
-		w.Out.Send(w.fun(m))
+func (g *transformer) Run() {
+	for m := range g.In {
+		// if m, ok := <-g.In; ok {
+		g.Out.Send(g.fun(m))
 	}
 }
 

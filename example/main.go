@@ -13,7 +13,7 @@ import (
 
 var (
 	verbose   = flag.Bool("i", false, "show info about version and registry")
-	wait      = flag.Bool("k", false, "keep running, don't exit main")
+	wait      = flag.Bool("w", false, "wait forever, don't exit main")
 	setupFile = flag.String("s", "setup.json", "circuitry setup file")
 	appMain   = flag.String("r", "main", "which registered circuit to run")
 )
@@ -36,6 +36,7 @@ func main() {
 		if factory, ok := flow.Registry[*appMain]; ok {
 			factory().Run()
 			if *wait {
+				println("waiting...")
 				time.Sleep(1e6 * time.Hour)
 			}
 		} else {
