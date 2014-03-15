@@ -83,9 +83,9 @@ func (w *Gadget) setOutput(pin string, c *wire) {
 
 func (w *Gadget) setupChannels() {
 	// make sure all the inbox wires have also been set up
-	for dest, memos := range w.circuit.inbox {
+	for dest, messages := range w.circuit.inbox {
 		if gadgetPart(dest) == w.name {
-			w.getInput(dest, len(memos)) // will add wire to input map
+			w.getInput(dest, len(messages)) // will add wire to input map
 		}
 	}
 
@@ -94,7 +94,7 @@ func (w *Gadget) setupChannels() {
 		// create a channel with the proper capacity
 		c.channel = make(chan Message, c.capacity)
 		setValue(w.pinValue(p), c.channel)
-		// fill it with memos from the inbox, if any
+		// fill it with messages from the inbox, if any
 		for _, m := range w.circuit.inbox[p] {
 			c.channel <- m
 		}

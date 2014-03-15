@@ -21,18 +21,18 @@ var Registry = map[string]func() Circuitry{}
 // Messages are the generic type sent to, between, and from gadgets.
 type Message interface{}
 
-// A tag allows adding a descriptive string to a memo.
+// A tag allows adding a descriptive string to a message.
 type Tag struct {
 	Tag string
-	Val Message
+	Msg Message
 }
 
-// Input pins are used to receive memos.
+// Input pins are used to receive messages.
 type Input <-chan Message
 
-// Output pins are used to send memos elsewhere.
+// Output pins are used to send messages elsewhere.
 type Output interface {
-	Send(v Message) // Send a memo through an output pin.
+	Send(v Message) // Send a message through an output pin.
 	Close()         // Detach the pin, close channel when last one is gone.
 }
 
@@ -43,7 +43,7 @@ type Circuitry interface {
 	initGadget(Circuitry, string, *Circuit) *Gadget
 }
 
-// A transformer processes each memo through a supplied function.
+// A transformer processes each message through a supplied function.
 func Transformer(f func(Message) Message) Circuitry {
 	return &transformer{fun: f}
 }

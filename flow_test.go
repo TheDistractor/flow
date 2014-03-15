@@ -29,7 +29,7 @@ func ExampleTransformer() {
 }
 
 func ExampleCircuit_Label() {
-	// new circuit to repeat each incoming memo three times
+	// new circuit to repeat each incoming message three times
 	wg := flow.NewCircuit()
 	wg.Add("r", "Repeater")
 	wg.Feed("r.Num", 3)

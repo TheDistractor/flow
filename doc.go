@@ -87,7 +87,7 @@ For this simple case, a Transformer could also have been used:
     g.AddCircuitry("ll", ll)
 
 This wraps a function into a gadget with In and Out pins. It can be used when
-there is a one-to-one processing task from incoming to outgoing memos.
+there is a one-to-one processing task from incoming to outgoing messages.
 
 To make a gadget available by name in the registry, set up a factory method:
 

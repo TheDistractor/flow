@@ -19,14 +19,14 @@ func init() {
 	flow.Registry["FanOut"] = func() flow.Circuitry { return &FanOut{} }
 }
 
-// A sink eats up all the memos it receives. Registers as "Sink".
+// A sink eats up all the messages it receives. Registers as "Sink".
 type Sink struct {
 	flow.Gadget
 	In  flow.Input
 	Out flow.Output
 }
 
-// Start reading memos and discard them.
+// Start reading messages and discard them.
 func (w *Sink) Run() {
 	w.Out.Close()
 	for _ = range w.In {
@@ -40,14 +40,14 @@ type Pipe struct {
 	Out flow.Output
 }
 
-// Start passing through memos.
+// Start passing through messages.
 func (w *Pipe) Run() {
 	for m := range w.In {
 		w.Out.Send(m)
 	}
 }
 
-// Repeaters are pipes which repeat each memo a number of times.
+// Repeaters are pipes which repeat each message a number of times.
 // Registers as "Repeater".
 type Repeater struct {
 	flow.Gadget
@@ -56,7 +56,7 @@ type Repeater struct {
 	Num flow.Input
 }
 
-// Start repeating incoming memos.
+// Start repeating incoming messages.
 func (w *Repeater) Run() {
 	if num, ok := <-w.Num; ok {
 		n := num.(int)
@@ -72,7 +72,7 @@ func (w *Repeater) Run() {
 	}
 }
 
-// A counter reports the number of memos it has received.
+// A counter reports the number of messages it has received.
 // Registers as "Counter".
 type Counter struct {
 	flow.Gadget
@@ -82,7 +82,7 @@ type Counter struct {
 	count int
 }
 
-// Start counting incoming memos.
+// Start counting incoming messages.
 func (w *Counter) Run() {
 	for m := range w.In {
 		if _, ok := m.(flow.Tag); ok {
@@ -94,20 +94,20 @@ func (w *Counter) Run() {
 	w.Out.Send(w.count)
 }
 
-// Printers report the memos sent to them as output. Registers as "Printer".
+// Printers report the messages sent to them as output. Registers as "Printer".
 type Printer struct {
 	flow.Gadget
 	In flow.Input
 }
 
-// Start printing incoming memos.
+// Start printing incoming messages.
 func (w *Printer) Run() {
 	for m := range w.In {
 		fmt.Printf("%T: %v\n", m, m)
 	}
 }
 
-// A timer sends out one memo after the time set by the Rate pin.
+// A timer sends out one message after the time set by the Rate pin.
 // Registers as "Timer".
 type Timer struct {
 	flow.Gadget
@@ -115,7 +115,7 @@ type Timer struct {
 	Out  flow.Output
 }
 
-// Start the timer, sends one memo when it expires.
+// Start the timer, sends one message when it expires.
 func (w *Timer) Run() {
 	if rate, ok := <-w.Rate; ok {
 		t := <-time.After(rate.(time.Duration))
@@ -123,7 +123,7 @@ func (w *Timer) Run() {
 	}
 }
 
-// A clock sends out memos at a fixed rate, as set by the Rate pin.
+// A clock sends out messages at a fixed rate, as set by the Rate pin.
 // Registers as "Clock".
 type Clock struct {
 	flow.Gadget
@@ -131,7 +131,7 @@ type Clock struct {
 	Out  flow.Output
 }
 
-// Start sending out periodic memos, once the rate is known.
+// Start sending out periodic messages, once the rate is known.
 func (w *Clock) Run() {
 	if rate, ok := <-w.Rate; ok {
 		t := time.NewTicker(rate.(time.Duration))
@@ -141,7 +141,7 @@ func (w *Clock) Run() {
 	}
 }
 
-// A fanout sends out memos to each of its outputs, which is set up as map.
+// A fanout sends out messages to each of its outputs, which is set up as map.
 // Registers as "FanOut".
 type FanOut struct {
 	flow.Gadget
@@ -149,7 +149,7 @@ type FanOut struct {
 	Out map[string]flow.Output
 }
 
-// Start sending out memos to all output pins (does not make copies of them).
+// Start sending out messages to all output pins (does not make copies of them).
 func (w *FanOut) Run() {
 	for m := range w.In {
 		for _, o := range w.Out {

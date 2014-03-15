@@ -14,7 +14,7 @@ func init() {
 	}
 }
 
-// A dispatcher sends memos to newly created gadgets, based on dispatch tags.
+// A dispatcher sends messages to newly created gadgets, based on dispatch tags.
 // These gadgets must have an In and an Out pin. Their output is merged into
 // a single Out pin, the rest is sent to Rej. Registers as "Dispatcher".
 type Dispatcher Circuit
@@ -35,7 +35,7 @@ func (w *dispatchHead) Run() {
 	gadget := ""
 	for m := range w.In {
 		if tag, ok := m.(Tag); ok && tag.Tag == "<dispatch>" {
-			if tag.Val == gadget {
+			if tag.Msg == gadget {
 				continue
 			}
 
@@ -44,7 +44,7 @@ func (w *dispatchHead) Run() {
 			<-w.Reply // TODO: add a timeout?
 
 			// perform the switch, now that previous output has drained
-			gadget = tag.Val.(string)
+			gadget = tag.Msg.(string)
 			if w.Feeds[gadget] == nil {
 				if Registry[gadget] == nil {
 					w.Rej.Send(tag) // report that no such gadget was found
@@ -81,7 +81,7 @@ type dispatchTail struct {
 
 func (w *dispatchTail) Run() {
 	for m := range w.In {
-		if tag, ok := m.(Tag); ok && tag.Tag == "<marker>" && tag.Val == w.circuit {
+		if tag, ok := m.(Tag); ok && tag.Tag == "<marker>" && tag.Msg == w.circuit {
 			w.Back.Send(m)
 		} else {
 			w.Out.Send(m)

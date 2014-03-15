@@ -60,7 +60,7 @@ func (g *Circuit) Connect(from, to string, capacity int) {
 	g.gadgetOf(from).setOutput(pinPart(from), c)
 }
 
-// Set up a memo to be sent to a gadget on startup.
+// Set up a message to be sent to a gadget on startup.
 func (g *Circuit) Feed(pin string, v Message) {
 	g.inbox[pin] = append(g.inbox[pin], v)
 }
