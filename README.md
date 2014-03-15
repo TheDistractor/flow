@@ -1,4 +1,4 @@
-![](gwtf.png)
+![](image.png)
 
 An experiment with dataflow programming in Go.
 Massively inspired by Paul Morrison's  
