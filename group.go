@@ -8,75 +8,75 @@ import (
 	"github.com/golang/glog"
 )
 
-// Initialise a new group.
-func NewGroup() *Group {
-	return &Group{
-		workers: map[string]*Work{},
-		portMap: map[string]string{},
-		inbox:   map[string][]Memo{},
+// Initialise a new circuit.
+func NewCircuit() *Circuit {
+	return &Circuit{
+		gadgets: map[string]*Gadget{},
+		pinMap:  map[string]string{},
+		inbox:   map[string][]Message{},
 	}
 }
 
-// A group is a collection of inter-connected workers.
-type Group struct {
-	Work
+// A circuit is a collection of inter-connected gadgets.
+type Circuit struct {
+	Gadget
 
-	workers map[string]*Work
-	portMap map[string]string
-	inbox   map[string][]Memo
+	gadgets map[string]*Gadget
+	pinMap  map[string]string
+	inbox   map[string][]Message
 	wait    sync.WaitGroup
 }
 
-// Add a named worker to the group with a unique name.
-func (g *Group) Add(name, worker string) {
-	fun := Registry[worker]
+// Add a named gadget to the circuit with a unique name.
+func (g *Circuit) Add(name, gadget string) {
+	fun := Registry[gadget]
 	if fun == nil {
-		fmt.Println("not found: ", worker)
+		fmt.Println("not found: ", gadget)
 		return
 	}
-	g.AddWorker(name, fun())
+	g.AddCircuitry(name, fun())
 }
 
-// Add a worker or workgroup to the group with a unique name.
-func (g *Group) AddWorker(name string, w Worker) {
-	g.workers[name] = w.initWork(w, name, g)
+// Add a gadget or circuit to the circuit with a unique name.
+func (g *Circuit) AddCircuitry(name string, w Circuitry) {
+	g.gadgets[name] = w.initGadget(w, name, g)
 }
 
-func (g *Group) workerOf(s string) *Work {
-	// TODO: migth be useful for extending an existing group
-	// if workerPart(s) == "" && g.portMap[s] != "" {
-	// 	s = g.portMap[s] // unnamed workers can use the group's port map
+func (g *Circuit) gadgetOf(s string) *Gadget {
+	// TODO: migth be useful for extending an existing circuit
+	// if gadgetPart(s) == "" && g.pinMap[s] != "" {
+	// 	s = g.pinMap[s] // unnamed gadgets can use the circuit's pin map
 	// }
-	w, ok := g.workers[workerPart(s)]
+	w, ok := g.gadgets[gadgetPart(s)]
 	if !ok {
-		glog.Fatalln("worker not found for:", s)
+		glog.Fatalln("gadget not found for:", s)
 	}
 	return w
 }
 
-// Connect an output port with an input port.
-func (g *Group) Connect(from, to string, capacity int) {
-	c := g.workerOf(to).getInput(portPart(to), capacity)
-	g.workerOf(from).setOutput(portPart(from), c)
+// Connect an output pin with an input pin.
+func (g *Circuit) Connect(from, to string, capacity int) {
+	c := g.gadgetOf(to).getInput(pinPart(to), capacity)
+	g.gadgetOf(from).setOutput(pinPart(from), c)
 }
 
-// Set up a memo to be sent to a worker on startup.
-func (g *Group) Set(port string, v Memo) {
-	g.inbox[port] = append(g.inbox[port], v)
+// Set up a memo to be sent to a gadget on startup.
+func (g *Circuit) Feed(pin string, v Message) {
+	g.inbox[pin] = append(g.inbox[pin], v)
 }
 
-// Start up the group, and return when it is finished.
-func (g *Group) Run() {
-	for _, w := range g.workers {
+// Start up the circuit, and return when it is finished.
+func (g *Circuit) Run() {
+	for _, w := range g.gadgets {
 		w.launch()
 	}
 	g.wait.Wait()
 }
 
-// Map an external port to an internal one.
-func (g *Group) Map(external, internal string) {
+// Map an external pin to an internal one.
+func (g *Circuit) Label(external, internal string) {
 	if strings.Contains(external, ".") {
-		glog.Fatalln("external port should not include a dot:", external)
+		glog.Fatalln("external pin should not include a dot:", external)
 	}
-	g.portMap[external] = internal
+	g.pinMap[external] = internal
 }

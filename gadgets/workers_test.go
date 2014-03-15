@@ -1,4 +1,4 @@
-package workers
+package gadgets
 
 import (
 	"testing"
@@ -8,19 +8,19 @@ import (
 )
 
 func ExamplePrinter() {
-	g := flow.NewGroup()
+	g := flow.NewCircuit()
 	g.Add("p", "Printer")
-	g.Set("p.In", "hello")
+	g.Feed("p.In", "hello")
 	g.Run()
 	// Output:
 	// string: hello
 }
 
 func ExampleRepeater() {
-	g := flow.NewGroup()
+	g := flow.NewCircuit()
 	g.Add("r", "Repeater")
-	g.Set("r.Num", 3)
-	g.Set("r.In", "abc")
+	g.Feed("r.Num", 3)
+	g.Feed("r.In", "abc")
 	g.Run()
 	// Output:
 	// Lost string: abc
@@ -29,30 +29,30 @@ func ExampleRepeater() {
 }
 
 func ExampleCounter() {
-	g := flow.NewGroup()
+	g := flow.NewCircuit()
 	g.Add("c", "Counter")
-	g.Set("c.In", nil)
+	g.Feed("c.In", nil)
 	g.Run()
 	// Output:
 	// Lost int: 1
 }
 
 func ExampleTimer() {
-	g := flow.NewGroup()
+	g := flow.NewCircuit()
 	g.Add("t1", "Timer")
 	g.Add("t2", "Timer")
 	g.Add("c", "Counter")
 	g.Connect("t1.Out", "c.In", 0)
 	g.Connect("t2.Out", "c.In", 0)
-	g.Set("t1.Rate", 100*time.Millisecond)
-	g.Set("t2.Rate", 200*time.Millisecond)
+	g.Feed("t1.Rate", 100*time.Millisecond)
+	g.Feed("t2.Rate", 200*time.Millisecond)
 	g.Run()
 	// Output:
 	// Lost int: 2
 }
 
-func ExampleAllWorkers() {
-	g := flow.NewGroup()
+func ExampleAllCircuitries() {
+	g := flow.NewCircuit()
 	g.Add("clock", "Clock")
 	g.Add("counter", "Counter") // returns 0
 	g.Add("pipe", "Pipe")
@@ -66,14 +66,14 @@ func ExampleAllWorkers() {
 }
 
 func ExampleFanOut() {
-	g := flow.NewGroup()
+	g := flow.NewCircuit()
 	g.Add("f", "FanOut")
 	g.Add("c", "Counter")
 	g.Add("p", "Printer")
 	g.Connect("f.Out:c", "c.In", 0)
 	g.Connect("f.Out:p", "p.In", 0)
-	g.Set("f.In", "abc")
-	g.Set("f.In", "def")
+	g.Feed("f.In", "abc")
+	g.Feed("f.In", "def")
 	g.Run()
 	// Output:
 	// string: abc
@@ -82,16 +82,16 @@ func ExampleFanOut() {
 }
 
 func TestTimer(t *testing.T) {
-	g := flow.NewGroup()
+	g := flow.NewCircuit()
 	g.Add("t", "Timer")
-	g.Set("t.Rate", 100*time.Millisecond)
+	g.Feed("t.Rate", 100*time.Millisecond)
 	g.Run()
 }
 
 func ExampleClock() {
 	// The following example never ends.
-	g := flow.NewGroup()
+	g := flow.NewCircuit()
 	g.Add("c", "Clock")
-	g.Set("c.Rate", time.Second)
+	g.Feed("c.Rate", time.Second)
 	g.Run()
 }

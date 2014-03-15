@@ -1,5 +1,5 @@
-// Basic collection of pre-defined workers.
-package workers
+// Basic collection of pre-defined gadgets.
+package gadgets
 
 import (
 	"fmt"
@@ -9,19 +9,19 @@ import (
 )
 
 func init() {
-	flow.Registry["Sink"] = func() flow.Worker { return &Sink{} }
-	flow.Registry["Pipe"] = func() flow.Worker { return &Pipe{} }
-	flow.Registry["Repeater"] = func() flow.Worker { return &Repeater{} }
-	flow.Registry["Counter"] = func() flow.Worker { return &Counter{} }
-	flow.Registry["Printer"] = func() flow.Worker { return &Printer{} }
-	flow.Registry["Timer"] = func() flow.Worker { return &Timer{} }
-	flow.Registry["Clock"] = func() flow.Worker { return &Clock{} }
-	flow.Registry["FanOut"] = func() flow.Worker { return &FanOut{} }
+	flow.Registry["Sink"] = func() flow.Circuitry { return &Sink{} }
+	flow.Registry["Pipe"] = func() flow.Circuitry { return &Pipe{} }
+	flow.Registry["Repeater"] = func() flow.Circuitry { return &Repeater{} }
+	flow.Registry["Counter"] = func() flow.Circuitry { return &Counter{} }
+	flow.Registry["Printer"] = func() flow.Circuitry { return &Printer{} }
+	flow.Registry["Timer"] = func() flow.Circuitry { return &Timer{} }
+	flow.Registry["Clock"] = func() flow.Circuitry { return &Clock{} }
+	flow.Registry["FanOut"] = func() flow.Circuitry { return &FanOut{} }
 }
 
 // A sink eats up all the memos it receives. Registers as "Sink".
 type Sink struct {
-	flow.Work
+	flow.Gadget
 	In  flow.Input
 	Out flow.Output
 }
@@ -33,9 +33,9 @@ func (w *Sink) Run() {
 	}
 }
 
-// Pipes are workers with an "In" and an "Out" port. Registers as "Pipe".
+// Pipes are gadgets with an "In" and an "Out" pin. Registers as "Pipe".
 type Pipe struct {
-	flow.Work
+	flow.Gadget
 	In  flow.Input
 	Out flow.Output
 }
@@ -50,7 +50,7 @@ func (w *Pipe) Run() {
 // Repeaters are pipes which repeat each memo a number of times.
 // Registers as "Repeater".
 type Repeater struct {
-	flow.Work
+	flow.Gadget
 	In  flow.Input
 	Out flow.Output
 	Num flow.Input
@@ -75,7 +75,7 @@ func (w *Repeater) Run() {
 // A counter reports the number of memos it has received.
 // Registers as "Counter".
 type Counter struct {
-	flow.Work
+	flow.Gadget
 	In  flow.Input
 	Out flow.Output
 
@@ -96,7 +96,7 @@ func (w *Counter) Run() {
 
 // Printers report the memos sent to them as output. Registers as "Printer".
 type Printer struct {
-	flow.Work
+	flow.Gadget
 	In flow.Input
 }
 
@@ -107,10 +107,10 @@ func (w *Printer) Run() {
 	}
 }
 
-// A timer sends out one memo after the time set by the Rate port.
+// A timer sends out one memo after the time set by the Rate pin.
 // Registers as "Timer".
 type Timer struct {
-	flow.Work
+	flow.Gadget
 	Rate flow.Input
 	Out  flow.Output
 }
@@ -123,10 +123,10 @@ func (w *Timer) Run() {
 	}
 }
 
-// A clock sends out memos at a fixed rate, as set by the Rate port.
+// A clock sends out memos at a fixed rate, as set by the Rate pin.
 // Registers as "Clock".
 type Clock struct {
-	flow.Work
+	flow.Gadget
 	Rate flow.Input
 	Out  flow.Output
 }
@@ -144,12 +144,12 @@ func (w *Clock) Run() {
 // A fanout sends out memos to each of its outputs, which is set up as map.
 // Registers as "FanOut".
 type FanOut struct {
-	flow.Work
+	flow.Gadget
 	In  flow.Input
 	Out map[string]flow.Output
 }
 
-// Start sending out memos to all output ports (does not make copies of them).
+// Start sending out memos to all output pins (does not make copies of them).
 func (w *FanOut) Run() {
 	for m := range w.In {
 		for _, o := range w.Out {

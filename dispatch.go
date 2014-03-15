@@ -1,30 +1,30 @@
 package flow
 
 func init() {
-	Registry["Dispatcher"] = func() Worker {
-		g := NewGroup()
-		g.AddWorker("head", &dispatchHead{})
-		g.AddWorker("tail", &dispatchTail{})
+	Registry["Dispatcher"] = func() Circuitry {
+		g := NewCircuit()
+		g.AddCircuitry("head", &dispatchHead{})
+		g.AddCircuitry("tail", &dispatchTail{})
 		g.Connect("head.Feeds:", "tail.In", 0)  // keeps tail alive
 		g.Connect("tail.Back", "head.Reply", 1) // must have room for reply
-		g.Map("In", "head.In")
-		g.Map("Rej", "head.Rej")
-		g.Map("Out", "tail.Out")
+		g.Label("In", "head.In")
+		g.Label("Rej", "head.Rej")
+		g.Label("Out", "tail.Out")
 		return g
 	}
 }
 
-// A dispatcher sends memos to newly created workers, based on dispatch tags.
-// These workers must have an In and an Out port. Their output is merged into
-// a single Out port, the rest is sent to Rej. Registers as "Dispatcher".
-type Dispatcher Group
+// A dispatcher sends memos to newly created gadgets, based on dispatch tags.
+// These gadgets must have an In and an Out pin. Their output is merged into
+// a single Out pin, the rest is sent to Rej. Registers as "Dispatcher".
+type Dispatcher Circuit
 
-// The implementation uses a group with dispatchHead and dispatchTail workers.
-// Newly created workers are inserted "between" them, using Feeds as fanout.
-// Switching needs special care to drain the preceding worker output first.
+// The implementation uses a circuit with dispatchHead and dispatchTail gadgets.
+// Newly created gadgets are inserted "between" them, using Feeds as fanout.
+// Switching needs special care to drain the preceding gadget output first.
 
 type dispatchHead struct {
-	Work
+	Gadget
 	In    Input
 	Reply Input
 	Feeds map[string]Output
@@ -32,39 +32,39 @@ type dispatchHead struct {
 }
 
 func (w *dispatchHead) Run() {
-	worker := ""
+	gadget := ""
 	for m := range w.In {
 		if tag, ok := m.(Tag); ok && tag.Tag == "<dispatch>" {
-			if tag.Val == worker {
+			if tag.Val == gadget {
 				continue
 			}
 
 			// send (unique!) marker and act on it once it comes back on Reply
-			w.Feeds[worker].Send(Tag{"<marker>", w.group})
+			w.Feeds[gadget].Send(Tag{"<marker>", w.circuit})
 			<-w.Reply // TODO: add a timeout?
 
 			// perform the switch, now that previous output has drained
-			worker = tag.Val.(string)
-			if w.Feeds[worker] == nil {
-				if Registry[worker] == nil {
-					w.Rej.Send(tag) // report that no such worker was found
-					worker = ""
-				} else { // create, hook up, and launch the new worker
-					println("Dispatching to new worker: " + worker)
-					g := w.group
-					g.Add(worker, worker)
-					g.Connect("head.Feeds:"+worker, worker+".In", 0)
-					g.Connect(worker+".Out", "tail.In", 0)
-					g.workers[worker].launch()
+			gadget = tag.Val.(string)
+			if w.Feeds[gadget] == nil {
+				if Registry[gadget] == nil {
+					w.Rej.Send(tag) // report that no such gadget was found
+					gadget = ""
+				} else { // create, hook up, and launch the new gadget
+					println("Dispatching to new gadget: " + gadget)
+					g := w.circuit
+					g.Add(gadget, gadget)
+					g.Connect("head.Feeds:"+gadget, gadget+".In", 0)
+					g.Connect(gadget+".Out", "tail.In", 0)
+					g.gadgets[gadget].launch()
 				}
 			}
 
 			// pass through a "consumed" dispatch tag
-			w.Feeds[""].Send(Tag{"<dispatched>", worker})
+			w.Feeds[""].Send(Tag{"<dispatched>", gadget})
 			continue
 		}
 
-		feed := w.Feeds[worker]
+		feed := w.Feeds[gadget]
 		if feed == nil {
 			feed = w.Rej
 		}
@@ -73,7 +73,7 @@ func (w *dispatchHead) Run() {
 }
 
 type dispatchTail struct {
-	Work
+	Gadget
 	In   Input
 	Back Output
 	Out  Output
@@ -81,7 +81,7 @@ type dispatchTail struct {
 
 func (w *dispatchTail) Run() {
 	for m := range w.In {
-		if tag, ok := m.(Tag); ok && tag.Tag == "<marker>" && tag.Val == w.group {
+		if tag, ok := m.(Tag); ok && tag.Tag == "<marker>" && tag.Val == w.circuit {
 			w.Back.Send(m)
 		} else {
 			w.Out.Send(m)

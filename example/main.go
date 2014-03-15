@@ -1,5 +1,5 @@
 // This application exercises the "flow" package via a JSON config file.
-// Use the "-i" flag for a list of built-in (i.e. pre-registered) workers.
+// Use the "-i" flag for a list of built-in (i.e. pre-registered) gadgets.
 package main
 
 import (
@@ -12,16 +12,16 @@ import (
 )
 
 var (
-	verbose    = flag.Bool("i", false, "show info about version and registry")
-	wait       = flag.Bool("k", false, "keep running, don't exit main")
-	configFile = flag.String("w", "warmup.json", "specify the warmup file")
-	appMain    = flag.String("m", "main", "which registered group to start")
+	verbose   = flag.Bool("i", false, "show info about version and registry")
+	wait      = flag.Bool("k", false, "keep running, don't exit main")
+	setupFile = flag.String("s", "setup.json", "circuitry setup file")
+	appMain   = flag.String("r", "main", "which registered circuit to run")
 )
 
 func main() {
 	flag.Parse()
 
-	err := flow.AddToRegistry(*configFile)
+	err := flow.AddToRegistry(*setupFile)
 	if err != nil && !*verbose {
 		glog.Fatal(err)
 	}
@@ -39,7 +39,7 @@ func main() {
 				time.Sleep(1e6 * time.Hour)
 			}
 		} else {
-			glog.Fatalln(*appMain, "not found in:", *configFile)
+			glog.Fatalln(*appMain, "not found in:", *setupFile)
 		}
 		glog.Infof("Flow %s -, normal exit", flow.Version)
 	}

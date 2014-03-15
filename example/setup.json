@@ -1,13 +1,13 @@
 {
     "main": {
-        "workers": [
+        "gadgets": [
             {
                 "name": "p",
                 "type": "Printer"
             }
         ],
-        "connections": [],
-        "requests": [
+        "wires": [],
+        "feeds": [
             {
                 "data": "blah",
                 "to": "p.In"

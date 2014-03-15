@@ -5,41 +5,41 @@ import (
 )
 
 type config struct {
-	Workers []struct {
+	Gadgets []struct {
 		Type, Name string
 	}
-	Connections []struct {
+	Wires []struct {
 		From, To string
-		Buf      int
+		Capacity int
 	}
-	Requests []struct {
+	Feeds []struct {
 		Tag, Data, To string
 	}
-	Mappings []struct {
+	Labels []struct {
 		External, Internal string
 	}
 }
 
-// Load a group from a JSON description in a string.
-func (g *Group) LoadJSON(data []byte) error {
+// Load a circuit from a JSON description in a string.
+func (c *Circuit) LoadJSON(data []byte) error {
 	var conf config
 	err := json.Unmarshal(data, &conf)
 	if err == nil {
-		for _, w := range conf.Workers {
-			g.Add(w.Name, w.Type)
+		for _, g := range conf.Gadgets {
+			c.Add(g.Name, g.Type)
 		}
-		for _, c := range conf.Connections {
-			g.Connect(c.From, c.To, c.Buf)
+		for _, w := range conf.Wires {
+			c.Connect(w.From, w.To, w.Capacity)
 		}
-		for _, r := range conf.Requests {
-			if r.Tag != "" {
-				g.Set(r.To, Tag{r.Tag, r.Data})
+		for _, f := range conf.Feeds {
+			if f.Tag != "" {
+				c.Feed(f.To, Tag{f.Tag, f.Data})
 			} else {
-				g.Set(r.To, r.Data)
+				c.Feed(f.To, f.Data)
 			}
 		}
-		for _, c := range conf.Mappings {
-			g.Map(c.External, c.Internal)
+		for _, l := range conf.Labels {
+			c.Label(l.External, l.Internal)
 		}
 	}
 	return err

@@ -6,14 +6,14 @@ import (
 )
 
 func ExampleDispatcher() {
-	g := flow.NewGroup()
+	g := flow.NewCircuit()
 	g.Add("d", "Dispatcher")
-	g.Set("d.In", "abc")
-	g.Set("d.In", flow.Tag{"<dispatch>", "Counter"})
-	g.Set("d.In", "def")
-	g.Set("d.In", "ghi")
-	g.Set("d.In", flow.Tag{"<dispatch>", ""})
-	g.Set("d.In", "jkl")
+	g.Feed("d.In", "abc")
+	g.Feed("d.In", flow.Tag{"<dispatch>", "Counter"})
+	g.Feed("d.In", "def")
+	g.Feed("d.In", "ghi")
+	g.Feed("d.In", flow.Tag{"<dispatch>", ""})
+	g.Feed("d.In", "jkl")
 	g.Run()
 	// Output:
 	// Lost string: abc

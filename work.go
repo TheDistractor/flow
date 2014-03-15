@@ -7,51 +7,51 @@ import (
 	"github.com/golang/glog"
 )
 
-// Work keeps track of internal details about a worker.
-type Work struct {
-	worker  Worker
+// Gadget keeps track of internal details about a gadget.
+type Gadget struct {
+	gadget  Circuitry
 	name    string
-	group   *Group
+	circuit *Circuit
 	alive   bool
-	inputs  map[string]*connection
-	outputs map[string]*connection
+	inputs  map[string]*wire
+	outputs map[string]*wire
 }
 
-func (w *Work) initWork(wi Worker, nm string, gr *Group) *Work {
-	if w.group != nil {
-		glog.Fatalln("worker is already in use:", nm)
+func (w *Gadget) initGadget(wi Circuitry, nm string, gr *Circuit) *Gadget {
+	if w.circuit != nil {
+		glog.Fatalln("gadget is already in use:", nm)
 	}
-	w.worker = wi
+	w.gadget = wi
 	w.name = nm
-	w.group = gr
-	w.inputs = map[string]*connection{}
-	w.outputs = map[string]*connection{}
+	w.circuit = gr
+	w.inputs = map[string]*wire{}
+	w.outputs = map[string]*wire{}
 	return w
 }
 
-func (w *Work) workerValue() reflect.Value {
-	return reflect.ValueOf(w.worker).Elem()
+func (w *Gadget) gadgetValue() reflect.Value {
+	return reflect.ValueOf(w.gadget).Elem()
 }
 
-func (w *Work) portValue(port string) reflect.Value {
-	pp := portPart(port)
-	// if it's a group, look up mapped ports
-	if g, ok := w.worker.(*Group); ok {
-		p := g.portMap[pp]
-		return g.workerOf(p).portValue(p) // recursive
+func (w *Gadget) pinValue(pin string) reflect.Value {
+	pp := pinPart(pin)
+	// if it's a circuit, look up mapped pins
+	if g, ok := w.gadget.(*Circuit); ok {
+		p := g.pinMap[pp]
+		return g.gadgetOf(p).pinValue(p) // recursive
 	}
-	fv := w.workerValue().FieldByName(pp)
+	fv := w.gadgetValue().FieldByName(pp)
 	if !fv.IsValid() {
-		glog.Fatalln("port not found:", port)
+		glog.Fatalln("pin not found:", pin)
 	}
 	return fv
 }
 
-func (w *Work) getInput(port string, capacity int) *connection {
-	c := w.inputs[port]
+func (w *Gadget) getInput(pin string, capacity int) *wire {
+	c := w.inputs[pin]
 	if c == nil {
-		c = &connection{channel: make(chan Memo, capacity), dest: w}
-		w.inputs[port] = c
+		c = &wire{channel: make(chan Message, capacity), dest: w}
+		w.inputs[pin] = c
 	}
 	if capacity > c.capacity {
 		c.capacity = capacity
@@ -59,12 +59,12 @@ func (w *Work) getInput(port string, capacity int) *connection {
 	return c
 }
 
-func (w *Work) setOutput(port string, c *connection) {
-	ppfv := strings.Split(port, ":")
-	fp := w.portValue(ppfv[0])
+func (w *Gadget) setOutput(pin string, c *wire) {
+	ppfv := strings.Split(pin, ":")
+	fp := w.pinValue(ppfv[0])
 	if len(ppfv) == 1 {
 		if !fp.IsNil() {
-			glog.Fatalf("output already connected: %s.%s", w.name, port)
+			glog.Fatalf("output already connected: %s.%s", w.name, pin)
 		}
 		setValue(fp, c)
 	} else { // it's not an Output, so it must be a map[string]Output
@@ -73,29 +73,29 @@ func (w *Work) setOutput(port string, c *connection) {
 		}
 		outputs := fp.Interface().(map[string]Output)
 		if _, ok := outputs[ppfv[1]]; ok {
-			glog.Fatalf("output already connected: %s.%s", w.name, port)
+			glog.Fatalf("output already connected: %s.%s", w.name, pin)
 		}
 		outputs[ppfv[1]] = c
 	}
 	c.senders++
-	w.outputs[port] = c
+	w.outputs[pin] = c
 }
 
-func (w *Work) setupChannels() {
-	// make sure all the inbox connections have also been set up
-	for dest, memos := range w.group.inbox {
-		if workerPart(dest) == w.name {
-			w.getInput(dest, len(memos)) // will add connection to input map
+func (w *Gadget) setupChannels() {
+	// make sure all the inbox wires have also been set up
+	for dest, memos := range w.circuit.inbox {
+		if gadgetPart(dest) == w.name {
+			w.getInput(dest, len(memos)) // will add wire to input map
 		}
 	}
 
-	// set up and pre-fill all the input ports
+	// set up and pre-fill all the input pins
 	for p, c := range w.inputs {
 		// create a channel with the proper capacity
-		c.channel = make(chan Memo, c.capacity)
-		setValue(w.portValue(p), c.channel)
+		c.channel = make(chan Message, c.capacity)
+		setValue(w.pinValue(p), c.channel)
 		// fill it with memos from the inbox, if any
-		for _, m := range w.group.inbox[p] {
+		for _, m := range w.circuit.inbox[p] {
 			c.channel <- m
 		}
 		// close the channel if there is no other feed
@@ -106,10 +106,10 @@ func (w *Work) setupChannels() {
 
 	// set dangling inputs to a null input and dangling outputs to a fake sink
 	sink := &fakeSink{}
-	null := make(chan Memo)
+	null := make(chan Message)
 	close(null)
 
-	we := w.workerValue()
+	we := w.gadgetValue()
 	for i := 0; i < we.NumField(); i++ {
 		fe := we.Field(i)
 		switch fe.Type().String() {
@@ -125,7 +125,7 @@ func (w *Work) setupChannels() {
 	}
 }
 
-func (w *Work) isFinished() bool {
+func (w *Gadget) isFinished() bool {
 	for _, c := range w.inputs {
 		if len(c.channel) > 0 {
 			return false
@@ -134,17 +134,17 @@ func (w *Work) isFinished() bool {
 	return true
 }
 
-func (w *Work) closeChannels() {
+func (w *Gadget) closeChannels() {
 	for p, c := range w.inputs {
 		c.channel = nil
-		setValue(w.portValue(p), c.channel)
+		setValue(w.pinValue(p), c.channel)
 	}
 	for _, c := range w.outputs {
 		c.Close()
 	}
 }
 
-func (w *Work) sendTo(c *connection, v Memo) {
+func (w *Gadget) sendTo(c *wire, v Message) {
 	if !w.alive {
 		w.launch()
 	}
@@ -152,17 +152,17 @@ func (w *Work) sendTo(c *connection, v Memo) {
 	c.channel <- v
 }
 
-func (w *Work) launch() {
+func (w *Gadget) launch() {
 	w.alive = true
-	w.group.wait.Add(1)
+	w.circuit.wait.Add(1)
 	w.setupChannels()
 
 	go func() {
-		defer w.group.wait.Done()
+		defer w.circuit.wait.Done()
 		defer DontPanic()
 
 		for {
-			w.worker.Run()
+			w.gadget.Run()
 			if w.isFinished() {
 				break
 			}

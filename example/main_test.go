@@ -3,7 +3,7 @@ package main
 import "github.com/jcw/flow"
 
 func Example() {
-	g := flow.NewGroup()
+	g := flow.NewCircuit()
 	g.Add("clock", "Clock")
 	g.Add("counter", "Counter") // will return 0 when not hooked up
 	g.Add("pipe", "Pipe")

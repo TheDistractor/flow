@@ -6,59 +6,59 @@ implementation - see also https://en.wikipedia.org/wiki/Flow-based_programming.
 
 The flow library is available as import, along with some supporting packages:
 
-    import "github.com/jcw/flow/flow"
-    import _ "github.com/jcw/flow/workers"
+    import "github.com/jcw/flow"
+    import _ "github.com/jcw/flow/gadgets"
 
-The "workers" package is loaded only for its side-effects here: defining some
-basic workers in the registry.
+The "gadgets" package is loaded only for its side-effects here: defining some
+basic gadgets in the registry.
 
-To use it, start by creating a "group", then add "workers" and "connections":
+To use it, start by creating a "circuit", then add "gadgets" and "wires":
 
-    g := flow.NewGroup()
+    g := flow.NewCircuit()
     g.Add("r", "Repeater")
     g.Add("c", "Counter")
     g.Connect("r.Out", "c.In", 0)
 
 Then set a few initial values to send and start the whole thing up:
 
-    g.Set("r.Num", 3)
-    g.Set("r.In", "abc")
+    g.Feed("r.Num", 3)
+    g.Feed("r.In", "abc")
     g.Run()
 
-Run returns once all workers have finished. Output shows up as "lost" since the
+Run returns once all gadgets have finished. Output shows up as "lost" since the
 output hasn't been connected:
 
     Lost int: 3
 
-A group can be used instead as worker, then it acts as a "workgroup". For this,
-a mapping from external port names to internal ones is needed to expose them:
+A circuit can also be used as gadget, collectively called "circuitry". For this,
+a mapping from external pin names to internal ones is needed to expose them:
 
-    g.Map("MyOut", "c.out")
+    g.Label("MyOut", "c.out")
 
-Once its ports have been mapped, the group can be used inside another group:
+Once its pins have been mapped, the circuit can be used inside another circuit:
 
-    g2 := flow.NewGroup()
-    g2.AddWorker("g", g)
+    g2 := flow.NewCircuit()
+    g2.AddCircuitry("g", g)
     g2.Add("p", "Printer")
     g2.Connect("g.MyOut", "p.In", 0)
     g2.Run()
 
-Since the output port has been wired up this time, the output will now be:
+Since the output pin has been wired up this time, the output will now be:
 
     int: 3
 
-Definitions of workers, connections, and initial set requests can be loaded
+Definitions of gadgets, wires, and initial set requests can be loaded
 from a JSON description:
 
     data, _ := ioutil.ReadFile("config.json")
-	g := flow.NewGroup()
+	g := flow.NewCircuit()
     g.LoadJSON(data)
 	g.Run()
 
-Te define your own worker, create a type which embeds Work and defines Run():
+Te define your own gadget, create a type which embeds Gadget and defines Run():
 
     type LineLengths struct {
-        flow.Work
+        flow.Gadget
         In  flow.Input
         Out flow.Output
     }
@@ -70,33 +70,33 @@ Te define your own worker, create a type which embeds Work and defines Run():
         }
     }
 
-    g := flow.NewGroup()
-    g.AddWorker("ll", new(LineLengths))
-    g.Set("ll.In", "abc")
-    g.Set("ll.In", "defgh")
+    g := flow.NewCircuit()
+    g.AddCircuitry("ll", new(LineLengths))
+    g.Feed("ll.In", "abc")
+    g.Feed("ll.In", "defgh")
     g.Run()
 
-Inputs and outputs become available to the group in which this worker is used.
+Inputs and outputs become available to the circuit in which this gadget is used.
 
 For this simple case, a Transformer could also have been used:
 
-    ll := flow.Transformer(func(m Memo) Memo) {
+    ll := flow.Transformer(func(m Message) Message) {
         return len(m.(string))
     }
     ...
-    g.AddWorker("ll", ll)
+    g.AddCircuitry("ll", ll)
 
-This wraps a function into a worker with In and Out ports. It can be used when
+This wraps a function into a gadget with In and Out pins. It can be used when
 there is a one-to-one processing task from incoming to outgoing memos.
 
-To make a worker available by name in the registry, set up a factory method:
+To make a gadget available by name in the registry, set up a factory method:
 
-    flow.registry["LineLen"] = func() Worker {
+    flow.registry["LineLen"] = func() GadgetType {
         return new(LineLengths)
     }
     ...
     g.Add("ll", "LineLen")
 
-Memo is a synonym for Go's generic "interface{}" type.
+Message is a synonym for Go's generic "interface{}" type.
 */
 package flow
