@@ -7,9 +7,8 @@ import (
 	"time"
 
 	"github.com/golang/glog"
-	"github.com/jcw/flow/flow"
-	_ "github.com/jcw/flow/fbpparse"
-	_ "github.com/jcw/flow/workers"
+	"github.com/jcw/flow"
+	_ "github.com/jcw/flow/gadgets"
 )
 
 var (

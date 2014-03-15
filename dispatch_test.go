@@ -1,8 +1,8 @@
 package flow_test
 
 import (
-	"github.com/jcw/flow/flow"
-	_ "github.com/jcw/flow/workers"
+	"github.com/jcw/flow"
+	_ "github.com/jcw/flow/gadgets"
 )
 
 func ExampleDispatcher() {

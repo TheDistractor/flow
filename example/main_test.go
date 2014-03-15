@@ -1,6 +1,6 @@
 package main
 
-import "github.com/jcw/flow/flow"
+import "github.com/jcw/flow"
 
 func Example() {
 	g := flow.NewGroup()
