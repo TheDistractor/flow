@@ -31,11 +31,11 @@ output hasn't been connected:
     Lost int: 3
 
 A circuit can also be used as gadget, collectively called "circuitry". For this,
-a mapping from external pin names to internal ones is needed to expose them:
+internal pins must be labeled with external names to expose them:
 
     g.Label("MyOut", "c.out")
 
-Once its pins have been mapped, the circuit can be used inside another circuit:
+Once pins have been labeled, the circuit can be used inside another circuit:
 
     g2 := flow.NewCircuit()
     g2.AddCircuitry("g", g)
@@ -51,9 +51,9 @@ Definitions of gadgets, wires, and initial set requests can be loaded
 from a JSON description:
 
     data, _ := ioutil.ReadFile("config.json")
-	g := flow.NewCircuit()
+    g := flow.NewCircuit()
     g.LoadJSON(data)
-	g.Run()
+    g.Run()
 
 Te define your own gadget, create a type which embeds Gadget and defines Run():
 
