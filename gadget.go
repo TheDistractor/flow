@@ -105,21 +105,19 @@ func (g *Gadget) setupChannels() {
 	}
 
 	// set dangling inputs to a null input and dangling outputs to a fake sink
-	sink := &fakeSink{}
-	null := make(chan Message)
-	close(null)
-
 	we := g.gadgetValue()
 	for i := 0; i < we.NumField(); i++ {
 		fe := we.Field(i)
 		switch fe.Type().String() {
 		case "flow.Input":
 			if fe.IsNil() {
+				null := make(chan Message)
+				close(null)
 				setValue(fe, null)
 			}
 		case "flow.Output":
 			if fe.IsNil() {
-				setValue(fe, sink)
+				setValue(fe, &fakeSink{})
 			}
 		}
 	}
