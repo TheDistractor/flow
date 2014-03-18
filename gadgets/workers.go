@@ -18,6 +18,7 @@ func init() {
 	flow.Registry["Clock"] = func() flow.Circuitry { return &Clock{} }
 	flow.Registry["FanOut"] = func() flow.Circuitry { return &FanOut{} }
 	flow.Registry["Forever"] = func() flow.Circuitry { return &Forever{} }
+	flow.Registry["Delay"] = func() flow.Circuitry { return &Delay{} }
 }
 
 // A sink eats up all the messages it receives. Registers as "Sink".
@@ -167,4 +168,20 @@ type Forever struct {
 // Start running (nearly) forever.
 func (w *Forever) Run() {
 	time.Sleep(1e6 * time.Hour)
+}
+
+// Send data out after a certain delay.
+type Delay struct {
+	flow.Gadget
+	In    flow.Input
+	Delay flow.Input
+	Out   flow.Output
+}
+
+func (g *Delay) Run() {
+	delay, _ := time.ParseDuration((<-g.Delay).(string))
+	for m := range g.In {
+		time.Sleep(delay)
+		g.Out.Send(m)
+	}
 }

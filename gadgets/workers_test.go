@@ -81,6 +81,19 @@ func ExampleFanOut() {
 	// Lost int: 2
 }
 
+func ExampleDelay() {
+	g := flow.NewCircuit()
+	g.Add("d", "Delay")
+	g.Add("p", "Printer")
+	g.Feed("d.Delay", "10ms")
+	g.Feed("d.In", "abc")
+	g.Feed("p.In", "def")
+	g.Run()
+	// Output:
+	// string: def
+	// Lost string: abc
+}
+
 func TestTimer(t *testing.T) {
 	g := flow.NewCircuit()
 	g.Add("t", "Timer")
