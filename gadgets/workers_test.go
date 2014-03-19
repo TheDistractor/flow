@@ -126,7 +126,7 @@ func ExampleClock() {
 	// The following example never ends.
 	g := flow.NewCircuit()
 	g.Add("c", "Clock")
-	g.Feed("c.Rate", time.Second)
+	g.Feed("c.Rate", "1s")
 	g.Run()
 }
 

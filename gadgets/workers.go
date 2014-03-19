@@ -140,8 +140,10 @@ type Clock struct {
 
 // Start sending out periodic messages, once the rate is known.
 func (w *Clock) Run() {
-	if rate, ok := <-w.Rate; ok {
-		t := time.NewTicker(rate.(time.Duration))
+	if r, ok := <-w.Rate; ok {
+		rate, err := time.ParseDuration(r.(string))
+		flow.Check(err)
+		t := time.NewTicker(rate)
 		for m := range t.C {
 			w.Out.Send(m)
 		}
