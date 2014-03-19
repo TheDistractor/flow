@@ -1,6 +1,7 @@
 package gadgets
 
 import (
+	"os"
 	"testing"
 	"time"
 
@@ -94,6 +95,26 @@ func ExampleDelay() {
 	// Lost string: abc
 }
 
+func ExampleTimeStamp() {
+	g := flow.NewCircuit()
+	g.Add("t", "TimeStamp")
+	g.Run()
+	g.Feed("t.In", "abc")
+	// produces two lines, the timestamp followed by the "abc" string
+}
+
+func ExampleReadTextFile() {
+	g := flow.NewCircuit()
+	g.Add("r", "ReadTextFile")
+	g.Add("c", "Counter")
+	g.Connect("r.Out", "c.In", 0)
+	g.Feed("r.In", "../README.md")
+	g.Run()
+	// Output:
+	// Lost flow.Tag: {<open> ../README.md}
+	// Lost flow.Tag: {<close> ../README.md}
+	// Lost int: 24
+}
 func TestTimer(t *testing.T) {
 	g := flow.NewCircuit()
 	g.Add("t", "Timer")
@@ -107,4 +128,19 @@ func ExampleClock() {
 	g.Add("c", "Clock")
 	g.Feed("c.Rate", time.Second)
 	g.Run()
+}
+
+func ExampleEnvVar() {
+	os.Setenv("FOO", "bar!")
+
+	g := flow.NewCircuit()
+	g.Add("e", "EnvVar")
+	g.Feed("e.In", "FOO")
+	g.Feed("e.In", flow.Tag{"FOO", "def"})
+	g.Feed("e.In", flow.Tag{"BLAH", "abc"})
+	g.Run()
+	// Output:
+	// Lost string: bar!
+	// Lost string: bar!
+	// Lost string: abc
 }
