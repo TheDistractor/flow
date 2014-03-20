@@ -8,6 +8,7 @@ func init() {
 		c.Connect("head.Feeds:", "tail.In", 0)  // keeps tail alive
 		c.Connect("tail.Back", "head.Reply", 1) // must have room for reply
 		c.Label("In", "head.In")
+		c.Label("Prefix", "head.Prefix")
 		c.Label("Rej", "head.Rej")
 		c.Label("Out", "tail.Out")
 		return c
@@ -25,13 +26,18 @@ type Dispatcher Circuit
 
 type dispatchHead struct {
 	Gadget
-	In    Input
-	Reply Input
-	Feeds map[string]Output
-	Rej   Output
+	In     Input
+	Prefix Input
+	Reply  Input
+	Feeds  map[string]Output
+	Rej    Output
 }
 
 func (g *dispatchHead) Run() {
+	prefix := ""
+	if p, ok := <-g.Prefix; ok {
+		prefix = p.(string)
+	}
 	gadget := ""
 	for m := range g.In {
 		if tag, ok := m.(Tag); ok && tag.Tag == "<dispatch>" {
@@ -46,13 +52,13 @@ func (g *dispatchHead) Run() {
 			// perform the switch, now that previous output has drained
 			gadget = tag.Msg.(string)
 			if g.Feeds[gadget] == nil {
-				if Registry[gadget] == nil {
+				if Registry[prefix+gadget] == nil {
 					g.Rej.Send(tag) // report that no such gadget was found
 					gadget = ""
 				} else { // create, hook up, and launch the new gadget
-					println("Dispatching to new gadget: " + gadget)
+					println("Dispatching to new gadget: " + prefix + gadget)
 					c := g.owner
-					c.Add(gadget, gadget)
+					c.Add(gadget, prefix+gadget)
 					c.Connect("head.Feeds:"+gadget, gadget+".In", 0)
 					c.Connect(gadget+".Out", "tail.In", 0)
 					c.gadgets[gadget].launch()
