@@ -144,6 +144,7 @@ func (w *Clock) Run() {
 		rate, err := time.ParseDuration(r.(string))
 		flow.Check(err)
 		t := time.NewTicker(rate)
+		defer t.Stop()
 		for m := range t.C {
 			w.Out.Send(m)
 		}
