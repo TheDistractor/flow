@@ -45,7 +45,7 @@ Once pins have been labeled, the circuit can be used inside another circuit:
 
 Since the output pin has been wired up this time, the output will now be:
 
-    int: 3
+    3
 
 Definitions of gadgets, wires, and initial set requests can be loaded
 from a JSON description:
