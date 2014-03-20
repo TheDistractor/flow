@@ -14,7 +14,7 @@ func ExamplePrinter() {
 	g.Feed("p.In", "hello")
 	g.Run()
 	// Output:
-	// string: hello
+	// hello
 }
 
 func ExampleRepeater() {
@@ -77,8 +77,8 @@ func ExampleFanOut() {
 	g.Feed("f.In", "def")
 	g.Run()
 	// Output:
-	// string: abc
-	// string: def
+	// abc
+	// def
 	// Lost int: 2
 }
 
@@ -91,7 +91,7 @@ func ExampleDelay() {
 	g.Feed("p.In", "def")
 	g.Run()
 	// Output:
-	// string: def
+	// def
 	// Lost string: abc
 }
 

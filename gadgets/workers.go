@@ -110,7 +110,7 @@ type Printer struct {
 // Start printing incoming messages.
 func (w *Printer) Run() {
 	for m := range w.In {
-		fmt.Printf("%T: %v\n", m, m)
+		fmt.Println(m)
 	}
 }
 
