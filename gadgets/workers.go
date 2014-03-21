@@ -3,8 +3,11 @@ package gadgets
 
 import (
 	"bufio"
+	"encoding/json"
+	"flag"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/jcw/flow"
@@ -24,6 +27,7 @@ func init() {
 	flow.Registry["TimeStamp"] = func() flow.Circuitry { return &TimeStamp{} }
 	flow.Registry["ReadTextFile"] = func() flow.Circuitry { return &ReadTextFile{} }
 	flow.Registry["EnvVar"] = func() flow.Circuitry { return &EnvVar{} }
+	flow.Registry["CmdLine"] = func() flow.Circuitry { return &CmdLine{} }
 }
 
 // A sink eats up all the messages it receives. Registers as "Sink".
@@ -256,5 +260,52 @@ func (g *EnvVar) Run() {
 			}
 		}
 		g.Out.Send(m)
+	}
+}
+
+// Turn command-line arguments into a message flow.
+type CmdLine struct {
+	flow.Gadget
+	Type flow.Input
+	Out  flow.Output
+}
+
+// Start processing the command-line arguments.
+func (g *CmdLine) Run() {
+	asJson := false
+	skip := 0
+	step := 1
+	for m := range g.Type {
+		for _, typ := range strings.Split(m.(string), ",") {
+			switch typ {
+			case "":
+				// ignored
+			case "skip":
+				skip++
+			case "json":
+				asJson = true
+			case "tags":
+				step = 2
+			default:
+				panic("unknown option: " + typ)
+			}
+		}
+	}
+	for i := skip; i < flag.NArg(); i += step {
+		arg := flag.Arg(i + step - 1)
+		var value interface{} = arg
+		if asJson {
+			if err := json.Unmarshal([]byte(arg), &value); err != nil {
+				if i+step-1 < flag.NArg() {
+					value = arg // didn't parse as JSON string, pass as string
+				} else {
+					value = nil // odd number of args, value set to nil
+				}
+			}
+		}
+		if step > 1 {
+			value = flow.Tag{flag.Arg(i), value}
+		}
+		g.Out.Send(value)
 	}
 }
