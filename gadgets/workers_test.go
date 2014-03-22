@@ -103,18 +103,31 @@ func ExampleTimeStamp() {
 	// produces two lines, the timestamp followed by the "abc" string
 }
 
-func ExampleReadTextFile() {
+func ExampleReadFileText() {
 	g := flow.NewCircuit()
-	g.Add("r", "ReadTextFile")
-	g.Add("c", "Counter")
-	g.Connect("r.Out", "c.In", 0)
-	g.Feed("r.In", "../README.md")
+	g.Add("r", "ReadFileText")
+	g.Feed("r.In", "example.json")
 	g.Run()
 	// Output:
-	// Lost flow.Tag: {<open> ../README.md}
-	// Lost flow.Tag: {<close> ../README.md}
-	// Lost int: 24
+	// Lost flow.Tag: {<open> example.json}
+	// Lost string: {
+	// Lost string:     "a": 123,
+	// Lost string:     "b": [3,4,5],
+	// Lost string:     "c": true
+	// Lost string: }
+	// Lost flow.Tag: {<close> example.json}
 }
+
+func ExampleReadFileJSON() {
+	g := flow.NewCircuit()
+	g.Add("r", "ReadFileJSON")
+	g.Feed("r.In", "example.json")
+	g.Run()
+	// Output:
+	// Lost flow.Tag: {<file> example.json}
+	// Lost map[string]interface {}: map[a:123 b:[3 4 5] c:true]
+}
+
 func TestTimer(t *testing.T) {
 	g := flow.NewCircuit()
 	g.Add("t", "Timer")

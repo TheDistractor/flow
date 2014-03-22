@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strings"
 	"time"
@@ -25,7 +26,8 @@ func init() {
 	flow.Registry["Forever"] = func() flow.Circuitry { return &Forever{} }
 	flow.Registry["Delay"] = func() flow.Circuitry { return &Delay{} }
 	flow.Registry["TimeStamp"] = func() flow.Circuitry { return &TimeStamp{} }
-	flow.Registry["ReadTextFile"] = func() flow.Circuitry { return &ReadTextFile{} }
+	flow.Registry["ReadFileText"] = func() flow.Circuitry { return &ReadFileText{} }
+	flow.Registry["ReadFileJSON"] = func() flow.Circuitry { return &ReadFileJSON{} }
 	flow.Registry["EnvVar"] = func() flow.Circuitry { return &EnvVar{} }
 	flow.Registry["CmdLine"] = func() flow.Circuitry { return &CmdLine{} }
 }
@@ -213,16 +215,16 @@ func (w *TimeStamp) Run() {
 	}
 }
 
-// ReadTextFile takes strings and replaces them by the lines of that file.
-// Inserts <open> and <close> tags before doing so. Registers as "ReadTextFile".
-type ReadTextFile struct {
+// ReadFileText takes strings and replaces them by the lines of that file.
+// Inserts <open> and <close> tags before doing so. Registers as "ReadFileText".
+type ReadFileText struct {
 	flow.Gadget
 	In  flow.Input
 	Out flow.Output
 }
 
-// Start picking up strings and injecting the text lines instead.
-func (w *ReadTextFile) Run() {
+// Start reading filenames and emit their text lines, with <open>/<close> tags.
+func (w *ReadFileText) Run() {
 	for m := range w.In {
 		if name, ok := m.(string); ok {
 			file, err := os.Open(name)
@@ -236,6 +238,30 @@ func (w *ReadTextFile) Run() {
 		} else {
 			w.Out.Send(m)
 		}
+	}
+}
+
+// ReadFileJSON takes strings and parses that file's contents as JSON.
+// Registers as "ReadFileJSON".
+type ReadFileJSON struct {
+	flow.Gadget
+	In  flow.Input
+	Out flow.Output
+}
+
+// Start reading filenames and emit a <file> tag followed by the decoded JSON.
+func (w *ReadFileJSON) Run() {
+	for m := range w.In {
+		if name, ok := m.(string); ok {
+			data, err := ioutil.ReadFile(name)
+			flow.Check(err)
+			w.Out.Send(flow.Tag{"<file>", name})
+			var any interface{}
+			err = json.Unmarshal(data, &any)
+			flow.Check(err)
+			m = any
+		}
+		w.Out.Send(m)
 	}
 }
 
