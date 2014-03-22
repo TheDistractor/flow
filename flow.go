@@ -126,7 +126,7 @@ func DontPanic() {
 				fmt.Fprintf(os.Stderr, "%s:%d %s()\n", file, line, name)
 			}
 		}
-		glog.Fatal("EXIT")
+		glog.Error("EXIT")
 	}
 }
 
