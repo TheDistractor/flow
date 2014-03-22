@@ -33,7 +33,7 @@ type Input <-chan Message
 // Output pins are used to send messages elsewhere.
 type Output interface {
 	Send(v Message) // Send a message through an output pin.
-	Close()         // Detach the pin, close channel when last one is gone.
+	Disconnect()    // Disconnect the pin, close channel when last one is gone.
 }
 
 // Circuitry is the collective name for circuits and gadgets.
@@ -75,7 +75,7 @@ func (c *wire) Send(v Message) {
 	c.dest.sendTo(c, v)
 }
 
-func (c *wire) Close() {
+func (c *wire) Disconnect() {
 	c.senders--
 	if c.senders == 0 && c.channel != nil {
 		close(c.channel)
@@ -89,7 +89,7 @@ func (c *fakeSink) Send(m Message) {
 	fmt.Printf("Lost %T: %v\n", m, m)
 }
 
-func (c *fakeSink) Close() {}
+func (c *fakeSink) Disconnect() {}
 
 // extract "a" from "a.b", panics if there's no dot in the string
 func gadgetPart(s string) string {

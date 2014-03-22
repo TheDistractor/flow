@@ -138,7 +138,7 @@ func (g *Gadget) closeChannels() {
 		setValue(g.pinValue(p), c.channel)
 	}
 	for _, c := range g.outputs {
-		c.Close()
+		c.Disconnect()
 	}
 }
 

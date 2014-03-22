@@ -41,7 +41,7 @@ type Sink struct {
 
 // Start reading messages and discard them.
 func (w *Sink) Run() {
-	w.Out.Close()
+	w.Out.Disconnect()
 	for _ = range w.In {
 	}
 }
