@@ -103,7 +103,7 @@ func pinPart(s string) string {
 	return s[n+1:]
 }
 
-// Utility to check for errors and panic if the arg is not nil.
+// Utility to check for errors, report as fatal error if the arg is not nil.
 func Check(err interface{}) {
 	if err != nil {
 		glog.Fatal(err)

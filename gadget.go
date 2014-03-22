@@ -83,49 +83,49 @@ func (g *Gadget) setOutput(pin string, c *wire) {
 
 func (g *Gadget) setupChannels() {
 	// make sure all the inbox wires have also been set up
-	for dest, messages := range g.owner.inbox {
+	for dest, msgs := range g.owner.inbox {
 		if gadgetPart(dest) == g.name {
-			g.getInput(dest, len(messages)) // will add wire to input map
+			g.getInput(dest, len(msgs)) // will add wire to the inputs map
 		}
 	}
 
 	// set up and pre-fill all the input pins
-	for p, c := range g.inputs {
+	for pin, wire := range g.inputs {
 		// create a channel with the proper capacity
-		c.channel = make(chan Message, c.capacity)
-		setValue(g.pinValue(p), c.channel)
+		wire.channel = make(chan Message, wire.capacity)
+		setValue(g.pinValue(pin), wire.channel)
 		// fill it with messages from the inbox, if any
-		for _, m := range g.owner.inbox[p] {
-			c.channel <- m
+		for _, msg := range g.owner.inbox[pin] {
+			wire.channel <- msg
 		}
 		// close the channel if there is no other feed
-		if c.senders == 0 {
-			close(c.channel)
+		if wire.senders == 0 {
+			close(wire.channel)
 		}
 	}
 
 	// set dangling inputs to a null input and dangling outputs to a fake sink
-	we := g.gadgetValue()
-	for i := 0; i < we.NumField(); i++ {
-		fe := we.Field(i)
-		switch fe.Type().String() {
+	gadget := g.gadgetValue()
+	for i := 0; i < gadget.NumField(); i++ {
+		field := gadget.Field(i)
+		switch field.Type().String() {
 		case "flow.Input":
-			if fe.IsNil() {
+			if field.IsNil() {
 				null := make(chan Message)
 				close(null)
-				setValue(fe, null)
+				setValue(field, null)
 			}
 		case "flow.Output":
-			if fe.IsNil() {
-				setValue(fe, &fakeSink{})
+			if field.IsNil() {
+				setValue(field, &fakeSink{})
 			}
 		}
 	}
 }
 
 func (g *Gadget) isFinished() bool {
-	for _, c := range g.inputs {
-		if len(c.channel) > 0 {
+	for _, wire := range g.inputs {
+		if len(wire.channel) > 0 {
 			return false
 		}
 	}
@@ -133,21 +133,21 @@ func (g *Gadget) isFinished() bool {
 }
 
 func (g *Gadget) closeChannels() {
-	for p, c := range g.inputs {
-		c.channel = nil
-		setValue(g.pinValue(p), c.channel)
+	for pin, wire := range g.inputs {
+		wire.channel = nil
+		setValue(g.pinValue(pin), wire.channel)
 	}
-	for _, c := range g.outputs {
-		c.Disconnect()
+	for _, wire := range g.outputs {
+		wire.Disconnect()
 	}
 }
 
-func (g *Gadget) sendTo(c *wire, v Message) {
+func (g *Gadget) sendTo(w *wire, v Message) {
 	if !g.alive {
 		g.launch()
 	}
 
-	c.channel <- v
+	w.channel <- v
 }
 
 func (g *Gadget) launch() {
@@ -171,6 +171,6 @@ func (g *Gadget) launch() {
 	}()
 }
 
-func setValue(val reflect.Value, any interface{}) {
-	val.Set(reflect.ValueOf(any))
+func setValue(value reflect.Value, any interface{}) {
+	value.Set(reflect.ValueOf(any))
 }
