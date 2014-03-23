@@ -1,6 +1,7 @@
 package flow
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -17,6 +18,9 @@ var Version = "0.9.0"
 
 // The registry is the factory for all known types of gadgets.
 var Registry = map[string]func() Circuitry{}
+
+// Config stores configuration settings for general use.
+var Config = map[string]string{}
 
 // Messages are the generic type sent to, between, and from gadgets.
 type Message interface{}
@@ -174,4 +178,41 @@ func PrintRegistry() {
 	if len(s) > 1 {
 		println(s)
 	}
+}
+
+// LoadConfig parses a configuration file, if it exists, to set up some basic
+// application settings, such as where the app/ and data/ directories are.
+// Settings can be overridden through environment variables with the same name.
+func LoadConfig(defaults, filename string) map[string]string {
+	parseSettingsLine := func(line string) {
+		line = strings.TrimSpace(line)
+		if line != "" && !strings.HasPrefix(line, "#") {
+			fields := strings.SplitN(line, "=", 2)
+			if len(fields) != 2 {
+				panic(fmt.Errorf("cannot parse configuration: %s", line))
+			}
+			key := strings.TrimSpace(fields[0])
+			value := strings.TrimSpace(fields[1])
+			env := os.Getenv(key)
+			if env != "" {
+				value = env
+			}
+			glog.Infoln("config", key, "=", value)
+			Config[key] = value
+		}
+	}
+
+	for _, s := range strings.Split(defaults, "\n") {
+		parseSettingsLine(s)
+	}
+
+	if fd, err := os.Open(filename); err == nil {
+		defer fd.Close()
+		scanner := bufio.NewScanner(fd)
+		for scanner.Scan() {
+			parseSettingsLine(scanner.Text())
+		}
+	}
+
+	return Config
 }
