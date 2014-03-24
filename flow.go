@@ -170,20 +170,20 @@ func PrintRegistry() {
 	s := " "
 	for _, k := range keys {
 		if len(s)+len(k) > 78 {
-			println(s)
+			fmt.Println(s)
 			s = " "
 		}
 		s += " " + k
 	}
 	if len(s) > 1 {
-		println(s)
+		fmt.Println(s)
 	}
 }
 
 // LoadConfig parses a configuration file, if it exists, to set up some basic
 // application settings, such as where the app/ and data/ directories are.
 // Settings can be overridden through environment variables with the same name.
-func LoadConfig(defaults, filename string) map[string]string {
+func LoadConfig(defaults, filename string) {
 	parseSettingsLine := func(line string) {
 		line = strings.TrimSpace(line)
 		if line != "" && !strings.HasPrefix(line, "#") {
@@ -197,7 +197,6 @@ func LoadConfig(defaults, filename string) map[string]string {
 			if env != "" {
 				value = env
 			}
-			glog.Infoln("config", key, "=", value)
 			Config[key] = value
 		}
 	}
@@ -213,6 +212,4 @@ func LoadConfig(defaults, filename string) map[string]string {
 			parseSettingsLine(scanner.Text())
 		}
 	}
-
-	return Config
 }

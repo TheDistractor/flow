@@ -30,6 +30,7 @@ func init() {
 	flow.Registry["ReadFileJSON"] = func() flow.Circuitry { return &ReadFileJSON{} }
 	flow.Registry["EnvVar"] = func() flow.Circuitry { return &EnvVar{} }
 	flow.Registry["CmdLine"] = func() flow.Circuitry { return &CmdLine{} }
+	flow.Registry["Waiter"] = func() flow.Circuitry { return &Waiter{} }
 }
 
 // A sink eats up all the messages it receives. Registers as "Sink".
@@ -177,11 +178,12 @@ func (w *FanOut) Run() {
 // Forever does just what the name says: run forever (and do nothing at all)
 type Forever struct {
 	flow.Gadget
+	Out flow.Output
 }
 
-// Start running (nearly) forever.
+// Start running forever, the output stays open and never sends anything.
 func (w *Forever) Run() {
-	time.Sleep(1e6 * time.Hour)
+	<-make(chan struct{})
 }
 
 // Send data out after a certain delay.
@@ -265,7 +267,7 @@ func (w *ReadFileJSON) Run() {
 	}
 }
 
-// Lookup an environment variable, with optional default.
+// Lookup an environment variable, with optional default. Registers as "EnvVar".
 type EnvVar struct {
 	flow.Gadget
 	In  flow.Input
@@ -289,7 +291,7 @@ func (g *EnvVar) Run() {
 	}
 }
 
-// Turn command-line arguments into a message flow.
+// Turn command-line arguments into a message flow. Registers as "CmdLine".
 type CmdLine struct {
 	flow.Gadget
 	Type flow.Input
@@ -333,5 +335,24 @@ func (g *CmdLine) Run() {
 			value = flow.Tag{flag.Arg(i), value}
 		}
 		g.Out.Send(value)
+	}
+}
+
+// Wait for the gate pin to be closed, then start passing from In to Out.
+// Registers as "Waiter".
+type Waiter struct {
+	flow.Gadget
+	Gate flow.Input
+	In   flow.Input
+	Out  flow.Output
+}
+
+// Start waiting, then turn into a pipe.
+func (g *Waiter) Run() {
+	for _ = range g.Gate {
+		// ignore until closed
+	}
+	for m := range g.In {
+		g.Out.Send(m)
 	}
 }

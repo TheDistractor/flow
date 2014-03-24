@@ -1,5 +1,9 @@
 package flow
 
+import (
+	"github.com/golang/glog"
+)
+
 func init() {
 	Registry["Dispatcher"] = func() Circuitry {
 		c := NewCircuit()
@@ -53,10 +57,11 @@ func (g *dispatchHead) Run() {
 			gadget = tag.Msg.(string)
 			if g.Feeds[gadget] == nil {
 				if Registry[prefix+gadget] == nil {
+					glog.Warningln("cannot dispatch:", prefix+gadget)
 					g.Rej.Send(tag) // report that no such gadget was found
 					gadget = ""
 				} else { // create, hook up, and launch the new gadget
-					println("Dispatching to new gadget: " + prefix + gadget)
+					glog.Infoln("dispatching to:", prefix+gadget)
 					c := g.owner
 					c.Add(gadget, prefix+gadget)
 					c.Connect("head.Feeds:"+gadget, gadget+".In", 0)

@@ -1,7 +1,6 @@
 package flow
 
 import (
-	"fmt"
 	"strings"
 	"sync"
 
@@ -31,7 +30,7 @@ type Circuit struct {
 func (c *Circuit) Add(name, gadget string) {
 	fun := Registry[gadget]
 	if fun == nil {
-		fmt.Println("not found: ", gadget)
+		glog.Warningln("not found:", gadget)
 		return
 	}
 	c.AddCircuitry(name, fun())

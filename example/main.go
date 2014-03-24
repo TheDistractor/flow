@@ -4,6 +4,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 
 	"github.com/golang/glog"
 	"github.com/jcw/flow"
@@ -25,9 +26,9 @@ func main() {
 	}
 
 	if *verbose {
-		println("Flow", flow.Version, "\n")
+		fmt.Println("Flow", flow.Version, "\n")
 		flow.PrintRegistry()
-		println("\nDocumentation at http://godoc.org/github.com/jcw/flow")
+		fmt.Println("\nDocumentation at http://godoc.org/github.com/jcw/flow")
 	} else {
 		glog.Infof("Flow %s - starting, registry size %d",
 			flow.Version, len(flow.Registry))
