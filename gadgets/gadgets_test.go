@@ -3,7 +3,6 @@ package gadgets
 import (
 	"os"
 	"testing"
-	"time"
 
 	"github.com/jcw/flow"
 )
@@ -45,8 +44,8 @@ func ExampleTimer() {
 	g.Add("c", "Counter")
 	g.Connect("t1.Out", "c.In", 0)
 	g.Connect("t2.Out", "c.In", 0)
-	g.Feed("t1.Rate", 100*time.Millisecond)
-	g.Feed("t2.Rate", 200*time.Millisecond)
+	g.Feed("t1.In", "10ms")
+	g.Feed("t2.In", "20ms")
 	g.Run()
 	// Output:
 	// Lost int: 2
@@ -131,7 +130,7 @@ func ExampleReadFileJSON() {
 func TestTimer(t *testing.T) {
 	g := flow.NewCircuit()
 	g.Add("t", "Timer")
-	g.Feed("t.Rate", 100*time.Millisecond)
+	g.Feed("t.In", "10ms")
 	g.Run()
 }
 
@@ -139,7 +138,7 @@ func ExampleClock() {
 	// The following example never ends.
 	g := flow.NewCircuit()
 	g.Add("c", "Clock")
-	g.Feed("c.Rate", "1s")
+	g.Feed("c.In", "1s")
 	g.Run()
 }
 
@@ -156,4 +155,20 @@ func ExampleEnvVar() {
 	// Lost string: bar!
 	// Lost string: bar!
 	// Lost string: abc
+}
+
+func ExampleConcat3() {
+	g := flow.NewCircuit()
+	g.Add("t1", "Timer")
+	g.Add("t2", "Timer")
+	g.Add("t3", "Timer")
+	g.Add("c", "Concat3")
+	g.Connect("t1.Out", "c.In1", 0)
+	g.Connect("t2.Out", "c.In2", 0)
+	g.Connect("t3.Out", "c.In3", 0)
+	g.Feed("t1.In", "30ms")
+	g.Feed("t2.In", "10ms")
+	g.Feed("t3.In", "20ms")
+	g.Run()
+	// Output will display t1, t2, t3 in order, even though t1 came in last
 }

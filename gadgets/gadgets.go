@@ -30,7 +30,7 @@ func init() {
 	flow.Registry["ReadFileJSON"] = func() flow.Circuitry { return &ReadFileJSON{} }
 	flow.Registry["EnvVar"] = func() flow.Circuitry { return &EnvVar{} }
 	flow.Registry["CmdLine"] = func() flow.Circuitry { return &CmdLine{} }
-	flow.Registry["Waiter"] = func() flow.Circuitry { return &Waiter{} }
+	flow.Registry["Concat3"] = func() flow.Circuitry { return &Concat3{} }
 }
 
 // A sink eats up all the messages it receives. Registers as "Sink".
@@ -125,14 +125,16 @@ func (w *Printer) Run() {
 // Registers as "Timer".
 type Timer struct {
 	flow.Gadget
-	Rate flow.Input
-	Out  flow.Output
+	In  flow.Input
+	Out flow.Output
 }
 
 // Start the timer, sends one message when it expires.
 func (w *Timer) Run() {
-	if rate, ok := <-w.Rate; ok {
-		t := <-time.After(rate.(time.Duration))
+	if r, ok := <-w.In; ok {
+		rate, err := time.ParseDuration(r.(string))
+		flow.Check(err)
+		t := <-time.After(rate)
 		w.Out.Send(t)
 	}
 }
@@ -141,13 +143,13 @@ func (w *Timer) Run() {
 // Registers as "Clock".
 type Clock struct {
 	flow.Gadget
-	Rate flow.Input
-	Out  flow.Output
+	In  flow.Input
+	Out flow.Output
 }
 
 // Start sending out periodic messages, once the rate is known.
 func (w *Clock) Run() {
-	if r, ok := <-w.Rate; ok {
+	if r, ok := <-w.In; ok {
 		rate, err := time.ParseDuration(r.(string))
 		flow.Check(err)
 		t := time.NewTicker(rate)
@@ -338,21 +340,25 @@ func (g *CmdLine) Run() {
 	}
 }
 
-// Wait for the gate pin to be closed, then start passing from In to Out.
-// Registers as "Waiter".
-type Waiter struct {
+// Until general collection is possible, this concatenates three input pins.
+// Registers as "Concat3".
+type Concat3 struct {
 	flow.Gadget
-	Gate flow.Input
-	In   flow.Input
-	Out  flow.Output
+	In1 flow.Input
+	In2 flow.Input
+	In3 flow.Input
+	Out flow.Output
 }
 
-// Start waiting, then turn into a pipe.
-func (g *Waiter) Run() {
-	for _ = range g.Gate {
-		// ignore until closed
+// Start waiting from each pin, moving on to the next when the channel closes.
+func (g *Concat3) Run() {
+	for m := range g.In1 {
+		g.Out.Send(m)
 	}
-	for m := range g.In {
+	for m := range g.In2 {
+		g.Out.Send(m)
+	}
+	for m := range g.In3 {
 		g.Out.Send(m)
 	}
 }
