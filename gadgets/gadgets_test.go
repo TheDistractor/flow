@@ -172,3 +172,16 @@ func ExampleConcat3() {
 	g.Run()
 	// Output will display t1, t2, t3 in order, even though t1 came in last
 }
+
+func ExampleAddTag() {
+	g := flow.NewCircuit()
+	g.Add("t", "AddTag")
+	g.Feed("t.Tag", "foo")
+	g.Feed("t.In", 1)
+	g.Feed("t.In", flow.Tag{"two", 2})
+	g.Feed("t.In", 3)
+	g.Run()
+	// Output:
+	// Lost flow.Tag: {foo 1}
+	// Lost flow.Tag: {foo 3}
+}

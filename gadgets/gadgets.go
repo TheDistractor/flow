@@ -31,6 +31,7 @@ func init() {
 	flow.Registry["EnvVar"] = func() flow.Circuitry { return &EnvVar{} }
 	flow.Registry["CmdLine"] = func() flow.Circuitry { return &CmdLine{} }
 	flow.Registry["Concat3"] = func() flow.Circuitry { return &Concat3{} }
+	flow.Registry["AddTag"] = func() flow.Circuitry { return &AddTag{} }
 }
 
 // A sink eats up all the messages it receives. Registers as "Sink".
@@ -360,5 +361,23 @@ func (g *Concat3) Run() {
 	}
 	for m := range g.In3 {
 		g.Out.Send(m)
+	}
+}
+
+// AddTag turns a stream into a tagged stream. Registers as "AddTag".
+type AddTag struct {
+	flow.Gadget
+	Tag flow.Input
+	In  flow.Input
+	Out flow.Output
+}
+
+// Start tagging all messages, but drop any incoming tags.
+func (g *AddTag) Run() {
+	tag := (<-g.Tag).(string)
+	for m := range g.In {
+		if _, ok := m.(flow.Tag); !ok {
+			g.Out.Send(flow.Tag{tag, m})
+		}
 	}
 }

@@ -13,7 +13,9 @@ type config struct {
 		Capacity int
 	}
 	Feeds []struct {
-		Tag, Data, To string
+		Tag  string
+		Data interface{}
+		To   string
 	}
 	Labels []struct {
 		External, Internal string
