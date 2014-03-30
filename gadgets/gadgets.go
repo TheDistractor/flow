@@ -15,23 +15,23 @@ import (
 )
 
 func init() {
-	flow.Registry["Sink"] = func() flow.Circuitry { return &Sink{} }
-	flow.Registry["Pipe"] = func() flow.Circuitry { return &Pipe{} }
-	flow.Registry["Repeater"] = func() flow.Circuitry { return &Repeater{} }
-	flow.Registry["Counter"] = func() flow.Circuitry { return &Counter{} }
-	flow.Registry["Printer"] = func() flow.Circuitry { return &Printer{} }
-	flow.Registry["Timer"] = func() flow.Circuitry { return &Timer{} }
-	flow.Registry["Clock"] = func() flow.Circuitry { return &Clock{} }
-	flow.Registry["FanOut"] = func() flow.Circuitry { return &FanOut{} }
-	flow.Registry["Forever"] = func() flow.Circuitry { return &Forever{} }
-	flow.Registry["Delay"] = func() flow.Circuitry { return &Delay{} }
-	flow.Registry["TimeStamp"] = func() flow.Circuitry { return &TimeStamp{} }
-	flow.Registry["ReadFileText"] = func() flow.Circuitry { return &ReadFileText{} }
-	flow.Registry["ReadFileJSON"] = func() flow.Circuitry { return &ReadFileJSON{} }
-	flow.Registry["EnvVar"] = func() flow.Circuitry { return &EnvVar{} }
-	flow.Registry["CmdLine"] = func() flow.Circuitry { return &CmdLine{} }
-	flow.Registry["Concat3"] = func() flow.Circuitry { return &Concat3{} }
-	flow.Registry["AddTag"] = func() flow.Circuitry { return &AddTag{} }
+	flow.Registry["Sink"] = func() flow.Circuitry { return new(Sink) }
+	flow.Registry["Pipe"] = func() flow.Circuitry { return new(Pipe) }
+	flow.Registry["Repeater"] = func() flow.Circuitry { return new(Repeater) }
+	flow.Registry["Counter"] = func() flow.Circuitry { return new(Counter) }
+	flow.Registry["Printer"] = func() flow.Circuitry { return new(Printer) }
+	flow.Registry["Timer"] = func() flow.Circuitry { return new(Timer) }
+	flow.Registry["Clock"] = func() flow.Circuitry { return new(Clock) }
+	flow.Registry["FanOut"] = func() flow.Circuitry { return new(FanOut) }
+	flow.Registry["Forever"] = func() flow.Circuitry { return new(Forever) }
+	flow.Registry["Delay"] = func() flow.Circuitry { return new(Delay) }
+	flow.Registry["TimeStamp"] = func() flow.Circuitry { return new(TimeStamp) }
+	flow.Registry["ReadFileText"] = func() flow.Circuitry { return new(ReadFileText) }
+	flow.Registry["ReadFileJSON"] = func() flow.Circuitry { return new(ReadFileJSON) }
+	flow.Registry["EnvVar"] = func() flow.Circuitry { return new(EnvVar) }
+	flow.Registry["CmdLine"] = func() flow.Circuitry { return new(CmdLine) }
+	flow.Registry["Concat3"] = func() flow.Circuitry { return new(Concat3) }
+	flow.Registry["AddTag"] = func() flow.Circuitry { return new(AddTag) }
 }
 
 // A sink eats up all the messages it receives. Registers as "Sink".
