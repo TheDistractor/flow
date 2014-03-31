@@ -197,6 +197,7 @@ type Delay struct {
 	Out   flow.Output
 }
 
+// Parse the delay, then throttle each incoming message.
 func (g *Delay) Run() {
 	delay, _ := time.ParseDuration((<-g.Delay).(string))
 	for m := range g.In {
