@@ -37,7 +37,7 @@ func (g *Gadget) pinValue(pin string) reflect.Value {
 	pp := pinPart(pin)
 	// if it's a circuit, look up mapped pins
 	if g, ok := g.circuitry.(*Circuit); ok {
-		p := g.pinMap[pp]
+		p := g.labels[pp]
 		return g.gadgetOf(p).pinValue(p) // recursive
 	}
 	fv := g.gadgetValue().FieldByName(pp)
@@ -82,8 +82,8 @@ func (g *Gadget) setOutput(pin string, c *wire) {
 }
 
 func (g *Gadget) setupChannels() {
-	// make sure all the inbox wires have also been set up
-	for dest, msgs := range g.owner.inbox {
+	// make sure all the feed wires have also been set up
+	for dest, msgs := range g.owner.feeds {
 		if gadgetPart(dest) == g.name {
 			g.getInput(dest, len(msgs)) // will add wire to the inputs map
 		}
@@ -94,8 +94,8 @@ func (g *Gadget) setupChannels() {
 		// create a channel with the proper capacity
 		wire.channel = make(chan Message, wire.capacity)
 		setValue(g.pinValue(pin), wire.channel)
-		// fill it with messages from the inbox, if any
-		for _, msg := range g.owner.inbox[pin] {
+		// fill it with messages from the feed inbox, if any
+		for _, msg := range g.owner.feeds[pin] {
 			wire.channel <- msg
 		}
 		// close the channel if there is no other feed
