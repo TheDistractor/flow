@@ -10,7 +10,6 @@ import (
 // Initialise a new circuit.
 func NewCircuit() *Circuit {
 	return &Circuit{
-		gnames:  map[string]string{},
 		gadgets: map[string]*Gadget{},
 		feeds:   map[string][]Message{},
 		labels:  map[string]string{},
@@ -21,13 +20,19 @@ func NewCircuit() *Circuit {
 type Circuit struct {
 	Gadget
 
-	gnames  map[string]string    // gadgets added by name from the registry
+	gnames  []gadgetDef          // gadgets added by name from the registry
 	gadgets map[string]*Gadget   // gadgets added to this circuit
 	wires   []wireDef            // list of all connections
 	feeds   map[string][]Message // message feeds
 	labels  map[string]string    // pin label lookup map
 
 	wait sync.WaitGroup // tracks number of running gadgets
+}
+
+// definition of one named gadget
+type gadgetDef struct {
+	Name string `json:"name"`
+	Type string `json:"type"`
 }
 
 // definition of one connection
@@ -44,7 +49,7 @@ func (c *Circuit) Add(name, gadget string) {
 		glog.Warningln("not found:", gadget)
 		return
 	}
-	c.gnames[name] = gadget
+	c.gnames = append(c.gnames, gadgetDef{name, gadget})
 	c.AddCircuitry(name, constructor())
 }
 
@@ -100,9 +105,13 @@ func (c *Circuit) Describe() interface{} {
 		desc["gadgets"] = c.gnames
 	}
 	if len(c.gadgets) > len(c.gnames) {
+		named := map[string]bool{}
+		for _, n := range c.gnames {
+			named[n.Name] = true
+		}
 		unreg := []string{}
 		for k := range c.gadgets {
-			if _, ok := c.gnames[k]; !ok {
+			if !named[k] {
 				unreg = append(unreg, k)
 			}
 		}
