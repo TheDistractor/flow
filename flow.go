@@ -180,6 +180,15 @@ func PrintRegistry() {
 	}
 }
 
+// Print a description of a gadget or circuit in indented JSON format.
+func PrintDescription(c Circuitry) {
+	if d, ok := c.(*Circuit); ok {
+		desc, err := json.MarshalIndent(d.Describe(), "", "  ")
+		Check(err)
+		fmt.Println(string(desc))
+	}
+}
+
 // LoadConfig parses a configuration file, if it exists, to set up some basic
 // application settings, such as where the app/ and data/ directories are.
 // Settings can be overridden through environment variables with the same name.
