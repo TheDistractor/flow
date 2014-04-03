@@ -1,14 +1,7 @@
 package flow
 
 import (
-	"bufio"
-	"bytes"
-	"fmt"
-	"io/ioutil"
-	"net/textproto"
-	"os"
 	"reflect"
-	"strings"
 
 	"github.com/golang/glog"
 )
@@ -37,23 +30,9 @@ func (g *transformer) Run() {
 
 // A runner turns a function with I/O channels into a gadget.
 func Runner(desc string, fun interface{}) Circuitry {
-	h, t := parseDescription(desc)
-	fmt.Fprintln(os.Stderr, 333, h)
-	fmt.Fprintln(os.Stderr, 444, len(t), t)
 	r := runner{desc: desc, fun: fun}
 	// r.ins = map[string]*Input{ "In": new(Input) }
 	return &r
-}
-
-// expects a mime-type header, followed by optional empty line and description
-// TODO: title, pins, etc will be in the header, the long desc is in Markdown
-func parseDescription(desc string) (header map[string][]string, text string) {
-	b := bufio.NewReader(bytes.NewBufferString(desc + "\n\n"))
-	header, err := textproto.NewReader(b).ReadMIMEHeader()
-	Check(err)
-	t, err := ioutil.ReadAll(b)
-	Check(err)
-	return header, strings.TrimSpace(string(t))
 }
 
 type runner struct {
