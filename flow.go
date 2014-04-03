@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"reflect"
 	"runtime"
 	"sort"
 	"strings"
@@ -45,26 +46,7 @@ type Circuitry interface {
 	Run()
 
 	initGadget(Circuitry, string, *Circuit) *Gadget
-}
-
-// A transformer processes each message through a supplied function.
-func Transformer(f func(Message) Message) Circuitry {
-	return &transformer{fun: f}
-}
-
-type transformer struct {
-	Gadget
-	In  Input
-	Out Output
-
-	fun func(Message) Message
-}
-
-func (g *transformer) Run() {
-	for m := range g.In {
-		// if m, ok := <-g.In; ok {
-		g.Out.Send(g.fun(m))
-	}
+	pinValue(name string) reflect.Value
 }
 
 // A wire is a ref-counted Input, it's closed when the count drops to 0.

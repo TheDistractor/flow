@@ -28,6 +28,22 @@ func ExampleTransformer() {
 	// Lost string: DEF
 }
 
+// func ExampleRunner() {
+// 	desc := "foo: bar\nInput: In \nOutput:  Out\n\nhaha\nyes!"
+// 	upper := flow.Runner(desc, func(in flow.Input, out flow.Output) {
+// 		out.Send(strings.ToUpper((<-in).(string)))
+// 	})
+//
+// 	g := flow.NewCircuit()
+// 	g.AddCircuitry("u", upper)
+// 	g.Feed("u.In", "abc")
+// 	g.Feed("u.In", "def")
+// 	g.Run()
+// 	// Output:
+// 	// Lost string: ABC
+// 	// Lost string: DEF
+// }
+
 func ExampleCircuit_Label() {
 	// new circuit to repeat each incoming message three times
 	wg := flow.NewCircuit()

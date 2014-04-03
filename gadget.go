@@ -38,7 +38,7 @@ func (g *Gadget) pinValue(pin string) reflect.Value {
 	// if it's a circuit, look up mapped pins
 	if g, ok := g.circuitry.(*Circuit); ok {
 		p := g.labels[pp]
-		return g.gadgetOf(p).pinValue(p) // recursive
+		return g.gadgetOf(p).circuitry.pinValue(p) // recursive
 	}
 	fv := g.gadgetValue().FieldByName(pp)
 	if !fv.IsValid() {
@@ -61,7 +61,7 @@ func (g *Gadget) getInput(pin string, capacity int) *wire {
 
 func (g *Gadget) setOutput(pin string, c *wire) {
 	ppfv := strings.Split(pin, ":")
-	fp := g.pinValue(ppfv[0])
+	fp := g.circuitry.pinValue(ppfv[0])
 	if len(ppfv) == 1 {
 		if !fp.IsNil() {
 			glog.Fatalf("output already connected: %s.%s", g.name, pin)
@@ -93,7 +93,7 @@ func (g *Gadget) setupChannels() {
 	for pin, wire := range g.inputs {
 		// create a channel with the proper capacity
 		wire.channel = make(chan Message, wire.capacity)
-		setValue(g.pinValue(pin), wire.channel)
+		setValue(g.circuitry.pinValue(pin), wire.channel)
 		// fill it with messages from the feed inbox, if any
 		for _, msg := range g.owner.feeds[pin] {
 			wire.channel <- msg
@@ -135,7 +135,7 @@ func (g *Gadget) isFinished() bool {
 func (g *Gadget) closeChannels() {
 	for pin, wire := range g.inputs {
 		wire.channel = nil
-		setValue(g.pinValue(pin), wire.channel)
+		setValue(g.circuitry.pinValue(pin), wire.channel)
 	}
 	for _, wire := range g.outputs {
 		wire.Disconnect()
