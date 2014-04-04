@@ -3,6 +3,7 @@ package flow
 import (
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/golang/glog"
 )
@@ -147,7 +148,14 @@ func (g *Gadget) sendTo(w *wire, v Message) {
 		g.launch()
 	}
 
-	w.channel <- v
+	for {
+		select {
+		case w.channel <- v:
+			return // send ok
+		case <-time.After(10 * time.Second):
+			glog.Errorln("send timed out", g.name, v)
+		}
+	}
 }
 
 func (g *Gadget) launch() {
