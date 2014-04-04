@@ -134,12 +134,21 @@ func (g *Gadget) isFinished() bool {
 }
 
 func (g *Gadget) closeChannels() {
-	for pin, wire := range g.inputs {
-		wire.channel = nil
-		setValue(g.circuitry.pinValue(pin), wire.channel)
-	}
 	for _, wire := range g.outputs {
 		wire.Disconnect()
+	}
+	for _, wire := range g.inputs {
+		// close channel if not nil and not already closed
+		if wire.channel != nil {
+			select {
+			case _, ok := <-wire.channel:
+				if ok {
+					close(wire.channel)
+				}
+			default:
+			}
+		}
+		// setValue(g.circuitry.pinValue(pin), wire.channel)
 	}
 }
 
@@ -148,13 +157,18 @@ func (g *Gadget) sendTo(w *wire, v Message) {
 		g.launch()
 	}
 
-	for {
-		select {
-		case w.channel <- v:
-			return // send ok
-		case <-time.After(10 * time.Second):
-			glog.Errorln("send timed out", g.name, v)
+	const reportSlowSends = false
+	if reportSlowSends {
+		for {
+			select {
+			case w.channel <- v:
+				return // send ok
+			case <-time.After(10 * time.Second):
+				glog.Errorln("send timed out", g.name, v)
+			}
 		}
+	} else {
+		w.channel <- v
 	}
 }
 

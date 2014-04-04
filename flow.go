@@ -15,7 +15,7 @@ import (
 )
 
 // Version of this package.
-var Version = "0.9.0"
+var Version = "0.3.0"
 
 // The registry is the factory for all known types of gadgets.
 var Registry = map[string]func() Circuitry{}
