@@ -156,17 +156,17 @@ func (g *Gadget) launch() {
 	g.setupChannels()
 
 	go func() {
-		defer g.owner.wait.Done()
 		defer DontPanic()
+		defer g.owner.wait.Done()
+		defer g.closeChannels()
 
-		for {
-			g.circuitry.Run()
-			if g.isFinished() {
-				break
-			}
-		}
+		// for {
+		g.circuitry.Run()
+		// 	if g.isFinished() {
+		// 		break
+		// 	}
+		// }
 
-		g.closeChannels()
 		g.alive = false
 	}()
 }
