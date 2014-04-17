@@ -12,11 +12,13 @@ import (
 	"time"
 
 	"github.com/jcw/flow"
+	_ "github.com/jcw/flow/gadgets/pipe"
+
 )
 
 func init() {
 	flow.Registry["Sink"] = func() flow.Circuitry { return new(Sink) }
-	flow.Registry["Pipe"] = func() flow.Circuitry { return new(Pipe) }
+//	flow.Registry["Pipe"] = func() flow.Circuitry { return new(Pipe) }  //pipe now in subdirectory
 	flow.Registry["Repeater"] = func() flow.Circuitry { return new(Repeater) }
 	flow.Registry["Counter"] = func() flow.Circuitry { return new(Counter) }
 	flow.Registry["Printer"] = func() flow.Circuitry { return new(Printer) }
@@ -48,19 +50,6 @@ func (w *Sink) Run() {
 	}
 }
 
-// Pipes are gadgets with an "In" and an "Out" pin. Registers as "Pipe".
-type Pipe struct {
-	flow.Gadget
-	In  flow.Input
-	Out flow.Output
-}
-
-// Start passing through messages.
-func (w *Pipe) Run() {
-	for m := range w.In {
-		w.Out.Send(m)
-	}
-}
 
 // Repeaters are pipes which repeat each message a number of times.
 // Registers as "Repeater".
